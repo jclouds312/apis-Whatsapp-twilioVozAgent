@@ -71,14 +71,22 @@ export default function WhatsAppPage() {
 
                 const sentInInterval = logs.filter(log => {
                     const logDate = parseISO(log.timestamp);
-                    const reqBody = JSON.parse(log.requestBody);
-                    return log.level === 'info' && reqBody.type === 'text' && logDate >= intervalStart && logDate < intervalEnd;
+                    try {
+                        const reqBody = JSON.parse(log.requestBody);
+                        return log.level === 'info' && reqBody.type === 'text' && logDate >= intervalStart && logDate < intervalEnd;
+                    } catch {
+                        return false;
+                    }
                 }).length;
 
                 const receivedInInterval = logs.filter(log => {
                      const logDate = parseISO(log.timestamp);
-                     const reqBody = JSON.parse(log.requestBody);
-                     return log.level === 'info' && reqBody.object === 'whatsapp_business_account' && logDate >= intervalStart && logDate < intervalEnd;
+                     try {
+                        const reqBody = JSON.parse(log.requestBody);
+                        return log.level === 'info' && reqBody.object === 'whatsapp_business_account' && logDate >= intervalStart && logDate < intervalEnd;
+                     } catch {
+                        return false;
+                     }
                 }).length;
 
                 return {
@@ -228,3 +236,5 @@ export default function WhatsAppPage() {
         </>
     )
 }
+
+    

@@ -8,7 +8,7 @@ import { CheckCircle, XCircle, Users, TrendingUp, Workflow as WorkflowIcon } fro
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { format, parseISO } from "date-fns";
 import { useUser, useFirestore, useCollection, useMemoFirebase } from '@/firebase';
-import { collection } from 'firebase/firestore';
+import { collection, query, where } from 'firebase/firestore';
 import type { ApiKey, ApiLog, Workflow } from '@/lib/types';
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
@@ -25,21 +25,24 @@ export default function CrmPage() {
 
     const workflowsQuery = useMemoFirebase(() => {
         if (!firestore || !user?.uid) return null;
-        return collection(firestore, 'users', user.uid, 'workflows');
+        const q = query(
+            collection(firestore, 'users', user.uid, 'workflows'), 
+            where('trigger.service', '==', 'CRM')
+        );
+        return q;
     }, [firestore, user?.uid]);
     const { data: workflows, isLoading: isLoadingWorkflows } = useCollection<Workflow>(workflowsQuery);
     
     const logsQuery = useMemoFirebase(() => {
         if (!firestore) return null;
-        return collection(firestore, 'apiLogs');
+        const q = query(collection(firestore, 'apiLogs'), where('endpoint', '==', 'CRM'));
+        return q;
     }, [firestore]);
     const { data: logs, isLoading: isLoadingLogs } = useCollection<ApiLog>(logsQuery);
 
     const isCrmConnected = apiKeys?.some(key => key.service.toLowerCase().includes('crm') && key.status === 'active');
-    const crmLogs = logs?.filter(log => log.endpoint.toLowerCase().includes('crm')).slice(0, 5) || [];
-    const crmWorkflows = workflows?.filter(wf => 
-        wf.trigger.service === 'CRM' || wf.steps.some(step => step.description.toLowerCase().includes('crm'))
-    ) || [];
+    const crmLogs = logs?.slice(0, 5) || [];
+    const crmWorkflows = workflows || [];
 
     const getLogLevelClass = (level: 'info' | 'warn' | 'error') => {
         switch (level) {
@@ -180,3 +183,5 @@ export default function CrmPage() {
         </>
     )
 }
+
+    

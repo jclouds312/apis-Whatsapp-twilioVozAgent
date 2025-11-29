@@ -15,7 +15,7 @@ import { cn } from '@/lib/utils';
 import { sendWhatsAppMessage } from './actions';
 import { useToast } from '@/hooks/use-toast';
 import { useUser, useFirestore, addDocumentNonBlocking, useCollection, useMemoFirebase } from '@/firebase';
-import { collection, query, orderBy } from "firebase/firestore";
+import { collection, query, orderBy, serverTimestamp } from "firebase/firestore";
 
 
 interface ChatMessageProps {
@@ -34,7 +34,7 @@ export function ChatMessage({ conversation, currentUserAvatar }: ChatMessageProp
     return query(collection(firestore, 'users', user.uid, 'conversations', conversation.id, 'messages'), orderBy('timestamp', 'asc'));
   }, [firestore, user?.uid, conversation?.id]);
 
-  const { data: messages, isLoading: isLoadingMessages } = useCollection<Message>(messagesQuery);
+  const { data: messages } = useCollection<Message>(messagesQuery);
   const scrollAreaRef = React.useRef<HTMLDivElement>(null);
 
   React.useEffect(() => {
@@ -50,18 +50,16 @@ export function ChatMessage({ conversation, currentUserAvatar }: ChatMessageProp
 
   const handleSend = async () => {
     if (input.trim() && conversation && user && firestore) {
-      const tempId = `msg_${Date.now()}`;
-      const newMessage: Omit<Message, 'id'> = {
-        contactId: user.uid,
-        content: input,
-        timestamp: new Date(),
-        isSender: true,
-      };
-      
       const tempInput = input;
       setInput('');
 
-      // Directly add to Firestore without optimistic update in local state
+      const newMessage: Omit<Message, 'id'> = {
+        contactId: user.uid,
+        content: tempInput,
+        timestamp: serverTimestamp(),
+        isSender: true,
+      };
+      
       const messagesCollection = collection(firestore, 'users', user.uid, 'conversations', conversation.id, 'messages');
       addDocumentNonBlocking(messagesCollection, newMessage);
 
@@ -210,3 +208,5 @@ export function ChatMessage({ conversation, currentUserAvatar }: ChatMessageProp
     </div>
   );
 }
+
+    

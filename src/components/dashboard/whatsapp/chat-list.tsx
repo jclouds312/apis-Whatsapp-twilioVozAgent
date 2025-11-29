@@ -1,6 +1,6 @@
 'use client';
 
-import { formatDistanceToNowStrict } from 'date-fns';
+import { formatDistanceToNowStrict, format } from 'date-fns';
 import { Archive, Search } from 'lucide-react';
 import Image from 'next/image';
 
@@ -16,6 +16,7 @@ import {
 } from '@/components/ui/tooltip';
 import type { Conversation } from '@/lib/types';
 import { cn } from '@/lib/utils';
+import { useState } from 'react';
 
 interface ChatListProps {
   conversations: Conversation[];
@@ -30,6 +31,22 @@ export function ChatList({
   isCollapsed,
   onSelectConversation,
 }: ChatListProps) {
+  const [searchTerm, setSearchTerm] = useState('');
+
+  const filteredConversations = conversations.filter(conv => 
+    conv.contactName.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  const getFormattedTimestamp = (timestamp: any) => {
+    if (!timestamp?.seconds) return '';
+    try {
+        const date = new Date(timestamp.seconds * 1000);
+        return formatDistanceToNowStrict(date, { addSuffix: false });
+    } catch (e) {
+        return '';
+    }
+  }
+
   return (
     <div className="flex h-full flex-col bg-background">
       <div className="flex items-center justify-between p-2 h-16">
@@ -50,14 +67,14 @@ export function ChatList({
 
       <div className="relative p-2 pt-0">
         <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-        <Input placeholder="Search" className="pl-8" />
+        <Input placeholder="Search" className="pl-8" value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} />
       </div>
 
       <Separator />
 
       <ScrollArea className="flex-1">
         <div className="flex flex-col gap-1 p-2">
-          {conversations.map((conv) => (
+          {filteredConversations.map((conv) => (
             <button
               key={conv.id}
               className={cn(
@@ -87,9 +104,7 @@ export function ChatList({
               )}
               {!isCollapsed && (
                 <div className="ml-auto text-xs text-muted-foreground">
-                  {formatDistanceToNowStrict(new Date(conv.lastMessageTime), {
-                    addSuffix: true,
-                  })}
+                  {getFormattedTimestamp(conv.lastMessageTime)}
                 </div>
               )}
             </button>
@@ -99,3 +114,5 @@ export function ChatList({
     </div>
   );
 }
+
+    

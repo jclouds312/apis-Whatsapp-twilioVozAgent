@@ -90,126 +90,12 @@
         "userId"
       ]
     },
-    "WhatsappSetting": {
-      "$schema": "http://json-schema.org/draft-07/schema#",
-      "title": "WhatsappSetting",
-      "type": "object",
-      "description": "Stores settings related to the WhatsApp Business Cloud API integration.",
-      "properties": {
-        "id": {
-          "type": "string",
-          "description": "Unique identifier for the WhatsApp setting."
-        },
-        "phoneNumberId": {
-          "type": "string",
-          "description": "WhatsApp Business phone number ID."
-        },
-        "accessToken": {
-          "type": "string",
-          "description": "Access token for the WhatsApp Business Cloud API (encrypted)."
-        },
-        "businessAccountId": {
-          "type": "string",
-          "description": "WhatsApp Business account ID."
-        },
-        "userId": {
-          "type": "string",
-          "description": "Reference to User. (Relationship: User 1:N WhatsappSetting)"
-        }
-      },
-      "required": [
-        "id",
-        "phoneNumberId",
-        "accessToken",
-        "businessAccountId",
-        "userId"
-      ]
-    },
-    "TwilioSetting": {
-      "$schema": "http://json-schema.org/draft-07/schema#",
-      "title": "TwilioSetting",
-      "type": "object",
-      "description": "Stores settings related to the Twilio integration.",
-      "properties": {
-        "id": {
-          "type": "string",
-          "description": "Unique identifier for the Twilio setting."
-        },
-        "accountSid": {
-          "type": "string",
-          "description": "Twilio account SID."
-        },
-        "authToken": {
-          "type": "string",
-          "description": "Twilio auth token (encrypted)."
-        },
-        "phoneNumber": {
-          "type": "string",
-          "description": "Twilio phone number."
-        },
-        "userId": {
-          "type": "string",
-          "description": "Reference to User. (Relationship: User 1:N TwilioSetting)"
-        }
-      },
-      "required": [
-        "id",
-        "accountSid",
-        "authToken",
-        "phoneNumber",
-        "userId"
-      ]
-    },
-    "CrmEndpoint": {
-      "$schema": "http://json-schema.org/draft-07/schema#",
-      "title": "CrmEndpoint",
-      "type": "object",
-      "description": "Defines an endpoint for a connected CRM.",
-      "properties": {
-        "id": {
-          "type": "string",
-          "description": "Unique identifier for the CRM endpoint."
-        },
-        "name": {
-          "type": "string",
-          "description": "Name of the CRM endpoint."
-        },
-        "baseUrl": {
-          "type": "string",
-          "description": "Base URL of the CRM API."
-        },
-        "authenticationType": {
-          "type": "string",
-          "description": "Type of authentication used (e.g., API Key, OAuth2)."
-        },
-        "authenticationDetails": {
-          "type": "string",
-          "description": "Details required for authentication (encrypted)."
-        },
-        "userId": {
-          "type": "string",
-          "description": "Reference to User. (Relationship: User 1:N CrmEndpoint)"
-        }
-      },
-      "required": [
-        "id",
-        "name",
-        "baseUrl",
-        "authenticationType",
-        "authenticationDetails",
-        "userId"
-      ]
-    },
     "ApiLog": {
       "$schema": "http://json-schema.org/draft-07/schema#",
       "title": "ApiLog",
       "type": "object",
       "description": "Stores logs of API requests and responses.",
       "properties": {
-        "id": {
-          "type": "string",
-          "description": "Unique identifier for the API log entry."
-        },
         "timestamp": {
           "type": "string",
           "description": "Timestamp of the API request.",
@@ -234,16 +120,20 @@
         "apiKeyId": {
           "type": "string",
           "description": "Reference to ApiKey. (Relationship: ApiKey 1:N ApiLog)"
+        },
+        "level": {
+          "type": "string",
+          "enum": ["info", "warn", "error"]
         }
       },
       "required": [
-        "id",
         "timestamp",
         "endpoint",
         "requestBody",
         "responseBody",
         "statusCode",
-        "apiKeyId"
+        "apiKeyId",
+        "level"
       ]
     },
     "DashboardUser": {
@@ -252,55 +142,12 @@
       "type": "object",
       "description": "Represents a user who has access to the admin dashboard.",
       "properties": {
-        "id": {
-          "type": "string",
-          "description": "Unique identifier for the dashboard user."
-        },
-        "username": {
-          "type": "string",
-          "description": "Username of the dashboard user."
-        },
-        "email": {
-          "type": "string",
-          "description": "Email address of the dashboard user.",
-          "format": "email"
-        },
-        "roleId": {
-          "type": "string",
-          "description": "Reference to Role. (Relationship: Role 1:N DashboardUser)"
-        }
+        "name": { "type": "string" },
+        "email": { "type": "string", "format": "email" },
+        "role": { "type": "string", "enum": ["Admin", "Manager", "Developer", "Agent"] },
+        "avatarUrl": { "type": "string", "format": "uri" }
       },
-      "required": [
-        "id",
-        "username",
-        "email",
-        "roleId"
-      ]
-    },
-    "Role": {
-      "$schema": "http://json-schema.org/draft-07/schema#",
-      "title": "Role",
-      "type": "object",
-      "description": "Defines a role with specific permissions within the admin dashboard.",
-      "properties": {
-        "id": {
-          "type": "string",
-          "description": "Unique identifier for the role."
-        },
-        "name": {
-          "type": "string",
-          "description": "Name of the role (e.g., Administrator, Agent)."
-        },
-        "permissions": {
-          "type": "string",
-          "description": "JSON string defining the permissions associated with the role."
-        }
-      },
-      "required": [
-        "id",
-        "name",
-        "permissions"
-      ]
+      "required": ["name", "email", "role"]
     },
     "Workflow": {
       "$schema": "http://json-schema.org/draft-07/schema#",
@@ -308,33 +155,36 @@
       "type": "object",
       "description": "Defines a workflow within Function Connect.",
       "properties": {
-        "id": {
-          "type": "string",
-          "description": "Unique identifier for the workflow."
-        },
-        "name": {
-          "type": "string",
-          "description": "Name of the workflow."
-        },
-        "description": {
-          "type": "string",
-          "description": "Description of the workflow."
+        "name": { "type": "string" },
+        "description": { "type": "string" },
+        "trigger": {
+            "type": "object",
+            "properties": {
+                "service": { "type": "string", "enum": ["WhatsApp", "Twilio", "CRM"]},
+                "event": { "type": "string" }
+            }
         },
         "steps": {
-          "type": "string",
-          "description": "JSON string defining the steps in the workflow."
+            "type": "array",
+            "items": {
+                "type": "object",
+                "properties": {
+                    "name": { "type": "string" },
+                    "description": { "type": "string" }
+                }
+            }
         },
-        "userId": {
-          "type": "string",
-          "description": "Reference to User. (Relationship: User 1:N Workflow)"
-        }
+        "status": { "type": "string", "enum": ["active", "inactive"] },
+        "lastRun": { "type": "string", "format": "date-time" },
+        "userId": { "type": "string" }
       },
       "required": [
-        "id",
         "name",
         "description",
         "steps",
-        "userId"
+        "userId",
+        "trigger",
+        "status"
       ]
     },
     "User": {
@@ -348,9 +198,51 @@
           "description": "Unique identifier for the user."
         }
       },
-      "required": [
-        "id"
-      ]
+      "required": ["id"]
+    },
+    "Conversation": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Conversation",
+      "type": "object",
+      "description": "Represents a chat conversation with a contact.",
+      "properties": {
+          "contactName": { "type": "string" },
+          "contactEmail": { "type": "string", "format": "email" },
+          "contactAvatar": { "type": "string", "format": "uri" },
+          "contactId": { "type": "string", "description": "Phone number for WhatsApp or other identifier" },
+          "tags": { "type": "array", "items": { "type": "string" } },
+          "agentNotes": { "type": "string" },
+          "orderHistory": {
+              "type": "array",
+              "items": {
+                  "type": "object",
+                  "properties": {
+                      "id": { "type": "string" },
+                      "date": { "type": "string", "format": "date-time" },
+                      "total": { "type": "number" },
+                      "status": { "type": "string", "enum": ["Completed", "Pending", "Cancelled"] }
+                  },
+                  "required": ["id", "date", "total", "status"]
+              }
+          },
+          "lastMessage": { "type": "string" },
+          "lastMessageTime": { "type": "string", "format": "date-time" },
+          "userId": { "type": "string" }
+      },
+      "required": ["contactName", "contactId", "lastMessage", "lastMessageTime", "userId"]
+    },
+    "Message": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Message",
+      "type": "object",
+      "description": "Represents a single message within a conversation.",
+      "properties": {
+          "contactId": { "type": "string" },
+          "content": { "type": "string" },
+          "timestamp": { "type": "string", "format": "date-time" },
+          "isSender": { "type": "boolean" }
+      },
+      "required": ["contactId", "content", "timestamp", "isSender"]
     }
   },
   "auth": {
@@ -360,192 +252,39 @@
     ]
   },
   "firestore": {
-    "structure": [
-      {
-        "path": "/users/{userId}",
-        "definition": {
-          "entityName": "User",
-          "schema": {
-            "$ref": "#/backend/entities/User"
-          },
-          "description": "Collection to store user profiles.",
-          "params": [
-            {
-              "name": "userId",
-              "description": "The unique identifier for the user."
-            }
-          ]
-        }
-      },
-      {
-        "path": "/users/{userId}/apiKeys/{apiKeyId}",
-        "definition": {
-          "entityName": "ApiKey",
-          "schema": {
-            "$ref": "#/backend/entities/ApiKey"
-          },
-          "description": "Stores API keys for integrated third-party services like WhatsApp, Twilio, etc.",
-          "params": [
-            {
-              "name": "userId",
-              "description": "The user owner."
-            },
-            {
-              "name": "apiKeyId",
-              "description": "The unique ID for the API key."
-            }
-          ]
-        }
-      },
-      {
-        "path": "/users/{userId}/exposedApis/{exposedApiId}",
-        "definition": {
-          "entityName": "ExposedApi",
-          "schema": {
-            "$ref": "#/backend/entities/ExposedApi"
-          },
-          "description": "Stores API endpoints exposed by this platform for consumption by external systems.",
-          "params": [
-            {
-              "name": "userId",
-              "description": "The user owner."
-            },
-            {
-              "name": "exposedApiId",
-              "description": "The unique ID for the exposed API."
-            }
-          ]
-        }
-      },
-      {
-        "path": "/users/{userId}/whatsappSettings/{whatsappSettingId}",
-        "definition": {
-          "entityName": "WhatsappSetting",
-          "schema": {
-            "$ref": "#/backend/entities/WhatsappSetting"
-          },
-          "description": "Collection to store WhatsApp settings for each user. Secured by path-based ownership.",
-          "params": [
-            {
-              "name": "userId",
-              "description": "The unique identifier for the user."
-            },
-            {
-              "name": "whatsappSettingId",
-              "description": "The unique identifier for the WhatsApp setting."
-            }
-          ]
-        }
-      },
-      {
-        "path": "/users/{userId}/twilioSettings/{twilioSettingId}",
-        "definition": {
-          "entityName": "TwilioSetting",
-          "schema": {
-            "$ref": "#/backend/entities/TwilioSetting"
-          },
-          "description": "Collection to store Twilio settings for each user. Secured by path-based ownership.",
-          "params": [
-            {
-              "name": "userId",
-              "description": "The unique identifier for the user."
-            },
-            {
-              "name": "twilioSettingId",
-              "description": "The unique identifier for the Twilio setting."
-            }
-          ]
-        }
-      },
-      {
-        "path": "/users/{userId}/crmEndpoints/{crmEndpointId}",
-        "definition": {
-          "entityName": "CrmEndpoint",
-          "schema": {
-            "$ref": "#/backend/entities/CrmEndpoint"
-          },
-          "description": "Collection to store CRM endpoints for each user. Secured by path-based ownership.",
-          "params": [
-            {
-              "name": "userId",
-              "description": "The unique identifier for the user."
-            },
-            {
-              "name": "crmEndpointId",
-              "description": "The unique identifier for the CRM endpoint."
-            }
-          ]
-        }
-      },
-      {
-        "path": "/apiLogs/{apiLogId}",
-        "definition": {
-          "entityName": "ApiLog",
-          "schema": {
-            "$ref": "#/backend/entities/ApiLog"
-          },
-          "description": "Collection to store API logs. Consider partitioning by date for scalability.",
-          "params": [
-            {
-              "name": "apiLogId",
-              "description": "The unique identifier for the API log entry."
-            }
-          ]
-        }
-      },
-      {
-        "path": "/dashboardUsers/{dashboardUserId}",
-        "definition": {
-          "entityName": "DashboardUser",
-          "schema": {
-            "$ref": "#/backend/entities/DashboardUser"
-          },
-          "description": "Collection to store dashboard users. Access controlled by roles.",
-          "params": [
-            {
-              "name": "dashboardUserId",
-              "description": "The unique identifier for the dashboard user."
-            }
-          ]
-        }
-      },
-      {
-        "path": "/roles/{roleId}",
-        "definition": {
-          "entityName": "Role",
-          "schema": {
-            "$ref": "#/backend/entities/Role"
-          },
-          "description": "Collection to store roles and their permissions.",
-          "params": [
-            {
-              "name": "roleId",
-              "description": "The unique identifier for the role."
-            }
-          ]
-        }
-      },
-      {
-        "path": "/users/{userId}/workflows/{workflowId}",
-        "definition": {
-          "entityName": "Workflow",
-          "schema": {
-            "$ref": "#/backend/entities/Workflow"
-          },
-          "description": "Collection to store workflows for each user. Secured by path-based ownership.",
-          "params": [
-            {
-              "name": "userId",
-              "description": "The unique identifier for the user."
-            },
-            {
-              "name": "workflowId",
-              "description": "The unique identifier for the workflow."
-            }
-          ]
-        }
-      }
-    ],
-    "reasoning": "The Firestore structure is designed to adhere to Authorization Independence (CRITICAL), DBAC (Database-Based Access Control), QAPs (Rules are not Filters), and Invariants. Authorization Independence is achieved through denormalization. For example, ownership is explicitly tied to user-owned data via path-based access, eliminating the need for `get()` calls in security rules. QAPs are ensured by segregating data based on access requirements (e.g., user-specific settings under `/users/{userId}`). The structure avoids mixing data with different security postures within the same collection. Roles are implicitly managed through path based access. The structure also makes use of nested hierarchical paths for 1:N relationships to maintain data integrity. All sensitive data such as API keys, tokens, and authentication details are stored within user specific paths to ensure only the owning user has access."
+    "/users/{userId}": {
+      "schema": { "$ref": "#/entities/User" },
+      "description": "Collection to store user profiles."
+    },
+    "/users/{userId}/apiKeys/{apiKeyId}": {
+      "schema": { "$ref": "#/entities/ApiKey" },
+      "description": "Stores API keys for integrated third-party services like WhatsApp, Twilio, etc."
+    },
+    "/users/{userId}/exposedApis/{exposedApiId}": {
+      "schema": { "$ref": "#/entities/ExposedApi" },
+      "description": "Stores API endpoints exposed by this platform for consumption by external systems."
+    },
+    "/users/{userId}/workflows/{workflowId}": {
+      "schema": { "$ref": "#/entities/Workflow" },
+      "description": "Collection to store workflows for each user. Secured by path-based ownership."
+    },
+    "/users/{userId}/conversations/{conversationId}": {
+        "schema": { "$ref": "#/entities/Conversation" },
+        "description": "Stores all chat conversations for a user."
+    },
+    "/users/{userId}/conversations/{conversationId}/messages/{messageId}": {
+        "schema": { "$ref": "#/entities/Message" },
+        "description": "Stores all messages within a specific conversation."
+    },
+    "/apiLogs/{apiLogId}": {
+      "schema": { "$ref": "#/entities/ApiLog" },
+      "description": "Collection to store API logs. Consider partitioning by date for scalability."
+    },
+    "/dashboardUsers/{dashboardUserId}": {
+      "schema": { "$ref": "#/entities/DashboardUser" },
+      "description": "Collection to store dashboard users. Access controlled by roles."
+    }
   }
 }
+
+    

@@ -2,16 +2,13 @@
 
 import { Header } from "@/components/dashboard/header";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { CheckCircle, XCircle, Phone } from "lucide-react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { format, parseISO } from "date-fns";
 import { useUser, useFirestore, useCollection, useMemoFirebase } from '@/firebase';
 import type { ApiKey, ApiLog } from "@/lib/types";
-import { collection } from 'firebase/firestore';
+import { collection, query, where } from 'firebase/firestore';
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 
@@ -27,12 +24,12 @@ export default function TwilioPage() {
 
     const logsQuery = useMemoFirebase(() => {
         if (!firestore) return null;
-        return collection(firestore, 'apiLogs');
+        return query(collection(firestore, 'apiLogs'), where('endpoint', '==', 'Twilio'));
     }, [firestore]);
     const { data: logs, isLoading: isLoadingLogs } = useCollection<ApiLog>(logsQuery);
 
     const isConnected = apiKeys?.some(key => key.service.toLowerCase() === 'twilio' && key.status === 'active');
-    const twilioLogs = logs?.filter(log => log.endpoint.toLowerCase().includes('twilio')).slice(0, 5) || [];
+    const twilioLogs = logs?.slice(0, 5) || [];
 
     const getLogLevelClass = (level: 'info' | 'warn' | 'error') => {
         switch (level) {
@@ -123,3 +120,5 @@ export default function TwilioPage() {
         </>
     )
 }
+
+    

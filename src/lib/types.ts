@@ -82,9 +82,10 @@ export type Conversation = {
   orderHistory: Order[];
   lastMessage: string;
   lastMessageTime: any; // Allow any for Firestore Timestamp
-  messages: Message[];
   userId: string;
 };
 
 // This type was previously User, changing to DashboardUser for clarity
 export type User = DashboardUser;
+
+    
