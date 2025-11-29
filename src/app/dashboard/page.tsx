@@ -7,10 +7,10 @@ import { AreaChartComponent } from "@/components/charts/area-chart";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { workflows, logs } from "@/lib/data";
-import { Activity, CreditCard, DollarSign, Users, Workflow, AlertCircle } from "lucide-react";
+import { workflows, logs, exposedApis } from "@/lib/data";
+import { Activity, Workflow, AlertCircle, Users, CodeXml, Circle } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { formatDistanceToNow } from "date-fns";
+import { format, formatDistanceToNow } from "date-fns";
 
 const initialApiTrafficData = Array.from({ length: 7 }, (_, i) => {
     const d = new Date();
@@ -24,22 +24,22 @@ const initialApiTrafficData = Array.from({ length: 7 }, (_, i) => {
 export default function DashboardPage() {
     const [apiTrafficData, setApiTrafficData] = useState(initialApiTrafficData);
     const totalApiCalls = apiTrafficData.reduce((sum, item) => sum + item['API Calls'], 0);
-    const activeWorkflows = workflows.filter(w => w.status === 'active').length;
+    const activeWorkflows = workflows.filter(w => w.status === 'active');
     const errorsToday = logs.filter(l => l.level === 'error').length;
+    const publishedApis = exposedApis.filter(api => api.status === 'published').length;
 
     useEffect(() => {
         const interval = setInterval(() => {
             setApiTrafficData(prevData => {
                 const newData = [...prevData];
                 const lastIndex = newData.length - 1;
-                // Add a random number of calls to the last data point
                 newData[lastIndex] = {
                     ...newData[lastIndex],
                     'API Calls': newData[lastIndex]['API Calls'] + Math.floor(Math.random() * 50) + 10,
                 };
                 return newData;
             });
-        }, 3000); // Update every 3 seconds
+        }, 3000);
 
         return () => clearInterval(interval);
     }, []);
@@ -49,7 +49,7 @@ export default function DashboardPage() {
     <>
       <Header title="Dashboard" />
       <main className="flex flex-1 flex-col gap-4 p-4 lg:gap-6 lg:p-6 bg-background">
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
             <StatCard 
                 title="Total API Calls (Live)"
                 value={totalApiCalls.toLocaleString()}
@@ -58,9 +58,15 @@ export default function DashboardPage() {
             />
             <StatCard 
                 title="Active Workflows"
-                value={activeWorkflows.toString()}
+                value={activeWorkflows.length.toString()}
                 description="Automating your business"
                 Icon={Workflow}
+            />
+            <StatCard 
+                title="Published APIs"
+                value={publishedApis.toString()}
+                description="Exposed to the world"
+                Icon={CodeXml}
             />
             <StatCard 
                 title="Errors (24h)"
@@ -75,17 +81,48 @@ export default function DashboardPage() {
                 Icon={Users}
             />
         </div>
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
-            <Card className="lg:col-span-4">
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+            <Card className="lg:col-span-2">
                 <CardHeader>
                     <CardTitle>API Traffic</CardTitle>
-                    <CardDescription>Live connection</CardDescription>
+                    <CardDescription>Live connection showing API call volume over time.</CardDescription>
                 </CardHeader>
                 <CardContent>
                     <AreaChartComponent data={apiTrafficData} dataKey="API Calls" xAxisKey="date" />
                 </CardContent>
             </Card>
-            <Card className="lg:col-span-3">
+            <Card className="lg:col-span-1">
+                <CardHeader>
+                    <CardTitle>Active Workflows</CardTitle>
+                    <CardDescription>A list of your currently running automations.</CardDescription>
+                </CardHeader>
+                <CardContent>
+                    <Table>
+                        <TableHeader>
+                            <TableRow>
+                                <TableHead>Workflow</TableHead>
+                                <TableHead className="text-right">Last Run</TableHead>
+                            </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                            {activeWorkflows.map(wf => (
+                                <TableRow key={wf.id}>
+                                    <TableCell>
+                                        <div className="font-medium">{wf.name}</div>
+                                        <div className="text-sm text-muted-foreground hidden md:inline">
+                                            Trigger: {wf.trigger.event}
+                                        </div>
+                                    </TableCell>
+                                    <TableCell className="text-right">{format(new Date(wf.lastRun), 'PP')}</TableCell>
+                                </TableRow>
+                            ))}
+                        </TableBody>
+                    </Table>
+                </CardContent>
+            </Card>
+        </div>
+        <div className="grid gap-4">
+             <Card>
                 <CardHeader>
                     <CardTitle>Recent Activity</CardTitle>
                     <CardDescription>Latest logs from all services.</CardDescription>
@@ -93,12 +130,12 @@ export default function DashboardPage() {
                 <CardContent>
                   <ScrollArea className="h-72">
                     <div className="space-y-4">
-                      {logs.slice(0, 5).map((log) => (
+                      {logs.slice(0, 10).map((log) => (
                         <div key={log.id} className="flex items-start gap-4">
-                          <div className="flex-shrink-0">
+                          <div className="flex-shrink-0 pt-1">
                             {log.level === 'error' && <AlertCircle className="h-5 w-5 text-destructive" />}
                             {log.level === 'warn' && <AlertCircle className="h-5 w-5 text-yellow-500" />}
-                            {log.level === 'info' && <Activity className="h-5 w-5 text-blue-500" />}
+                            {log.level === 'info' && <Circle className="h-5 w-5 text-blue-500 fill-current" />}
                           </div>
                           <div className="flex-1">
                             <p className="text-sm font-medium leading-none">
