@@ -33,7 +33,7 @@ export function TextToSpeechAgent() {
     if (state.errors?._form) {
       toast({
         variant: "destructive",
-        title: "Error",
+        title: "Error Generating Audio",
         description: state.errors._form.join(", "),
       });
     }

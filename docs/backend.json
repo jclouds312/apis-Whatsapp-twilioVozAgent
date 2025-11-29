@@ -213,18 +213,6 @@
           "userId": { "type": "string" }
       },
       "required": ["contactName", "contactId", "lastMessage", "lastMessageTime", "userId"]
-    },
-    "Message": {
-      "title": "Message",
-      "type": "object",
-      "description": "Represents a single message within a conversation.",
-      "properties": {
-          "contactId": { "type": "string" },
-          "content": { "type": "string" },
-          "timestamp": { "type": "string", "format": "date-time" },
-          "isSender": { "type": "boolean" }
-      },
-      "required": ["contactId", "content", "timestamp", "isSender"]
     }
   },
   "auth": {
@@ -249,10 +237,6 @@
     "/users/{userId}/conversations/{conversationId}": {
         "schema": { "$ref": "#/entities/Conversation" },
         "description": "Stores all chat conversations for a user."
-    },
-    "/users/{userId}/conversations/{conversationId}/messages/{messageId}": {
-        "schema": { "$ref": "#/entities/Message" },
-        "description": "Stores all messages within a specific conversation."
     },
     "/apiLogs/{apiLogId}": {
       "schema": { "$ref": "#/entities/ApiLog" },

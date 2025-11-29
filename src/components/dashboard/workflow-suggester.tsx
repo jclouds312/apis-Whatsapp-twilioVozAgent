@@ -33,7 +33,7 @@ export function WorkflowSuggester() {
     if (state.errors?._form) {
       toast({
         variant: "destructive",
-        title: "Error",
+        title: "Error Generating Suggestion",
         description: state.errors._form.join(", "),
       });
     }
