@@ -48,34 +48,24 @@ export function ChatMessage({ conversation, currentUserAvatar }: ChatMessageProp
       const tempInput = input;
       setInput('');
       
-      try {
-        const result = await sendWhatsAppMessage(conversation.contactId, tempInput);
-        if (result.success) {
-            addLog({ service: 'WhatsApp', level: 'info', message: `Message sent to ${conversation.contactName}.` });
-            toast({
-                title: 'Message Sent',
-                description: `Your message to ${conversation.contactName} was sent successfully.`,
-            });
-        } else {
-            addLog({ service: 'WhatsApp', level: 'error', message: `Failed to send message: ${result.error}` });
-            toast({
-                variant: 'destructive',
-                title: 'Failed to send message',
-                description: result.error,
-            });
-            // Optional: remove the message from UI if it failed to send
-            setMessages(prev => prev.filter(m => m.id !== newMessage.id));
-        }
-      } catch (error) {
-           addLog({ service: 'WhatsApp', level: 'error', message: 'An unexpected error occurred.' });
-           toast({
-                variant: 'destructive',
-                title: 'Error',
-                description: 'An unexpected error occurred while sending the message.',
-           });
-           setMessages(prev => prev.filter(m => m.id !== newMessage.id));
-      }
+      const result = await sendWhatsAppMessage(conversation.contactId, tempInput);
 
+      if (result.success) {
+          addLog({ service: 'WhatsApp', level: 'info', message: `Message sent to ${conversation.contactName}.` });
+          toast({
+              title: 'Message Sent',
+              description: `Your message to ${conversation.contactName} was sent successfully.`,
+          });
+      } else {
+          addLog({ service: 'WhatsApp', level: 'error', message: `Failed to send message: ${result.error}` });
+          toast({
+              variant: 'destructive',
+              title: 'Failed to send message',
+              description: result.error,
+          });
+          // Revert UI by removing the optimistic message
+          setMessages(prev => prev.filter(m => m.id !== newMessage.id));
+      }
     }
   };
 
@@ -84,7 +74,7 @@ export function ChatMessage({ conversation, currentUserAvatar }: ChatMessageProp
       <div className="flex h-full flex-col items-center justify-center bg-muted/50 border-l">
         <Bot className="h-12 w-12 text-muted-foreground" />
         <h3 className="mt-4 text-lg font-semibold">No Conversation Selected</h3>
-        <p className="text-muted-foreground text-center">
+        <p className="text-sm text-muted-foreground text-center px-4">
             Select a conversation from the left panel to start chatting.
         </p>
       </div>
@@ -94,6 +84,16 @@ export function ChatMessage({ conversation, currentUserAvatar }: ChatMessageProp
   return (
     <div className="flex h-full flex-col">
       <div className="flex items-center gap-4 p-4 border-b">
+        <Avatar className="h-10 w-10">
+          <AvatarImage
+            src={conversation.contactAvatar}
+            alt={conversation.contactName}
+            width={40}
+            height={40}
+            data-ai-hint="person face"
+          />
+          <AvatarFallback>{conversation.contactName.charAt(0)}</AvatarFallback>
+        </Avatar>
         <div className="flex-1">
           <h2 className="text-lg font-semibold">{conversation.contactName}</h2>
           <p className="text-xs text-muted-foreground">Online</p>
@@ -160,7 +160,10 @@ export function ChatMessage({ conversation, currentUserAvatar }: ChatMessageProp
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={(e) => {
-              if (e.key === 'Enter') handleSend();
+              if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                handleSend();
+              }
             }}
             className="pr-28"
           />

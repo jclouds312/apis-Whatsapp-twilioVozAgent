@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import {
   ResizableHandle,
   ResizablePanel,
@@ -38,7 +38,7 @@ export function ChatLayout({
             <ResizablePanelGroup
                 direction="horizontal"
                 onLayout={onLayout}
-                className="h-full items-stretch border rounded-lg"
+                className="h-full items-stretch border rounded-lg overflow-hidden"
             >
                 <ResizablePanel
                     defaultSize={defaultLayout[0]}

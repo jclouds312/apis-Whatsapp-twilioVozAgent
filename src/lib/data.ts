@@ -2,6 +2,13 @@ import type { ApiKey, Log, User, Workflow, ExposedApi, Conversation } from '@/li
 
 export const userAvatar = "https://picsum.photos/seed/user1/100/100";
 
+export const users: User[] = [
+  { id: 'usr_1', name: 'Admin User', email: 'admin@apimanager.io', role: 'Admin', avatarUrl: userAvatar },
+  { id: 'usr_2', name: 'John Agent', email: 'john.agent@apimanager.io', role: 'Agent', avatarUrl: 'https://picsum.photos/seed/user2/100/100' },
+  { id: 'usr_3', name: 'Sarah Developer', email: 'sarah.dev@apimanager.io', role: 'Developer', avatarUrl: 'https://picsum.photos/seed/user3/100/100' },
+  { id: 'usr_4', name: 'Mike Manager', email: 'mike.manager@apimanager.io', role: 'Manager', avatarUrl: 'https://picsum.photos/seed/user4/100/100' },
+];
+
 export const apiKeys: ApiKey[] = [
   { id: 'key_waba_1', service: 'WhatsApp Business', key: 'WA-xxxx-xxxx-xxxx-E7G8', status: 'active', createdAt: new Date(Date.now() - 1000 * 60 * 60 * 2).toISOString() },
   { id: 'key_tw_1', service: 'Twilio', key: 'TW-xxxx-xxxx-xxxx-F9H1', status: 'active', createdAt: new Date(Date.now() - 1000 * 60 * 60 * 8).toISOString() },
@@ -17,13 +24,6 @@ export const logs: Log[] = [
   { id: 'log_5', timestamp: new Date(Date.now() - 1000 * 60 * 3).toISOString(), level: 'info', service: 'WhatsApp', message: 'Sent template `order_confirmation` to +1...9012.' },
   { id: 'log_6', timestamp: new Date(Date.now() - 1000 * 60 * 5).toISOString(), level: 'info', service: 'Function Connect', message: 'Workflow "Support Ticket from Twilio" triggered.' },
   { id: 'log_7', timestamp: new Date(Date.now() - 1000 * 60 * 8).toISOString(), level: 'info', service: 'CRM Connector', message: 'Successfully updated deal: deal_xyz.' },
-];
-
-export const users: User[] = [
-  { id: 'usr_1', name: 'Admin User', email: 'admin@apimanager.io', role: 'Admin', avatarUrl: userAvatar },
-  { id: 'usr_2', name: 'John Agent', email: 'john.agent@apimanager.io', role: 'Agent', avatarUrl: 'https://picsum.photos/seed/user2/100/100' },
-  { id: 'usr_3', name: 'Sarah Developer', email: 'sarah.dev@apimanager.io', role: 'Developer', avatarUrl: 'https://picsum.photos/seed/user3/100/100' },
-  { id: 'usr_4', name: 'Mike Manager', email: 'mike.manager@apimanager.io', role: 'Manager', avatarUrl: 'https://picsum.photos/seed/user4/100/100' },
 ];
 
 export const workflows: Workflow[] = [
@@ -85,7 +85,7 @@ export const conversations: Conversation[] = [
         id: 'conv_1',
         contactName: 'John Agent',
         contactEmail: 'john.agent@example.com',
-        contactAvatar: users.find(u => u.id === 'usr_2')?.avatarUrl || '',
+        contactAvatar: users.find(u => u.name === 'John Agent')?.avatarUrl || '',
         contactId: '15550001111',
         tags: ['New Lead', 'Product Inquiry'],
         agentNotes: 'Interested in the premium package. Follow up on Friday.',
@@ -104,7 +104,7 @@ export const conversations: Conversation[] = [
         id: 'conv_2',
         contactName: 'Sarah Developer',
         contactEmail: 'sarah.dev@example.com',
-        contactAvatar: users.find(u => u.id === 'usr_3')?.avatarUrl || '',
+        contactAvatar: users.find(u => u.name === 'Sarah Developer')?.avatarUrl || '',
         contactId: '15550002222',
         tags: ['VIP', 'Support'],
         agentNotes: 'Has a custom integration. Needs technical support for API questions.',
@@ -122,7 +122,7 @@ export const conversations: Conversation[] = [
         id: 'conv_3',
         contactName: 'Mike Manager',
         contactEmail: 'mike.manager@example.com',
-        contactAvatar: users.find(u => u.id === 'usr_4')?.avatarUrl || '',
+        contactAvatar: users.find(u => u.name === 'Mike Manager')?.avatarUrl || '',
         contactId: '15550003333',
         tags: ['Follow Up'],
         agentNotes: 'Scheduled a demo for next week.',

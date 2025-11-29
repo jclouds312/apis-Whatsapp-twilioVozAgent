@@ -31,15 +31,15 @@ export function ChatList({
   onSelectConversation,
 }: ChatListProps) {
   return (
-    <div className="flex h-full flex-col">
-      <div className="flex items-center justify-between p-2">
-        {!isCollapsed && <h2 className="text-lg font-semibold">Chats</h2>}
+    <div className="flex h-full flex-col bg-background">
+      <div className="flex items-center justify-between p-2 h-16">
+        {!isCollapsed && <h2 className="text-lg font-semibold px-2">Chats</h2>}
         <Tooltip>
           <TooltipTrigger asChild>
             <Button
               variant="ghost"
               size="icon"
-              className={cn(isCollapsed && 'mx-auto')}
+              className={cn('h-9 w-9', isCollapsed && 'mx-auto')}
             >
               <Archive className="h-5 w-5" />
             </Button>
@@ -48,7 +48,7 @@ export function ChatList({
         </Tooltip>
       </div>
 
-      <div className="relative p-2">
+      <div className="relative p-2 pt-0">
         <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
         <Input placeholder="Search" className="pl-8" />
       </div>
@@ -61,7 +61,7 @@ export function ChatList({
             <button
               key={conv.id}
               className={cn(
-                'flex items-center gap-3 rounded-lg px-3 py-2 text-left transition-colors hover:bg-muted',
+                'flex items-center gap-3 rounded-lg px-2 py-2 text-left transition-colors hover:bg-muted',
                 selectedConversationId === conv.id && 'bg-muted',
                 isCollapsed && 'justify-center'
               )}
@@ -86,9 +86,9 @@ export function ChatList({
                 </div>
               )}
               {!isCollapsed && (
-                <div className="text-xs text-muted-foreground">
+                <div className="ml-auto text-xs text-muted-foreground">
                   {formatDistanceToNowStrict(new Date(conv.lastMessageTime), {
-                    addSuffix: false,
+                    addSuffix: true,
                   })}
                 </div>
               )}

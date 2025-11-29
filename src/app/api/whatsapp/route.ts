@@ -21,9 +21,11 @@ export async function GET(request: NextRequest) {
   // Check if the mode and token are present and valid
   if (mode === 'subscribe' && token === VERIFY_TOKEN) {
     // Respond with the challenge to verify the webhook
+    console.log('Webhook verified successfully!');
     return new Response(challenge, { status: 200 });
   } else {
     // If the token is invalid, respond with a 403 Forbidden error
+    console.error('Failed to verify webhook token.');
     return NextResponse.json({ error: 'Failed to verify webhook token' }, { status: 403 });
   }
 }
@@ -52,11 +54,15 @@ export async function POST(request: NextRequest) {
     }
 
     //
-    // TODO: Process the message (e.g., save to database, notify frontend)
+    // TODO: Process the message (e.g., save to database, notify frontend via WebSocket)
     //
-    const message = parseResult.data.entry[0].changes[0].value.messages?.[0];
+    const message = parseResult.data.entry[0]?.changes[0]?.value.messages?.[0];
     if (message) {
-        console.log(`Processing message from ${message.from}: "${message.text.body}"`);
+        console.log(`Processing incoming message from ${message.from}: "${message.text.body}"`);
+        // Here you would typically:
+        // 1. Find the conversation associated with `message.from`.
+        // 2. Save the new message to your database.
+        // 3. Emit an event (e.g., via WebSockets) to the frontend to update the UI in real-time.
     }
 
     // WhatsApp requires a 200 OK response to acknowledge receipt of the webhook.
@@ -65,8 +71,8 @@ export async function POST(request: NextRequest) {
 
   } catch (error) {
     console.error('Error processing WhatsApp webhook:', error);
-    // Return a 500 error but it's often better to return 200 to avoid webhook retries.
-    // Depending on the error, you might want to handle it differently.
-    return NextResponse.json({ status: 'error', message: 'Internal Server Error' }, { status: 500 });
+    // It's generally recommended to return 200 even on errors to prevent webhook spam from Meta.
+    // Your internal monitoring should catch and handle these processing errors.
+    return NextResponse.json({ status: 'error', message: 'Internal Server Error' }, { status: 200 });
   }
 }
