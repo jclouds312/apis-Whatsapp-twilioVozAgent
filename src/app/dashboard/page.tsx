@@ -26,8 +26,8 @@ const initialApiTrafficData = Array.from({ length: 15 }, (_, i) => {
 
 export default function DashboardPage() {
     const [apiTrafficData, setApiTrafficData] = useState(initialApiTrafficData);
-    const [recentLogs, setRecentLogs] = useState<Log[]>(initialLogs.slice(0, 10));
-    const [activeWorkflows, setActiveWorkflows] = useState<WorkflowType[]>(initialWorkflows.filter(w => w.status === 'active'));
+    const [recentLogs, setRecentLogs] = useState<Log[]>([]);
+    const [activeWorkflows, setActiveWorkflows] = useState<WorkflowType[]>([]);
     
     const topExposedApis = exposedApis.slice(0, 4);
 
@@ -38,8 +38,15 @@ export default function DashboardPage() {
 
     useEffect(() => {
         setIsClient(true);
-        setErrorsToday(initialLogs.filter(l => l.level === 'error' && (new Date().getTime() - new Date(l.timestamp).getTime()) < 86400000).length);
         
+        const updateData = () => {
+            setErrorsToday(initialLogs.filter(l => l.level === 'error' && (new Date().getTime() - new Date(l.timestamp).getTime()) < 86400000).length);
+            setRecentLogs(initialLogs.slice(0, 10));
+            setActiveWorkflows(initialWorkflows.filter(w => w.status === 'active'));
+        };
+
+        updateData();
+
         const interval = setInterval(() => {
             setApiTrafficData(prevData => {
                 const now = new Date();
@@ -65,19 +72,16 @@ export default function DashboardPage() {
             };
             setRecentLogs(prev => [newLog, ...prev].slice(0, 10));
 
-            if (newLog.level === 'error') {
-                setErrorsToday(prev => prev + 1);
-            }
-
              if (Math.random() > 0.8) { 
                 setActiveWorkflows(prev => {
+                    if (prev.length === 0) return [];
                     const randomIndex = Math.floor(Math.random() * prev.length);
                     const updatedWf = { ...prev[randomIndex], lastRun: new Date().toISOString() };
-                    return [...prev.slice(0, randomIndex), updatedWf, ...prev.slice(randomIndex + 1)];
+                    const newWorkflows = [...prev];
+                    newWorkflows[randomIndex] = updatedWf;
+                    return newWorkflows;
                 })
              }
-
-
         }, 5000); 
 
         return () => clearInterval(interval);
