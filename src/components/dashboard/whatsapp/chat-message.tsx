@@ -1,7 +1,7 @@
 'use client';
 
 import { AnimatePresence, motion } from 'framer-motion';
-import { Paperclip, SendHorizonal, ThumbsUp } from 'lucide-react';
+import { Bot, Paperclip, SendHorizonal, ThumbsUp } from 'lucide-react';
 import Image from 'next/image';
 import * as React from 'react';
 
@@ -13,6 +13,10 @@ import { Separator } from '@/components/ui/separator';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import type { Conversation, Message } from '@/lib/types';
 import { cn } from '@/lib/utils';
+import { sendWhatsAppMessage } from '@/app/dashboard/whatsapp/actions';
+import { useLogs } from '@/context/LogContext';
+import { useToast } from '@/hooks/use-toast';
+
 
 interface ChatMessageProps {
   conversation: Conversation | null;
@@ -24,31 +28,65 @@ export function ChatMessage({ conversation, currentUserAvatar }: ChatMessageProp
     conversation?.messages || []
   );
   const [input, setInput] = React.useState('');
+  const { addLog } = useLogs();
+  const { toast } = useToast();
 
   React.useEffect(() => {
     setMessages(conversation?.messages || []);
   }, [conversation]);
 
-  const handleSend = () => {
-    if (input.trim()) {
+  const handleSend = async () => {
+    if (input.trim() && conversation) {
       const newMessage: Message = {
         id: `msg_${Date.now()}`,
-        contactId: 'usr_1',
+        contactId: 'usr_1', // This should be the current user's ID
         content: input,
         timestamp: new Date().toISOString(),
         isSender: true,
       };
       setMessages((prev) => [...prev, newMessage]);
+      const tempInput = input;
       setInput('');
+      
+      try {
+        const result = await sendWhatsAppMessage(conversation.contactId, tempInput);
+        if (result.success) {
+            addLog({ service: 'WhatsApp', level: 'info', message: `Message sent to ${conversation.contactName}.` });
+            toast({
+                title: 'Message Sent',
+                description: `Your message to ${conversation.contactName} was sent successfully.`,
+            });
+        } else {
+            addLog({ service: 'WhatsApp', level: 'error', message: `Failed to send message: ${result.error}` });
+            toast({
+                variant: 'destructive',
+                title: 'Failed to send message',
+                description: result.error,
+            });
+            // Optional: remove the message from UI if it failed to send
+            setMessages(prev => prev.filter(m => m.id !== newMessage.id));
+        }
+      } catch (error) {
+           addLog({ service: 'WhatsApp', level: 'error', message: 'An unexpected error occurred.' });
+           toast({
+                variant: 'destructive',
+                title: 'Error',
+                description: 'An unexpected error occurred while sending the message.',
+           });
+           setMessages(prev => prev.filter(m => m.id !== newMessage.id));
+      }
+
     }
   };
 
   if (!conversation) {
     return (
-      <div className="flex h-full items-center justify-center">
-        <div className="text-center text-muted-foreground">
-            <p>No conversation selected</p>
-        </div>
+      <div className="flex h-full flex-col items-center justify-center bg-muted/50 border-l">
+        <Bot className="h-12 w-12 text-muted-foreground" />
+        <h3 className="mt-4 text-lg font-semibold">No Conversation Selected</h3>
+        <p className="text-muted-foreground text-center">
+            Select a conversation from the left panel to start chatting.
+        </p>
       </div>
     );
   }
@@ -56,25 +94,15 @@ export function ChatMessage({ conversation, currentUserAvatar }: ChatMessageProp
   return (
     <div className="flex h-full flex-col">
       <div className="flex items-center gap-4 p-4 border-b">
-        <Avatar className="h-10 w-10">
-          <AvatarImage
-            src={conversation.contactAvatar}
-            alt={conversation.contactName}
-            width={40}
-            height={40}
-            data-ai-hint="person face"
-          />
-          <AvatarFallback>{conversation.contactName.charAt(0)}</AvatarFallback>
-        </Avatar>
         <div className="flex-1">
           <h2 className="text-lg font-semibold">{conversation.contactName}</h2>
-          <p className="text-xs text-muted-foreground">Active 5m ago</p>
+          <p className="text-xs text-muted-foreground">Online</p>
         </div>
       </div>
       <ScrollArea className="flex-1">
         <div className="p-4 space-y-4">
           <AnimatePresence>
-            {messages.map((message, index) => (
+            {messages.map((message) => (
               <motion.div
                 key={message.id}
                 layout
@@ -153,7 +181,7 @@ export function ChatMessage({ conversation, currentUserAvatar }: ChatMessageProp
               </TooltipTrigger>
               <TooltipContent>Attach file</TooltipContent>
             </Tooltip>
-            <Button size="sm" className="ml-2" onClick={handleSend}>
+            <Button size="sm" className="ml-2" onClick={handleSend} disabled={!input.trim()}>
               Send
               <SendHorizonal className="h-4 w-4 ml-2" />
             </Button>

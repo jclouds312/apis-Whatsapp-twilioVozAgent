@@ -11,6 +11,7 @@ import { cn } from "@/lib/utils";
 import type { Conversation } from "@/lib/types";
 import { ChatList } from "./chat-list";
 import { ChatMessage } from "./chat-message";
+import { ContactPanel } from "./contact-panel";
 
 interface ChatLayoutProps {
   defaultLayout: number[] | undefined
@@ -20,13 +21,13 @@ interface ChatLayoutProps {
 }
 
 export function ChatLayout({ 
-    defaultLayout = [320, 1080],
+    defaultLayout = [320, 480, 600],
     navCollapsedSize,
     conversations,
     currentUserAvatar,
 }: ChatLayoutProps) {
     const [isCollapsed, setIsCollapsed] = useState(false);
-    const [selectedConversation, setSelectedConversation] = useState<Conversation | null>(null);
+    const [selectedConversation, setSelectedConversation] = useState<Conversation | null>(conversations[0] || null);
 
     const onLayout = (sizes: number[]) => {
         document.cookie = `react-resizable-panels:layout=${JSON.stringify(sizes)}`
@@ -61,6 +62,13 @@ export function ChatLayout({
                         key={selectedConversation?.id}
                         conversation={selectedConversation}
                         currentUserAvatar={currentUserAvatar}
+                    />
+                </ResizablePanel>
+                 <ResizableHandle withHandle />
+                <ResizablePanel defaultSize={defaultLayout[2]} minSize={20} maxSize={30}>
+                    <ContactPanel
+                        key={selectedConversation?.id} // Rerender when conversation changes
+                        contact={selectedConversation}
                     />
                 </ResizablePanel>
             </ResizablePanelGroup>

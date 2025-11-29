@@ -55,11 +55,22 @@ export type Message = {
   isSender: boolean; // True if the current user sent the message
 };
 
+export type Order = {
+  id: string;
+  date: string;
+  total: number;
+  status: 'Completed' | 'Pending' | 'Cancelled';
+}
+
 export type Conversation = {
   id: string;
   contactName: string;
+  contactEmail: string;
   contactAvatar: string;
   contactId: string; // Phone number for WhatsApp
+  tags: string[];
+  agentNotes: string;
+  orderHistory: Order[];
   lastMessage: string;
   lastMessageTime: string;
   messages: Message[];

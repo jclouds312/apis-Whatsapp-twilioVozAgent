@@ -149,21 +149,13 @@ export default function WhatsAppPage() {
                     </Card>
                 </div>
 
-                <div className="flex-1 px-4 lg:px-6 pb-6">
-                    <Card className="h-full">
-                        <CardHeader>
-                            <CardTitle>WhatsApp Live Chat</CardTitle>
-                            <CardDescription>Engage directly with your contacts.</CardDescription>
-                        </CardHeader>
-                        <CardContent className="h-[calc(100%-4rem)] p-0">
-                             <ChatLayout
-                                defaultLayout={[320, 1080]}
-                                navCollapsedSize={8}
-                                conversations={conversations}
-                                currentUserAvatar={userAvatar}
-                            />
-                        </CardContent>
-                    </Card>
+                <div className="flex-1 px-4 lg:px-6 pb-6 h-[700px]">
+                     <ChatLayout
+                        defaultLayout={[25, 45, 30]}
+                        navCollapsedSize={8}
+                        conversations={conversations}
+                        currentUserAvatar={userAvatar}
+                    />
                 </div>
             </main>
         </>

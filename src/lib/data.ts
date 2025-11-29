@@ -84,8 +84,15 @@ export const conversations: Conversation[] = [
     {
         id: 'conv_1',
         contactName: 'John Agent',
+        contactEmail: 'john.agent@example.com',
         contactAvatar: users.find(u => u.id === 'usr_2')?.avatarUrl || '',
-        contactId: '15550001111', // Example phone number
+        contactId: '15550001111',
+        tags: ['New Lead', 'Product Inquiry'],
+        agentNotes: 'Interested in the premium package. Follow up on Friday.',
+        orderHistory: [
+            { id: 'ORD-001', date: '2023-10-25', total: 199.99, status: 'Completed' },
+            { id: 'ORD-002', date: '2024-01-15', total: 49.99, status: 'Completed' },
+        ],
         lastMessage: 'Sure, I can do that. When do you need it by?',
         lastMessageTime: new Date(Date.now() - 1000 * 20).toISOString(),
         messages: [
@@ -96,8 +103,14 @@ export const conversations: Conversation[] = [
     {
         id: 'conv_2',
         contactName: 'Sarah Developer',
+        contactEmail: 'sarah.dev@example.com',
         contactAvatar: users.find(u => u.id === 'usr_3')?.avatarUrl || '',
         contactId: '15550002222',
+        tags: ['VIP', 'Support'],
+        agentNotes: 'Has a custom integration. Needs technical support for API questions.',
+        orderHistory: [
+            { id: 'ORD-003', date: '2023-11-10', total: 999.00, status: 'Completed' },
+        ],
         lastMessage: 'Got it, thanks!',
         lastMessageTime: new Date(Date.now() - 1000 * 60 * 5).toISOString(),
         messages: [
@@ -108,8 +121,12 @@ export const conversations: Conversation[] = [
     {
         id: 'conv_3',
         contactName: 'Mike Manager',
+        contactEmail: 'mike.manager@example.com',
         contactAvatar: users.find(u => u.id === 'usr_4')?.avatarUrl || '',
         contactId: '15550003333',
+        tags: ['Follow Up'],
+        agentNotes: 'Scheduled a demo for next week.',
+        orderHistory: [],
         lastMessage: 'See you then!',
         lastMessageTime: new Date(Date.now() - 1000 * 60 * 60 * 1).toISOString(),
         messages: [

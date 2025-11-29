@@ -1,6 +1,4 @@
-// Inspired by: https://github.com/dillionverma/llm.report/blob/main/components/chat-layout.tsx
-
-"use client"
+'use client';
 
 import { useState, useEffect } from "react";
 import {
@@ -8,23 +6,22 @@ import {
   ResizablePanel,
   ResizablePanelGroup,
 } from "@/components/ui/resizable"
-import { Separator } from "@/components/ui/separator";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
 import type { Conversation } from "@/lib/types";
 import { ChatList } from "./chat-list";
 import { ChatMessage } from "./chat-message";
+import { ContactPanel } from "./contact-panel";
 
 interface ChatLayoutProps {
   defaultLayout: number[] | undefined
-  defaultCollapsed?: boolean
   navCollapsedSize: number
   conversations: Conversation[]
   currentUserAvatar: string
 }
 
 export function ChatLayout({ 
-    defaultLayout = [320, 1080],
+    defaultLayout = [320, 480, 600],
     navCollapsedSize,
     conversations,
     currentUserAvatar,
@@ -41,7 +38,7 @@ export function ChatLayout({
             <ResizablePanelGroup
                 direction="horizontal"
                 onLayout={onLayout}
-                className="h-full max-h-[calc(100vh-4rem)] items-stretch"
+                className="h-full items-stretch border rounded-lg"
             >
                 <ResizablePanel
                     defaultSize={defaultLayout[0]}
@@ -65,6 +62,13 @@ export function ChatLayout({
                         key={selectedConversation?.id}
                         conversation={selectedConversation}
                         currentUserAvatar={currentUserAvatar}
+                    />
+                </ResizablePanel>
+                 <ResizableHandle withHandle />
+                <ResizablePanel defaultSize={defaultLayout[2]} minSize={20} maxSize={30}>
+                    <ContactPanel
+                        key={selectedConversation?.id} // Rerender when conversation changes
+                        contact={selectedConversation}
                     />
                 </ResizablePanel>
             </ResizablePanelGroup>
