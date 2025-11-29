@@ -38,11 +38,13 @@ const TwilioIcon = (props: React.SVGProps<SVGSVGElement>) => (
 );
 
 const CrmIcon = (props: React.SVGProps<SVGSVGElement>) => (
-  <svg viewBox="0 0 24 24" {...props}>
-    <path fill="#00A4BD" d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10s10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8s8 3.59 8 8s-3.59 8-8 8zM15 12c0 1.66-1.34 3-3 3s-3-1.34-3-3s1.34-3 3-3s3 1.34 3 3zm-6 0c0-1.66 1.34-3 3-3v2c-.55 0-1 .45-1 1s.45 1 1 1v2c-1.66 0-3-1.34-3-3zm4.5 1.5c.83 0 1.5-.67 1.5-1.5s-.67-1.5-1.5-1.5v3zM12 6c-3.31 0-6 2.69-6 6s2.69 6 6 6s6-2.69 6-6s-2.69-6-6-6zm0 10c-2.21 0-4-1.79-4-4s1.79-4 4-4s4 1.79 4 4s-1.79 4-4 4z"/>
-  </svg>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
+        <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
+        <circle cx="9" cy="7" r="4" />
+        <path d="M22 21v-2a4 4 0 0 0-3-3.87" />
+        <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+    </svg>
 );
-
 
 const navItems = [
   { href: '/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
@@ -59,12 +61,7 @@ const navItems = [
   },
   { href: '/dashboard/exposed-apis', icon: CodeXml, label: 'Exposed APIs' },
   { href: '/dashboard/function-connect', icon: Workflow, label: 'Function Connect' },
-  {
-    href: '/dashboard/crm',
-    icon: CrmIcon,
-    label: 'CRM',
-    color: 'text-[#00A4BD]',
-  },
+  { href: '/dashboard/crm', icon: CrmIcon, label: 'CRM', color: 'text-sky-500'},
   {
     href: '/dashboard/ai-agents',
     icon: Bot,
