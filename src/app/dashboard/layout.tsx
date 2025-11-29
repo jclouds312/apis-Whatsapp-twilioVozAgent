@@ -1,11 +1,9 @@
 'use client';
 
-import type { Metadata } from 'next';
 import { SidebarProvider, Sidebar, SidebarHeader, SidebarContent, SidebarFooter, SidebarInset } from '@/components/ui/sidebar';
 import Link from 'next/link';
 import { Sparkles } from 'lucide-react';
 import { DashboardNav } from '@/components/dashboard/dashboard-nav';
-import { Header } from '@/components/dashboard/header';
 
 export default function DashboardLayout({
   children,
