@@ -6,10 +6,6 @@ const WHATSAPP_ACCESS_TOKEN = process.env.WHATSAPP_ACCESS_TOKEN;
 const WHATSAPP_PHONE_NUMBER_ID = process.env.WHATSAPP_PHONE_NUMBER_ID;
 const API_VERSION = 'v20.0';
 
-if (!WHATSAPP_ACCESS_TOKEN || !WHATSAPP_PHONE_NUMBER_ID) {
-  console.error('WhatsApp environment variables are not set.');
-}
-
 /**
  * Sends a message through the WhatsApp Business API.
  * @param to The recipient's phone number.
@@ -18,7 +14,7 @@ if (!WHATSAPP_ACCESS_TOKEN || !WHATSAPP_PHONE_NUMBER_ID) {
  */
 export async function sendWhatsAppMessage(to: string, text: string): Promise<{ success: boolean; error?: string }> {
   if (!WHATSAPP_ACCESS_TOKEN || !WHATSAPP_PHONE_NUMBER_ID) {
-    const errorMessage = 'Server is not configured for sending WhatsApp messages.';
+    const errorMessage = 'Server is not configured for sending WhatsApp messages. Please set environment variables.';
     console.error(errorMessage);
     return { success: false, error: errorMessage };
   }
@@ -47,6 +43,10 @@ export async function sendWhatsAppMessage(to: string, text: string): Promise<{ s
   } catch (error: any) {
     const errorMessage = error.response?.data?.error?.message || error.message || 'An unknown error occurred.';
     console.error('Failed to send WhatsApp message:', errorMessage);
+    // Be more specific if possible
+    if (error.response?.status === 401 || error.response?.status === 403) {
+      return { success: false, error: `Authentication failed. Check your WhatsApp Access Token. (Details: ${errorMessage})` };
+    }
     return { success: false, error: errorMessage };
   }
 }

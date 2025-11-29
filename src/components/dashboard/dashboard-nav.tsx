@@ -99,7 +99,8 @@ export function DashboardNav() {
     );
     
     if (activeParent && !openSections[activeParent.label]) {
-      setOpenSections(prev => ({ ...prev, [activeParent.label]: true }));
+      // This logic might be too aggressive, let's keep it simple
+      // setOpenSections(prev => ({ ...prev, [activeParent.label]: true }));
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pathname]);

@@ -7,12 +7,13 @@ import { AreaChartComponent } from "@/components/charts/area-chart";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { workflows as initialWorkflows, logs as initialLogs, exposedApis, users } from "@/lib/data";
+import { workflows as initialWorkflows, exposedApis, users } from "@/lib/data";
 import { Activity, Workflow, AlertCircle, Users, CodeXml, Circle } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { formatDistanceToNow, parseISO } from "date-fns";
 import { cn } from '@/lib/utils';
 import type { Log, Workflow as WorkflowType } from '@/lib/types';
+import { useLogs } from '@/context/LogContext';
 
 
 const initialApiTrafficData = Array.from({ length: 15 }, (_, i) => {
@@ -25,8 +26,8 @@ const initialApiTrafficData = Array.from({ length: 15 }, (_, i) => {
 });
 
 export default function DashboardPage() {
+    const { logs } = useLogs();
     const [apiTrafficData, setApiTrafficData] = useState(initialApiTrafficData);
-    const [recentLogs, setRecentLogs] = useState<Log[]>([]);
     const [activeWorkflows, setActiveWorkflows] = useState<WorkflowType[]>([]);
     
     const topExposedApis = exposedApis.slice(0, 4);
@@ -40,8 +41,7 @@ export default function DashboardPage() {
         setIsClient(true);
         
         const updateData = () => {
-            setErrorsToday(initialLogs.filter(l => l.level === 'error' && (new Date().getTime() - new Date(l.timestamp).getTime()) < 86400000).length);
-            setRecentLogs(initialLogs.slice(0, 10));
+            setErrorsToday(logs.filter(l => l.level === 'error' && (new Date().getTime() - new Date(l.timestamp).getTime()) < 86400000).length);
             setActiveWorkflows(initialWorkflows.filter(w => w.status === 'active'));
         };
 
@@ -63,15 +63,6 @@ export default function DashboardPage() {
                 return shiftedData;
             });
 
-            const newLog: Log = {
-              id: `log_${Date.now()}`,
-              timestamp: new Date().toISOString(),
-              level: ['info', 'warn'][Math.floor(Math.random() * 2)] as 'info' | 'warn',
-              service: ['Function Connect', 'CRM Connector', 'Twilio', 'WhatsApp', 'API Exhibition'][Math.floor(Math.random() * 5)],
-              message: ['Operation successful.', 'Task may require attention.', 'Connection timed out.', 'Data processed.', 'User logged in.'][Math.floor(Math.random() * 5)],
-            };
-            setRecentLogs(prev => [newLog, ...prev].slice(0, 10));
-
              if (Math.random() > 0.8) { 
                 setActiveWorkflows(prev => {
                     if (prev.length === 0) return [];
@@ -85,7 +76,12 @@ export default function DashboardPage() {
         }, 5000); 
 
         return () => clearInterval(interval);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
+
+    useEffect(() => {
+       setErrorsToday(logs.filter(l => l.level === 'error' && (new Date().getTime() - new Date(l.timestamp).getTime()) < 86400000).length);
+    }, [logs])
 
     const publishedApis = exposedApis.filter(api => api.status === 'published').length;
 
@@ -202,7 +198,7 @@ export default function DashboardPage() {
                 <CardContent>
                   <ScrollArea className="h-72">
                     <div className="space-y-4">
-                      {recentLogs.map((log) => (
+                      {logs.slice(0, 15).map((log) => (
                         <div key={log.id} className="flex items-start gap-4">
                           <div className="flex-shrink-0 pt-1">
                             {log.level === 'error' && <AlertCircle className="h-5 w-5 text-destructive" />}

@@ -45,11 +45,17 @@ export function ChatMessage({ conversation, currentUserAvatar }: ChatMessageProp
         isSender: true,
       };
       setMessages((prev) => [...prev, newMessage]);
+      const tempInput = input;
+      setInput('');
       
       try {
-        const result = await sendWhatsAppMessage(conversation.contactId, input);
+        const result = await sendWhatsAppMessage(conversation.contactId, tempInput);
         if (result.success) {
             addLog({ service: 'WhatsApp', level: 'info', message: `Message sent to ${conversation.contactName}.` });
+            toast({
+                title: 'Message Sent',
+                description: `Your message to ${conversation.contactName} was sent successfully.`,
+            });
         } else {
             addLog({ service: 'WhatsApp', level: 'error', message: `Failed to send message: ${result.error}` });
             toast({
@@ -70,7 +76,6 @@ export function ChatMessage({ conversation, currentUserAvatar }: ChatMessageProp
            setMessages(prev => prev.filter(m => m.id !== newMessage.id));
       }
 
-      setInput('');
     }
   };
 
@@ -78,7 +83,7 @@ export function ChatMessage({ conversation, currentUserAvatar }: ChatMessageProp
     return (
       <div className="flex h-full items-center justify-center">
         <div className="text-center text-muted-foreground">
-            <p>No conversation selected</p>
+            <p>Select a conversation to start chatting.</p>
         </div>
       </div>
     );
@@ -99,7 +104,7 @@ export function ChatMessage({ conversation, currentUserAvatar }: ChatMessageProp
         </Avatar>
         <div className="flex-1">
           <h2 className="text-lg font-semibold">{conversation.contactName}</h2>
-          <p className="text-xs text-muted-foreground">Active 5m ago</p>
+          <p className="text-xs text-muted-foreground">Online</p>
         </div>
       </div>
       <ScrollArea className="flex-1">
@@ -184,7 +189,7 @@ export function ChatMessage({ conversation, currentUserAvatar }: ChatMessageProp
               </TooltipTrigger>
               <TooltipContent>Attach file</TooltipContent>
             </Tooltip>
-            <Button size="sm" className="ml-2" onClick={handleSend}>
+            <Button size="sm" className="ml-2" onClick={handleSend} disabled={!input.trim()}>
               Send
               <SendHorizonal className="h-4 w-4 ml-2" />
             </Button>

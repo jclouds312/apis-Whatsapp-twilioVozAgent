@@ -1,6 +1,6 @@
 'use client';
 
-import { createContext, useContext, useState, ReactNode } from 'react';
+import { createContext, useContext, useState, ReactNode, useCallback } from 'react';
 import type { Log } from '@/lib/types';
 import { logs as initialLogs } from '@/lib/data';
 
@@ -14,14 +14,14 @@ const LogContext = createContext<LogContextType | undefined>(undefined);
 export function LogProvider({ children }: { children: ReactNode }) {
   const [logs, setLogs] = useState<Log[]>(initialLogs);
 
-  const addLog = (log: Omit<Log, 'id' | 'timestamp'>) => {
+  const addLog = useCallback((log: Omit<Log, 'id' | 'timestamp'>) => {
     const newLog: Log = {
       ...log,
-      id: `log_${Date.now()}`,
+      id: `log_${Date.now()}_${Math.random()}`,
       timestamp: new Date().toISOString(),
     };
     setLogs(prevLogs => [newLog, ...prevLogs]);
-  };
+  }, []);
 
   return (
     <LogContext.Provider value={{ logs, addLog }}>
