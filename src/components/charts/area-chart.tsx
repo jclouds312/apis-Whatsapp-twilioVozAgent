@@ -6,6 +6,7 @@ import {
   ChartContainer,
   ChartTooltipContent,
 } from '@/components/ui/chart';
+import { format } from 'date-fns';
 
 type AreaChartComponentProps = {
   data: any[];
@@ -31,7 +32,12 @@ export function AreaChartComponent({ data, dataKey, xAxisKey }: AreaChartCompone
                 tickLine={false}
                 axisLine={false}
                 tickMargin={8}
-                tickFormatter={(value) => value.slice(5)} // Format date like 07-21
+                tickFormatter={(value) => {
+                    if (value.includes(" ")) { // It's a datetime string
+                        return format(new Date(value), 'HH:mm');
+                    }
+                    return value.slice(5) // It's just a date
+                }}
             />
             <YAxis
                 tickLine={false}
