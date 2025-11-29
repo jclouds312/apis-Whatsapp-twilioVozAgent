@@ -1,6 +1,6 @@
 'use client';
 
-import { useFormState, useFormStatus } from 'react-dom';
+import { useActionState, useFormStatus } from 'react-dom';
 import { getRetellSuggestion } from '@/app/dashboard/function-connect/actions';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -26,7 +26,7 @@ function SubmitButton() {
 }
 
 export function RetellAgent() {
-  const [state, formAction] = useFormState(getRetellSuggestion, initialState);
+  const [state, formAction] = useActionState(getRetellSuggestion, initialState);
   const { toast } = useToast();
 
   useEffect(() => {

@@ -1,6 +1,6 @@
 'use client';
 
-import { useFormState, useFormStatus } from 'react-dom';
+import { useActionState, useFormStatus } from 'react-dom';
 import { sendVerificationToken, checkVerificationToken } from '@/app/dashboard/twilio/actions';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
@@ -44,8 +44,8 @@ function CheckSubmitButton() {
 }
 
 export function VerifyForm() {
-  const [sendState, sendAction] = useFormState(sendVerificationToken, sendInitialState);
-  const [checkState, checkAction] = useFormState(checkVerificationToken, checkInitialState);
+  const [sendState, sendAction] = useActionState(sendVerificationToken, sendInitialState);
+  const [checkState, checkAction] = useActionState(checkVerificationToken, checkInitialState);
   const { toast } = useToast();
   
   const [showVerification, setShowVerification] = useState(false);
