@@ -131,22 +131,22 @@ export function DashboardNav() {
             <CollapsibleContent className="py-1 pl-8">
               <div className="flex flex-col gap-1 border-l-2 border-sidebar-border/50">
                 {subItems.map(subItem => (
-                  <Link key={subItem.href} href={subItem.href} legacyBehavior passHref>
-                    <a
-                      className={cn(
-                        'block pl-4 pr-3 py-2 rounded-md text-base hover:bg-sidebar-accent/50',
-                        pathname === subItem.href ? 'bg-sidebar-accent/80 text-sidebar-accent-foreground font-semibold' : 'text-sidebar-foreground/80'
-                      )}
-                    >
-                      {subItem.label}
-                    </a>
+                  <Link
+                    key={subItem.href}
+                    href={subItem.href}
+                    className={cn(
+                      'block pl-4 pr-3 py-2 rounded-md text-base hover:bg-sidebar-accent/50',
+                      pathname === subItem.href ? 'bg-sidebar-accent/80 text-sidebar-accent-foreground font-semibold' : 'text-sidebar-foreground/80'
+                    )}
+                  >
+                    {subItem.label}
                   </Link>
                 ))}
               </div>
             </CollapsibleContent>
           </Collapsible>
         ) : (
-          <Link key={href} href={href} legacyBehavior passHref>
+          <Link key={href} href={href}>
             <Button
               variant="ghost"
               className={cn(
