@@ -1,9 +1,10 @@
 'use client';
 
+import { useState } from "react";
 import { Header } from "@/components/dashboard/header";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { users } from "@/lib/data";
+import { users as initialUsers } from "@/lib/data";
 import { MoreHorizontal, PlusCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
@@ -14,6 +15,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import Image from "next/image";
 import { Badge } from "@/components/ui/badge";
+import type { User } from "@/lib/types";
 
 const roleClasses: Record<string, string> = {
     'Admin': 'bg-red-100 text-red-800 dark:bg-red-900/50 dark:text-red-300 border-red-200 dark:border-red-500/50',
@@ -22,7 +24,106 @@ const roleClasses: Record<string, string> = {
     'Agent': 'bg-green-100 text-green-800 dark:bg-green-900/50 dark:text-green-300 border-green-200 dark:border-green-500/50',
 }
 
+function EditUserDialog({ user, onSave }: { user: User, onSave: (updatedUser: User) => void }) {
+    const [open, setOpen] = useState(false);
+    
+    const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+        event.preventDefault();
+        const formData = new FormData(event.currentTarget);
+        const updatedUser: User = {
+            ...user,
+            name: formData.get('name') as string,
+            email: formData.get('email') as string,
+            role: formData.get('role') as User['role'],
+        };
+        onSave(updatedUser);
+        setOpen(false);
+    }
+
+    return (
+        <Dialog open={open} onOpenChange={setOpen}>
+            <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                    <Button aria-haspopup="true" size="icon" variant="ghost">
+                        <MoreHorizontal className="h-4 w-4" />
+                        <span className="sr-only">Toggle menu</span>
+                    </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                    <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                    <DialogTrigger asChild>
+                      <DropdownMenuItem onSelect={(e) => e.preventDefault()}>Edit</DropdownMenuItem>
+                    </DialogTrigger>
+                    <DropdownMenuItem className="text-destructive">Remove</DropdownMenuItem>
+                </DropdownMenuContent>
+            </DropdownMenu>
+             <DialogContent>
+                <form onSubmit={handleSubmit}>
+                    <DialogHeader>
+                        <DialogTitle>Edit User: {user.name}</DialogTitle>
+                        <DialogDescription>
+                            Update the details for this user.
+                        </DialogDescription>
+                    </DialogHeader>
+                    <div className="grid gap-4 py-4">
+                        <div className="grid grid-cols-4 items-center gap-4">
+                            <Label htmlFor={`name-${user.id}`} className="text-right">Name</Label>
+                            <Input id={`name-${user.id}`} name="name" defaultValue={user.name} className="col-span-3" />
+                        </div>
+                        <div className="grid grid-cols-4 items-center gap-4">
+                            <Label htmlFor={`email-${user.id}`} className="text-right">Email</Label>
+                            <Input id={`email-${user.id}`} name="email" type="email" defaultValue={user.email} className="col-span-3" />
+                        </div>
+                        <div className="grid grid-cols-4 items-center gap-4">
+                            <Label htmlFor={`role-${user.id}`} className="text-right">Role</Label>
+                            <Select name="role" defaultValue={user.role}>
+                                <SelectTrigger className="col-span-3">
+                                    <SelectValue placeholder="Select a role" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="Admin">Admin</SelectItem>
+                                    <SelectItem value="Manager">Manager</SelectItem>
+                                    <SelectItem value="Developer">Developer</SelectItem>
+                                    <SelectItem value="Agent">Agent</SelectItem>
+                                </SelectContent>
+                            </Select>
+                        </div>
+                    </div>
+                    <DialogFooter>
+                        <Button type="submit">Save Changes</Button>
+                    </DialogFooter>
+                </form>
+            </DialogContent>
+        </Dialog>
+    )
+}
+
 export default function UsersPage() {
+    const [users, setUsers] = useState<User[]>(initialUsers);
+    const [addUserOpen, setAddUserOpen] = useState(false);
+    
+    const handleAddUser = (event: React.FormEvent<HTMLFormElement>) => {
+        event.preventDefault();
+        const formData = new FormData(event.currentTarget);
+        const newUser: User = {
+            id: `usr_${Date.now()}`,
+            name: formData.get('name') as string,
+            email: formData.get('email') as string,
+            role: formData.get('role') as User['role'],
+            avatarUrl: `https://picsum.photos/seed/user${Date.now()}/100/100`
+        };
+        setUsers(prev => [...prev, newUser]);
+        setAddUserOpen(false);
+    }
+
+    const handleUpdateUser = (updatedUser: User) => {
+        setUsers(prev => prev.map(u => u.id === updatedUser.id ? updatedUser : u));
+    }
+    
+    const handleRemoveUser = (userId: string) => {
+        setUsers(prev => prev.filter(u => u.id !== userId));
+    };
+
     return (
         <>
             <Header title="Users & Roles" />
@@ -33,7 +134,7 @@ export default function UsersPage() {
                             <CardTitle>User Management</CardTitle>
                             <CardDescription>Manage your team members and their roles.</CardDescription>
                         </div>
-                         <Dialog>
+                         <Dialog open={addUserOpen} onOpenChange={setAddUserOpen}>
                             <DialogTrigger asChild>
                                 <Button size="sm" className="gap-1">
                                     <PlusCircle className="h-3.5 w-3.5" />
@@ -41,40 +142,42 @@ export default function UsersPage() {
                                 </Button>
                             </DialogTrigger>
                             <DialogContent>
-                                <DialogHeader>
-                                <DialogTitle>Add New User</DialogTitle>
-                                <DialogDescription>
-                                    Invite a new team member to APIs Manager.
-                                </DialogDescription>
-                                </DialogHeader>
-                                <div className="grid gap-4 py-4">
-                                    <div className="grid grid-cols-4 items-center gap-4">
-                                        <Label htmlFor="name" className="text-right">Name</Label>
-                                        <Input id="name" placeholder="John Doe" className="col-span-3" />
-                                    </div>
-                                    <div className="grid grid-cols-4 items-center gap-4">
-                                        <Label htmlFor="email" className="text-right">Email</Label>
+                                <form onSubmit={handleAddUser}>
+                                    <DialogHeader>
+                                    <DialogTitle>Add New User</DialogTitle>
+                                    <DialogDescription>
+                                        Invite a new team member to APIs Manager.
+                                    </DialogDescription>
+                                    </DialogHeader>
+                                    <div className="grid gap-4 py-4">
+                                        <div className="grid grid-cols-4 items-center gap-4">
+                                            <Label htmlFor="name" className="text-right">Name</Label>
+                                            <Input id="name" name="name" placeholder="John Doe" className="col-span-3" />
+                                        </div>
+                                        <div className="grid grid-cols-4 items-center gap-4">
+                                            <Label htmlFor="email" className="text-right">Email</Label>
 
-                                        <Input id="email" type="email" placeholder="john@example.com" className="col-span-3" />
+                                            <Input id="email" name="email" type="email" placeholder="john@example.com" className="col-span-3" />
+                                        </div>
+                                        <div className="grid grid-cols-4 items-center gap-4">
+                                            <Label htmlFor="role" className="text-right">Role</Label>
+                                            <Select name="role" defaultValue="Agent">
+                                                <SelectTrigger className="col-span-3">
+                                                    <SelectValue placeholder="Select a role" />
+                                                </SelectTrigger>
+                                                <SelectContent>
+                                                    <SelectItem value="Admin">Admin</SelectItem>
+                                                    <SelectItem value="Manager">Manager</SelectItem>
+                                                    <SelectItem value="Developer">Developer</SelectItem>
+                                                    <SelectItem value="Agent">Agent</SelectItem>
+                                                </SelectContent>
+                                            </Select>
+                                        </div>
                                     </div>
-                                    <div className="grid grid-cols-4 items-center gap-4">
-                                        <Label htmlFor="role" className="text-right">Role</Label>
-                                        <Select>
-                                            <SelectTrigger className="col-span-3">
-                                                <SelectValue placeholder="Select a role" />
-                                            </SelectTrigger>
-                                            <SelectContent>
-                                                <SelectItem value="Admin">Admin</SelectItem>
-                                                <SelectItem value="Manager">Manager</SelectItem>
-                                                <SelectItem value="Developer">Developer</SelectItem>
-                                                <SelectItem value="Agent">Agent</SelectItem>
-                                            </SelectContent>
-                                        </Select>
-                                    </div>
-                                </div>
-                                <DialogFooter>
-                                <Button type="submit">Invite User</Button>
-                                </DialogFooter>
+                                    <DialogFooter>
+                                    <Button type="submit">Invite User</Button>
+                                    </DialogFooter>
+                                </form>
                             </DialogContent>
                         </Dialog>
                     </CardHeader>
@@ -121,43 +224,64 @@ export default function UsersPage() {
                                                         <DialogTrigger asChild>
                                                           <DropdownMenuItem onSelect={(e) => e.preventDefault()}>Edit</DropdownMenuItem>
                                                         </DialogTrigger>
-                                                        <DropdownMenuItem className="text-destructive">Remove</DropdownMenuItem>
+                                                        <DropdownMenuItem 
+                                                            className="text-destructive"
+                                                            onClick={() => handleRemoveUser(user.id)}>
+                                                            Remove
+                                                        </DropdownMenuItem>
                                                     </DropdownMenuContent>
                                                 </DropdownMenu>
                                                  <DialogContent>
-                                                    <DialogHeader>
-                                                        <DialogTitle>Edit User: {user.name}</DialogTitle>
-                                                        <DialogDescription>
-                                                            Update the details for this user.
-                                                        </DialogDescription>
-                                                    </DialogHeader>
-                                                    <div className="grid gap-4 py-4">
-                                                        <div className="grid grid-cols-4 items-center gap-4">
-                                                            <Label htmlFor={`name-${user.id}`} className="text-right">Name</Label>
-                                                            <Input id={`name-${user.id}`} defaultValue={user.name} className="col-span-3" />
+                                                    <form onSubmit={(e) => {
+                                                        e.preventDefault();
+                                                        const formData = new FormData(e.currentTarget);
+                                                        const updatedUser: User = {
+                                                            ...user,
+                                                            name: formData.get('name') as string,
+                                                            email: formData.get('email') as string,
+                                                            role: formData.get('role') as User['role'],
+                                                        };
+                                                        handleUpdateUser(updatedUser);
+                                                        // find a way to close the dialog
+                                                        const closeButton = e.currentTarget.closest('div[role="dialog"]')?.querySelector('button[aria-label="Close"]');
+                                                        if (closeButton instanceof HTMLElement) {
+                                                            closeButton.click();
+                                                        }
+                                                    }}>
+                                                        <DialogHeader>
+                                                            <DialogTitle>Edit User: {user.name}</DialogTitle>
+                                                            <DialogDescription>
+                                                                Update the details for this user.
+                                                            </DialogDescription>
+                                                        </DialogHeader>
+                                                        <div className="grid gap-4 py-4">
+                                                            <div className="grid grid-cols-4 items-center gap-4">
+                                                                <Label htmlFor={`name-${user.id}`} className="text-right">Name</Label>
+                                                                <Input id={`name-${user.id}`} name="name" defaultValue={user.name} className="col-span-3" />
+                                                            </div>
+                                                            <div className="grid grid-cols-4 items-center gap-4">
+                                                                <Label htmlFor={`email-${user.id}`} className="text-right">Email</Label>
+                                                                <Input id={`email-${user.id}`} name="email" type="email" defaultValue={user.email} className="col-span-3" />
+                                                            </div>
+                                                            <div className="grid grid-cols-4 items-center gap-4">
+                                                                <Label htmlFor={`role-${user.id}`} className="text-right">Role</Label>
+                                                                <Select name="role" defaultValue={user.role}>
+                                                                    <SelectTrigger className="col-span-3">
+                                                                        <SelectValue placeholder="Select a role" />
+                                                                    </SelectTrigger>
+                                                                    <SelectContent>
+                                                                        <SelectItem value="Admin">Admin</SelectItem>
+                                                                        <SelectItem value="Manager">Manager</SelectItem>
+                                                                        <SelectItem value="Developer">Developer</SelectItem>
+                                                                        <SelectItem value="Agent">Agent</SelectItem>
+                                                                    </SelectContent>
+                                                                </Select>
+                                                            </div>
                                                         </div>
-                                                        <div className="grid grid-cols-4 items-center gap-4">
-                                                            <Label htmlFor={`email-${user.id}`} className="text-right">Email</Label>
-                                                            <Input id={`email-${user.id}`} type="email" defaultValue={user.email} className="col-span-3" />
-                                                        </div>
-                                                        <div className="grid grid-cols-4 items-center gap-4">
-                                                            <Label htmlFor={`role-${user.id}`} className="text-right">Role</Label>
-                                                            <Select defaultValue={user.role}>
-                                                                <SelectTrigger className="col-span-3">
-                                                                    <SelectValue placeholder="Select a role" />
-                                                                </SelectTrigger>
-                                                                <SelectContent>
-                                                                    <SelectItem value="Admin">Admin</SelectItem>
-                                                                    <SelectItem value="Manager">Manager</SelectItem>
-                                                                    <SelectItem value="Developer">Developer</SelectItem>
-                                                                    <SelectItem value="Agent">Agent</SelectItem>
-                                                                </SelectContent>
-                                                            </Select>
-                                                        </div>
-                                                    </div>
-                                                    <DialogFooter>
-                                                        <Button type="submit">Save Changes</Button>
-                                                    </DialogFooter>
+                                                        <DialogFooter>
+                                                            <Button type="submit">Save Changes</Button>
+                                                        </DialogFooter>
+                                                    </form>
                                                 </DialogContent>
                                             </Dialog>
                                         </TableCell>

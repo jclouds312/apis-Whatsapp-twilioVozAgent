@@ -1,8 +1,11 @@
+'use client';
+
+import { useState } from "react";
 import { Header } from "@/components/dashboard/header";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { exposedApis } from "@/lib/data";
+import { exposedApis as initialExposedApis } from "@/lib/data";
 import { MoreHorizontal, PlusCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
@@ -12,8 +15,12 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
+import type { ExposedApi } from "@/lib/types";
 
 export default function ApiExhibitionPage() {
+    const [open, setOpen] = useState(false);
+    const [exposedApis, setExposedApis] = useState<ExposedApi[]>(initialExposedApis);
+
     const getStatusClass = (status: 'published' | 'draft' | 'deprecated') => {
         switch (status) {
             case 'published': return 'bg-green-100 text-green-800 dark:bg-green-900/50 dark:text-green-300 border-green-200 dark:border-green-500/50';
@@ -31,6 +38,22 @@ export default function ApiExhibitionPage() {
         }
     }
 
+    const handleAddApi = (event: React.FormEvent<HTMLFormElement>) => {
+        event.preventDefault();
+        const formData = new FormData(event.currentTarget);
+        const newApi: ExposedApi = {
+            id: `api_${Date.now()}`,
+            name: formData.get('name') as string,
+            description: formData.get('description') as string,
+            endpoint: formData.get('endpoint') as string,
+            method: formData.get('method') as 'GET' | 'POST' | 'PUT' | 'DELETE',
+            version: formData.get('version') as string,
+            status: 'draft',
+        };
+        setExposedApis(prev => [...prev, newApi]);
+        setOpen(false);
+    }
+
     return (
         <>
             <Header title="API Exhibition" />
@@ -41,7 +64,7 @@ export default function ApiExhibitionPage() {
                             <CardTitle>Exposed API Console</CardTitle>
                             <CardDescription>Document, secure, and expose your internal APIs to the world.</CardDescription>
                         </div>
-                        <Dialog>
+                        <Dialog open={open} onOpenChange={setOpen}>
                             <DialogTrigger asChild>
                                 <Button size="sm" className="gap-1">
                                     <PlusCircle className="h-3.5 w-3.5" />
@@ -49,46 +72,48 @@ export default function ApiExhibitionPage() {
                                 </Button>
                             </DialogTrigger>
                              <DialogContent>
-                                <DialogHeader>
-                                    <DialogTitle>Expose a New API</DialogTitle>
-                                    <DialogDescription>
-                                        Define a new internal API to be documented and exposed.
-                                    </DialogDescription>
-                                </DialogHeader>
-                                <div className="grid gap-4 py-4">
-                                    <div className="grid grid-cols-4 items-center gap-4">
-                                        <Label htmlFor="name" className="text-right">API Name</Label>
-                                        <Input id="name" placeholder="e.g., Get Products" className="col-span-3" />
-                                    </div>
-                                    <div className="grid grid-cols-4 items-center gap-4">
-                                        <Label htmlFor="description" className="text-right">Description</Label>
-                                        <Textarea id="description" placeholder="Describe what this API does." className="col-span-3" />
-                                    </div>
-                                     <div className="grid grid-cols-4 items-center gap-4">
-                                        <Label htmlFor="endpoint" className="text-right">Endpoint</Label>
-                                        <div className="col-span-3 flex gap-2">
-                                            <Select defaultValue="GET">
-                                                <SelectTrigger className="w-[100px]">
-                                                    <SelectValue />
-                                                </SelectTrigger>
-                                                <SelectContent>
-                                                    <SelectItem value="GET">GET</SelectItem>
-                                                    <SelectItem value="POST">POST</SelectItem>
-                                                    <SelectItem value="PUT">PUT</SelectItem>
-                                                    <SelectItem value="DELETE">DELETE</SelectItem>
-                                                </SelectContent>
-                                            </Select>
-                                            <Input id="endpoint" placeholder="/v1/products" className="flex-1 font-mono" />
+                                <form onSubmit={handleAddApi}>
+                                    <DialogHeader>
+                                        <DialogTitle>Expose a New API</DialogTitle>
+                                        <DialogDescription>
+                                            Define a new internal API to be documented and exposed.
+                                        </DialogDescription>
+                                    </DialogHeader>
+                                    <div className="grid gap-4 py-4">
+                                        <div className="grid grid-cols-4 items-center gap-4">
+                                            <Label htmlFor="name" className="text-right">API Name</Label>
+                                            <Input id="name" name="name" placeholder="e.g., Get Products" className="col-span-3" />
+                                        </div>
+                                        <div className="grid grid-cols-4 items-center gap-4">
+                                            <Label htmlFor="description" className="text-right">Description</Label>
+                                            <Textarea id="description" name="description" placeholder="Describe what this API does." className="col-span-3" />
+                                        </div>
+                                        <div className="grid grid-cols-4 items-center gap-4">
+                                            <Label htmlFor="endpoint" className="text-right">Endpoint</Label>
+                                            <div className="col-span-3 flex gap-2">
+                                                <Select name="method" defaultValue="GET">
+                                                    <SelectTrigger className="w-[100px]">
+                                                        <SelectValue />
+                                                    </SelectTrigger>
+                                                    <SelectContent>
+                                                        <SelectItem value="GET">GET</SelectItem>
+                                                        <SelectItem value="POST">POST</SelectItem>
+                                                        <SelectItem value="PUT">PUT</SelectItem>
+                                                        <SelectItem value="DELETE">DELETE</SelectItem>
+                                                    </SelectContent>
+                                                </Select>
+                                                <Input id="endpoint" name="endpoint" placeholder="/v1/products" className="flex-1 font-mono" />
+                                            </div>
+                                        </div>
+                                        <div className="grid grid-cols-4 items-center gap-4">
+                                            <Label htmlFor="version" className="text-right">Version</Label>
+                                            <Input id="version" name="version" placeholder="1.0.0" className="col-span-3" />
                                         </div>
                                     </div>
-                                    <div className="grid grid-cols-4 items-center gap-4">
-                                        <Label htmlFor="version" className="text-right">Version</Label>
-                                        <Input id="version" placeholder="1.0.0" className="col-span-3" />
-                                    </div>
-                                </div>
-                                <DialogFooter>
-                                    <Button type="submit">Save as Draft</Button>
-                                </DialogFooter>
+                                    <DialogFooter>
+                                        <Button type="submit">Save as Draft</Button>
+                                    </DialogFooter>
+                                </form>
                             </DialogContent>
                         </Dialog>
                     </CardHeader>

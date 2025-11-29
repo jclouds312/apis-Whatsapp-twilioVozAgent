@@ -2,14 +2,17 @@
 
 import { Header } from "@/components/dashboard/header";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { workflows } from "@/lib/data";
+import { workflows as initialWorkflows } from "@/lib/data";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Circle, MessageSquare, Phone, Workflow as WorkflowIcon } from "lucide-react";
 import { useEffect, useState } from "react";
+import type { Workflow } from "@/lib/types";
 
 export default function FunctionConnectPage() {
     const [isClient, setIsClient] = useState(false);
+    const [workflows, setWorkflows] = useState<Workflow[]>(initialWorkflows);
+
 
     useEffect(() => {
         setIsClient(true);
