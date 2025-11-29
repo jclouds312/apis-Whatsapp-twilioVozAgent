@@ -4,7 +4,7 @@ import { Header } from "@/components/dashboard/header";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger, DialogClose } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -194,7 +194,7 @@ function ApiKeysTabContent() {
                                 <TableCell className="text-sm">{key.description}</TableCell>
                                 <TableCell>
                                     <div className="flex items-center gap-2 font-mono text-muted-foreground">
-                                       <span className={cn(key.status === 'revoked' && 'italic')}>{getDisplayKey(key)}</span>
+                                       <span className={cn('text-sm', key.status === 'revoked' && 'italic')}>{getDisplayKey(key)}</span>
                                         <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => toggleRevealKey(key.id)} disabled={key.status === 'revoked'}>
                                             {revealedKeys[key.id] ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                                         </Button>
@@ -205,10 +205,10 @@ function ApiKeysTabContent() {
                                 </TableCell>
                                 <TableCell>
                                     <Badge variant={key.status === 'active' ? 'default' : 'destructive'} 
-                                        className={key.status === 'active' 
+                                        className={cn(key.status === 'active' 
                                             ? 'bg-green-100 text-green-800 dark:bg-green-900/50 dark:text-green-300 border-green-200 dark:border-green-500/50' 
                                             : 'bg-stone-100 text-stone-800 dark:bg-stone-900/50 dark:text-stone-300 border-stone-200 dark:border-stone-500/50'
-                                        }>
+                                        )}>
                                         {key.status}
                                     </Badge>
                                 </TableCell>
@@ -238,12 +238,12 @@ function ApiKeysTabContent() {
                                                 </DialogHeader>
                                                 <div className="grid gap-4 py-4">
                                                      <div className="grid grid-cols-4 items-center gap-4">
-                                                        <Label htmlFor="service" className="text-right">Service</Label>
-                                                        <Input id="service" name="service" defaultValue={key.service} className="col-span-3" disabled />
+                                                        <Label htmlFor="service-edit" className="text-right">Service</Label>
+                                                        <Input id="service-edit" name="service" defaultValue={key.service} className="col-span-3" disabled />
                                                      </div>
                                                     <div className="grid grid-cols-4 items-center gap-4">
-                                                        <Label htmlFor="description" className="text-right">Description</Label>
-                                                        <Textarea id="description" name="description" defaultValue={key.description} className="col-span-3" />
+                                                        <Label htmlFor="description-edit" className="text-right">Description</Label>
+                                                        <Textarea id="description-edit" name="description" defaultValue={key.description} className="col-span-3" />
                                                     </div>
                                                 </div>
                                                 <DialogFooter>
