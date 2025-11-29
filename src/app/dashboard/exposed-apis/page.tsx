@@ -15,7 +15,8 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import type { ExposedApi } from "@/lib/types";
-import { useUser, useFirestore, useCollection, useMemoFirebase, addDocumentNonBlocking } from '@/firebase';
+import { useUser, useFirestore, useCollection, useMemoFirebase } from '@/firebase';
+import { addDocumentNonBlocking } from '@/firebase/non-blocking-updates';
 import { collection } from "firebase/firestore";
 import { Skeleton } from "@/components/ui/skeleton";
 
@@ -54,7 +55,7 @@ export default function ExposedApisPage() {
         if (!exposedApisQuery || !user) return;
 
         const formData = new FormData(event.currentTarget);
-        const newApiData = {
+        const newApiData: Omit<ExposedApi, 'id'> = {
             name: formData.get('name') as string,
             description: formData.get('description') as string,
             endpoint: formData.get('endpoint') as string,
