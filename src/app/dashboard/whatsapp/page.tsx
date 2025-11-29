@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useEffect, useState } from "react";
@@ -44,10 +45,10 @@ export default function WhatsAppPage() {
     const { data: conversations, isLoading: isLoadingConversations } = useCollection<Conversation>(conversationsQuery);
     
     const logsQuery = useMemoFirebase(() => {
-        if (!firestore) return null;
+        if (!firestore || !user?.uid) return null;
         const q = query(collection(firestore, "apiLogs"), where("endpoint", "in", ["/api/whatsapp", "WhatsApp"]), orderBy('timestamp', 'desc'));
         return q;
-    }, [firestore]);
+    }, [firestore, user?.uid]);
     const { data: logs, isLoading: isLoadingLogs } = useCollection<ApiLog>(logsQuery);
 
     const workflowsQuery = useMemoFirebase(() => {
@@ -236,5 +237,3 @@ export default function WhatsAppPage() {
         </>
     )
 }
-
-    

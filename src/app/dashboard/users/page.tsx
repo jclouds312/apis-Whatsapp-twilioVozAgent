@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState } from "react";
@@ -14,7 +15,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import Image from "next/image";
 import { Badge } from "@/components/ui/badge";
-import type { User } from "@/lib/types";
+import type { DashboardUser } from "@/lib/types";
 import { useUser, useFirestore, useCollection, useMemoFirebase, addDocumentNonBlocking, deleteDocumentNonBlocking, updateDocumentNonBlocking } from '@/firebase';
 import { collection, doc } from "firebase/firestore";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -37,28 +38,28 @@ export default function UsersPage() {
     // In a real multi-user app, this would be more complex (e.g., /organizations/{orgId}/users)
     // For simplicity, we assume users can see other users, but rules would lock this down.
     const usersQuery = useMemoFirebase(() => {
-        if (!firestore) return null;
+        if (!firestore || !authUser?.uid) return null;
         return collection(firestore, 'dashboardUsers');
-    }, [firestore]);
+    }, [firestore, authUser?.uid]);
     
-    const { data: users, isLoading } = useCollection<User>(usersQuery);
+    const { data: users, isLoading } = useCollection<DashboardUser>(usersQuery);
 
     const handleAddUser = (event: React.FormEvent<HTMLFormElement>) => {
         event.preventDefault();
         if (!usersQuery) return;
 
         const formData = new FormData(event.currentTarget);
-        const newUser: Omit<User, 'id'> = {
+        const newUser: Omit<DashboardUser, 'id'> = {
             name: formData.get('name') as string,
             email: formData.get('email') as string,
-            role: formData.get('role') as User['role'],
+            role: formData.get('role') as DashboardUser['role'],
             avatarUrl: `https://picsum.photos/seed/user${Date.now()}/100/100`
         };
         addDocumentNonBlocking(usersQuery, newUser);
         setAddUserOpen(false);
     }
 
-    const handleUpdateUser = (userId: string, updatedData: Partial<User>) => {
+    const handleUpdateUser = (userId: string, updatedData: Partial<DashboardUser>) => {
        if (!firestore) return;
        const userDocRef = doc(firestore, 'dashboardUsers', userId);
        updateDocumentNonBlocking(userDocRef, updatedData);
@@ -199,7 +200,7 @@ export default function UsersPage() {
                                                         const updatedData = {
                                                             name: formData.get('name') as string,
                                                             email: formData.get('email') as string,
-                                                            role: formData.get('role') as User['role'],
+                                                            role: formData.get('role') as DashboardUser['role'],
                                                         };
                                                         handleUpdateUser(user.id, updatedData);
                                                         // find a way to close the dialog

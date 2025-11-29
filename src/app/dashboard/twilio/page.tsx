@@ -1,3 +1,4 @@
+
 'use client';
 
 import { Header } from "@/components/dashboard/header";
@@ -23,9 +24,9 @@ export default function TwilioPage() {
     const { data: apiKeys, isLoading: isLoadingKeys } = useCollection<ApiKey>(apiKeysQuery);
 
     const logsQuery = useMemoFirebase(() => {
-        if (!firestore) return null;
+        if (!firestore || !user?.uid) return null;
         return query(collection(firestore, 'apiLogs'), where('endpoint', '==', 'Twilio'));
-    }, [firestore]);
+    }, [firestore, user?.uid]);
     const { data: logs, isLoading: isLoadingLogs } = useCollection<ApiLog>(logsQuery);
 
     const isConnected = apiKeys?.some(key => key.service.toLowerCase() === 'twilio' && key.status === 'active');
@@ -120,5 +121,3 @@ export default function TwilioPage() {
         </>
     )
 }
-
-    

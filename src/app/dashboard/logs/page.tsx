@@ -1,3 +1,4 @@
+
 'use client';
 
 import { Header } from "@/components/dashboard/header";
@@ -6,7 +7,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge";
 import { format, parseISO } from "date-fns";
 import { cn } from "@/lib/utils";
-import { useFirestore, useCollection, useMemoFirebase } from '@/firebase';
+import { useFirestore, useCollection, useMemoFirebase, useUser } from '@/firebase';
 import type { ApiLog } from "@/lib/types";
 import { collection } from "firebase/firestore";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -14,10 +15,12 @@ import { Skeleton } from "@/components/ui/skeleton";
 
 export default function LogsPage() {
     const firestore = useFirestore();
+    const { user } = useUser();
+    
     const logsQuery = useMemoFirebase(() => {
-        if (!firestore) return null;
+        if (!firestore || !user?.uid) return null;
         return collection(firestore, 'apiLogs');
-    }, [firestore]);
+    }, [firestore, user?.uid]);
 
     const { data: logs, isLoading } = useCollection<ApiLog>(logsQuery);
 

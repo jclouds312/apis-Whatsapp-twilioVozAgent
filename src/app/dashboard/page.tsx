@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -47,15 +48,15 @@ export default function DashboardPage() {
     const { data: workflows, isLoading: isLoadingWorkflows } = useCollection<WorkflowType>(workflowsQuery);
 
     const usersQuery = useMemoFirebase(() => {
-        if (!firestore) return null;
+        if (!firestore || !user?.uid) return null;
         return collection(firestore, 'dashboardUsers');
-    }, [firestore]);
+    }, [firestore, user?.uid]);
     const { data: users, isLoading: isLoadingUsers } = useCollection<DashboardUser>(usersQuery);
 
     const logsQuery = useMemoFirebase(() => {
-        if (!firestore) return null;
+        if (!firestore || !user?.uid) return null;
         return query(collection(firestore, 'apiLogs'), orderBy('timestamp', 'desc'), limit(100));
-    }, [firestore]);
+    }, [firestore, user?.uid]);
     const { data: logs, isLoading: isLoadingLogs } = useCollection<ApiLog>(logsQuery);
     
     // Derived stats
@@ -291,5 +292,3 @@ export default function DashboardPage() {
     </>
   );
 }
-
-    

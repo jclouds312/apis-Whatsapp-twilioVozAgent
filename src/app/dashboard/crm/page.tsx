@@ -1,3 +1,4 @@
+
 'use client';
 
 import { Header } from "@/components/dashboard/header";
@@ -34,10 +35,10 @@ export default function CrmPage() {
     const { data: workflows, isLoading: isLoadingWorkflows } = useCollection<Workflow>(workflowsQuery);
     
     const logsQuery = useMemoFirebase(() => {
-        if (!firestore) return null;
+        if (!firestore || !user?.uid) return null;
         const q = query(collection(firestore, 'apiLogs'), where('endpoint', '==', 'CRM'));
         return q;
-    }, [firestore]);
+    }, [firestore, user?.uid]);
     const { data: logs, isLoading: isLoadingLogs } = useCollection<ApiLog>(logsQuery);
 
     const isCrmConnected = apiKeys?.some(key => key.service.toLowerCase().includes('crm') && key.status === 'active');
@@ -183,5 +184,3 @@ export default function CrmPage() {
         </>
     )
 }
-
-    
