@@ -16,6 +16,7 @@ import {
   Workflow,
   ChevronDown,
   Bot,
+  Settings,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import {
@@ -33,11 +34,6 @@ const navItems = [
     label: 'Dashboard' 
   },
   {
-    href: '/dashboard/api-keys',
-    icon: KeyRound,
-    label: 'API Keys',
-  },
-  {
     href: '/dashboard/api-exhibition',
     icon: CodeXml,
     label: 'API Exhibition',
@@ -46,6 +42,15 @@ const navItems = [
     href: '/dashboard/function-connect',
     icon: Workflow,
     label: 'Function Connect',
+  },
+  {
+    href: '/dashboard/ai-agents',
+    icon: Bot,
+    label: 'AI Agents',
+    subItems: [
+        { href: '/dashboard/ai-agents/retell', label: 'Retell Agent' },
+        { href: '/dashboard/ai-agents/workflow-suggester', label: 'Workflow Suggester' },
+    ]
   },
   {
     href: '/dashboard/integrations',
@@ -67,6 +72,11 @@ const navItems = [
     icon: Users,
     label: 'Users & Roles',
   },
+  {
+    href: '/dashboard/settings',
+    icon: Settings,
+    label: 'Settings',
+  },
 ];
 
 export function DashboardNav() {
@@ -82,16 +92,14 @@ export function DashboardNav() {
   });
 
   useEffect(() => {
-    // This effect ensures that the correct section is open on initial load
-    // or when navigating directly to a sub-page.
     const activeParent = navItems.find(item => 
       item.subItems && item.subItems.some(sub => pathname.startsWith(sub.href))
     );
     
-    if (activeParent) {
+    if (activeParent && !openSections[activeParent.label]) {
       setOpenSections(prev => ({ ...prev, [activeParent.label]: true }));
     }
-  }, [pathname]);
+  }, [pathname, openSections]);
 
   const toggleSection = (label: string) => {
     setOpenSections(prev => ({...prev, [label]: !prev[label]}));
