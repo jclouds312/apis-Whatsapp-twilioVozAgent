@@ -1,7 +1,7 @@
 'use client';
 
 import { AnimatePresence, motion } from 'framer-motion';
-import { Bot, Paperclip, ThumbsUp } from 'lucide-react';
+import { Bot, Paperclip, Send, ThumbsUp } from 'lucide-react';
 import * as React from 'react';
 
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -12,22 +12,16 @@ import { Separator } from '@/components/ui/separator';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import type { Conversation, Message } from '@/lib/types';
 import { cn } from '@/lib/utils';
-import { sendWhatsAppMessage } from '@/app/dashboard/whatsapp/actions';
 import { useToast } from '@/hooks/use-toast';
 import { useUser, useFirestore, addDocumentNonBlocking, useCollection, useMemoFirebase, updateDocumentNonBlocking } from '@/firebase';
 import { collection, query, orderBy, serverTimestamp, doc } from "firebase/firestore";
+import { sendWhatsAppMessage } from '@/app/dashboard/function-connect/actions';
 
 
 interface ChatMessageProps {
   conversation: Conversation | null;
   currentUserAvatar: string;
 }
-
-const SendIcon = () => (
-    <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <path d="M10.8333 9.16669L0 0L20 10L0 20L10.8333 10.8333V15.8333L16.6667 12.5V7.5L10.8333 4.16669V9.16669Z" fill="currentColor"/>
-    </svg>
-)
 
 export function ChatMessage({ conversation, currentUserAvatar }: ChatMessageProps) {
   const [input, setInput] = React.useState('');
@@ -209,7 +203,7 @@ export function ChatMessage({ conversation, currentUserAvatar }: ChatMessageProp
             </Tooltip>
             <Button size="sm" className="ml-2" onClick={handleSend} disabled={!input.trim()}>
               Send
-              <SendIcon />
+              <Send className="w-4 h-4 ml-2"/>
             </Button>
           </div>
         </div>
