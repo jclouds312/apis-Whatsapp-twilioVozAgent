@@ -59,9 +59,9 @@ export default function DashboardPage() {
             const newLog: Log = {
               id: `log_${Date.now()}`,
               timestamp: new Date().toISOString(),
-              level: ['info', 'warn', 'error'][Math.floor(Math.random() * 3)] as 'info' | 'warn' | 'error',
+              level: ['info', 'warn'][Math.floor(Math.random() * 2)] as 'info' | 'warn',
               service: ['Function Connect', 'CRM Connector', 'Twilio', 'WhatsApp', 'API Exhibition'][Math.floor(Math.random() * 5)],
-              message: ['Operation successful.', 'Task failed.', 'Connection timed out.', 'Data processed.', 'User logged in.'][Math.floor(Math.random() * 5)],
+              message: ['Operation successful.', 'Task may require attention.', 'Connection timed out.', 'Data processed.', 'User logged in.'][Math.floor(Math.random() * 5)],
             };
             setRecentLogs(prev => [newLog, ...prev].slice(0, 10));
 
@@ -132,9 +132,9 @@ export default function DashboardPage() {
             <StatCard 
                 title="Errors (24h)"
                 value={errorsToday.toString()}
-                description="Needs attention"
+                description={errorsToday === 0 ? "All systems operational" : "Needs attention"}
                 Icon={AlertCircle}
-                iconColor="text-destructive"
+                iconColor={errorsToday === 0 ? "text-green-500" : "text-destructive"}
             />
             <StatCard 
                 title="Active Users"

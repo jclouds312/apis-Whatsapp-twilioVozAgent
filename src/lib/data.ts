@@ -13,10 +13,10 @@ export const logs: Log[] = [
   { id: 'log_1', timestamp: new Date(Date.now() - 1000 * 15).toISOString(), level: 'info', service: 'Function Connect', message: 'Workflow "New Lead from WA" triggered successfully.' },
   { id: 'log_2', timestamp: new Date(Date.now() - 1000 * 45).toISOString(), level: 'info', service: 'CRM Connector', message: 'Successfully created contact in CRM for +1...2345.' },
   { id: 'log_3', timestamp: new Date(Date.now() - 1000 * 60 * 1).toISOString(), level: 'warn', service: 'Twilio', message: 'Voice call to +1...5678 failed: No answer.' },
-  { id: 'log_4', timestamp: new Date(Date.now() - 1000 * 60 * 2.5).toISOString(), level: 'error', service: 'API Exhibition', message: 'Endpoint /v1/products returned 500 Internal Server Error.' },
+  { id: 'log_4', timestamp: new Date(Date.now() - 1000 * 60 * 2.5).toISOString(), level: 'info', service: 'API Exhibition', message: 'Endpoint /v1/products returned 200 OK.' },
   { id: 'log_5', timestamp: new Date(Date.now() - 1000 * 60 * 3).toISOString(), level: 'info', service: 'WhatsApp', message: 'Sent template `order_confirmation` to +1...9012.' },
   { id: 'log_6', timestamp: new Date(Date.now() - 1000 * 60 * 5).toISOString(), level: 'info', service: 'Function Connect', message: 'Workflow "Support Ticket from Twilio" triggered.' },
-  { id: 'log_7', timestamp: new Date(Date.now() - 1000 * 60 * 8).toISOString(), level: 'error', service: 'CRM Connector', message: 'Failed to update deal: Invalid ID `deal_abc`.' },
+  { id: 'log_7', timestamp: new Date(Date.now() - 1000 * 60 * 8).toISOString(), level: 'info', service: 'CRM Connector', message: 'Successfully updated deal: deal_xyz.' },
 ];
 
 export const users: User[] = [
