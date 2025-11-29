@@ -15,6 +15,7 @@ In today's digital ecosystem, businesses rely on a multitude of SaaS services an
 
 -   **Dashboard**: Offers a bird's-eye view of the most important metrics, such as API traffic, active workflows, and recent system errors, all powered by live data from Firestore.
 -   **WhatsApp & Twilio Dashboards**: Dedicated sections for managing conversations and monitoring activity for WhatsApp Business and Twilio Voice.
+-   **Twilio Verify**: A dedicated interface to send and check one-time verification codes via WhatsApp.
 -   **API Key Management**: A centralized and secure repository to store, view, manage, and revoke API keys for integrated services.
 -   **Exposed API Console**: A tool to document, secure, and expose internal APIs, controlling their status (published, draft, obsolete) and visibility.
 -   **User and Role Management**: Administer team members and assign roles to control access to different platform functionalities.
@@ -32,10 +33,18 @@ In today's digital ecosystem, businesses rely on a multitude of SaaS services an
 This project is configured for a quick and easy deployment on [Vercel](https://vercel.com/).
 
 1.  **Set up Firebase**: Before deploying, ensure you have a Firebase project with Firestore and Authentication enabled. You will need to populate the Firebase configuration in `src/firebase/config.ts` and your environment variables.
-2.  **Configure Environment Variables**: In your Vercel project settings, you must add the following environment variables for the WhatsApp integration:
+2.  **Configure Environment Variables**: In your Vercel project settings, you must add the following environment variables:
+    
+    **For WhatsApp Integration:**
     - `WHATSAPP_VERIFY_TOKEN`: A secret token of your choice for webhook verification.
     - `WHATSAPP_ACCESS_TOKEN`: The permanent access token for the WhatsApp Business API from your Meta App.
     - `WHATSAPP_PHONE_NUMBER_ID`: The Phone Number ID from your Meta App.
+    
+    **For Twilio Integration:**
+    - `TWILIO_ACCOUNT_SID`: Your Twilio Account SID.
+    - `TWILIO_AUTH_TOKEN`: Your Twilio Auth Token.
+    - `TWILIO_VERIFY_SERVICE_SID`: The Service SID from your Twilio Verify service.
+
 3.  **Create a Git Repository**: Push the project code to a GitHub, GitLab, or Bitbucket repository.
 4.  **Import the Project in Vercel**: From your Vercel dashboard, import the repository you just created. Vercel will automatically detect that it's a Next.js project.
 5.  **Deploy**: Click "Deploy". Vercel will handle the rest and provide you with a URL for your live application. After deployment, use the provided URL to set up your webhook in the Meta Developer portal.

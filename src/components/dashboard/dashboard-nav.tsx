@@ -13,6 +13,7 @@ import {
   Bot,
   Settings,
   Volume2,
+  ShieldCheck,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import {
@@ -47,7 +48,16 @@ const CrmIcon = (props: React.SVGProps<SVGSVGElement>) => (
 const navItems = [
   { href: '/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
   { href: '/dashboard/whatsapp', icon: WhatsAppIcon, label: 'WhatsApp', color: 'text-[#25D366]' },
-  { href: '/dashboard/twilio', icon: TwilioIcon, label: 'Twilio Voice', color: 'text-[#F22F46]' },
+  {
+    href: '/dashboard/twilio',
+    icon: TwilioIcon,
+    label: 'Twilio',
+    color: 'text-[#F22F46]',
+    subItems: [
+      { href: '/dashboard/twilio', label: 'Voice Dashboard' },
+      { href: '/dashboard/twilio/verify', icon: ShieldCheck, label: 'Verify', color: 'text-blue-500' },
+    ]
+  },
   { href: '/dashboard/exposed-apis', icon: CodeXml, label: 'Exposed APIs' },
   { href: '/dashboard/function-connect', icon: Workflow, label: 'Function Connect' },
   {
@@ -121,7 +131,7 @@ export function DashboardNav() {
                   item.subItems.some(sub => pathname.startsWith(sub.href)) && "bg-sidebar-accent text-sidebar-accent-foreground"
                 )}
               >
-                <item.icon className="h-6 w-6 mr-4" />
+                <item.icon className={cn("h-6 w-6 mr-4", item.color)} />
                 {item.label}
                 <ChevronDown className={cn("ml-auto h-5 w-5 transition-transform", openSections[item.label] && "rotate-180")} />
               </Button>
@@ -168,5 +178,3 @@ export function DashboardNav() {
     </nav>
   );
 }
-
-    
