@@ -6,7 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { StatCard } from "@/components/dashboard/stat-card";
 import { apiKeys, logs as initialLogs, workflows } from "@/lib/data";
 import { Badge } from "@/components/ui/badge";
-import { CheckCircle, XCircle, Users, TrendingUp, Contact, Workflow as WorkflowIcon } from "lucide-react";
+import { CheckCircle, XCircle, Users, TrendingUp, Workflow as WorkflowIcon } from "lucide-react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { format } from "date-fns";
 
@@ -22,7 +22,7 @@ export default function CrmPage() {
             <Header title="CRM Integration" />
             <main className="flex-1 flex flex-col gap-6 p-4 lg:p-6">
                 <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-                    <Card>
+                    <Card className="transition-all hover:shadow-md">
                         <CardHeader>
                             <CardTitle>Connection Status</CardTitle>
                             <CardDescription>CRM API Key status.</CardDescription>
@@ -43,22 +43,25 @@ export default function CrmPage() {
                         value="18"
                         description="From all connected channels"
                         Icon={TrendingUp}
+                        iconColor="text-blue-500"
                     />
                      <StatCard 
                         title="Contacts Synced"
                         value="1,204"
                         description="Total contacts in CRM"
                         Icon={Users}
+                        iconColor="text-purple-500"
                     />
                      <StatCard 
                         title="Active CRM Workflows"
                         value={crmWorkflows.filter(wf => wf.status === 'active').length.toString()}
                         description="Automations involving CRM"
                         Icon={WorkflowIcon}
+                        iconColor="text-orange-500"
                     />
                 </div>
                 <div className="grid gap-6 md:grid-cols-2">
-                     <Card>
+                     <Card className="transition-all hover:shadow-lg">
                          <CardHeader>
                             <CardTitle>Recent CRM Activity</CardTitle>
                             <CardDescription>Live feed of CRM-related events.</CardDescription>
@@ -77,7 +80,13 @@ export default function CrmPage() {
                                        <TableRow key={log.id}>
                                            <TableCell className="text-muted-foreground">{format(new Date(log.timestamp), "HH:mm:ss")}</TableCell>
                                            <TableCell>
-                                                <Badge variant={log.level === 'error' ? 'destructive' : 'default'} className={log.level === 'warn' ? 'bg-yellow-500' : ''}>
+                                                <Badge variant={log.level === 'error' ? 'destructive' : log.level === 'warn' ? 'default' : 'secondary'} 
+                                                    className={
+                                                        log.level === 'error' ? 'bg-red-100 text-red-800' 
+                                                        : log.level === 'warn' ? 'bg-yellow-100 text-yellow-800' 
+                                                        : 'bg-blue-100 text-blue-800'
+                                                    }
+                                                >
                                                     {log.level}
                                                 </Badge>
                                            </TableCell>
@@ -88,7 +97,7 @@ export default function CrmPage() {
                            </Table>
                         </CardContent>
                     </Card>
-                     <Card>
+                     <Card className="transition-all hover:shadow-lg">
                          <CardHeader>
                             <CardTitle>Related Workflows</CardTitle>
                             <CardDescription>Automations that interact with your CRM.</CardDescription>
@@ -108,7 +117,11 @@ export default function CrmPage() {
                                            <TableCell className="font-medium">{wf.name}</TableCell>
                                            <TableCell className="text-muted-foreground">{wf.trigger.service}: {wf.trigger.event}</TableCell>
                                            <TableCell>
-                                                <Badge variant={wf.status === 'active' ? 'default' : 'secondary'} className={wf.status === 'active' ? 'bg-green-500' : ''}>
+                                                <Badge variant={wf.status === 'active' ? 'default' : 'secondary'} 
+                                                    className={wf.status === 'active' 
+                                                        ? 'bg-green-100 text-green-800' 
+                                                        : ''
+                                                    }>
                                                     {wf.status}
                                                 </Badge>
                                            </TableCell>

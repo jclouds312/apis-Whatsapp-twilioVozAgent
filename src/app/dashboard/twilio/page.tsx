@@ -32,7 +32,7 @@ export default function TwilioPage() {
             <Header title="Twilio Voice" />
             <main className="flex-1 grid gap-6 p-4 lg:p-6">
                 <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-                    <Card className="lg:col-span-1 flex flex-col">
+                    <Card className="lg:col-span-1 flex flex-col transition-all hover:shadow-lg">
                         <CardHeader>
                             <CardTitle>Twilio Connection</CardTitle>
                             <CardDescription>Manage your Twilio API credentials for Voice.</CardDescription>
@@ -40,11 +40,11 @@ export default function TwilioPage() {
                         <CardContent className="space-y-4 flex-grow">
                             <div className="space-y-2">
                                 <Label htmlFor="twilio-sid">Account SID</Label>
-                                <Input id="twilio-sid" placeholder="AC..." defaultValue="AC1521875f599e92e8bdc38f75c97751cb" />
+                                <Input id="twilio-sid" placeholder="AC..." defaultValue="AC1521875f599e92e8bdc38f75c97751cb" className="font-mono"/>
                             </div>
                             <div className="space-y-2">
                                 <Label htmlFor="twilio-token">Auth Token</Label>
-                                <Input id="twilio-token" type="password" placeholder="Your auth token" defaultValue="••••••••••••••••••••••••" />
+                                <Input id="twilio-token" type="password" placeholder="Your auth token" defaultValue="••••••••••••••••••••••••" className="font-mono"/>
                             </div>
                              <div className="flex items-center space-x-2 pt-2">
                                 {isConnected ? (
@@ -62,13 +62,13 @@ export default function TwilioPage() {
                         </CardHeader>
                     </Card>
 
-                    <Card className="lg:col-span-2">
+                    <Card className="lg:col-span-2 transition-all hover:shadow-lg">
                          <CardHeader className="flex flex-row items-center justify-between">
                             <div>
                                 <CardTitle>Recent Voice Activity</CardTitle>
                                 <CardDescription>Last voice and SMS events from Twilio.</CardDescription>
                             </div>
-                            <Phone className="h-6 w-6 text-muted-foreground" />
+                            <Phone className="h-6 w-6 text-red-500" />
                         </CardHeader>
                         <CardContent>
                            <Table>
@@ -84,7 +84,11 @@ export default function TwilioPage() {
                                        <TableRow key={log.id}>
                                            <TableCell>{format(new Date(log.timestamp), "yyyy-MM-dd HH:mm:ss")}</TableCell>
                                            <TableCell>
-                                                <Badge variant={log.level === 'error' ? 'destructive' : 'default'} className={log.level === 'warn' ? 'bg-yellow-500' : ''}>
+                                                <Badge variant={log.level === 'error' ? 'destructive' : 'default'} className={
+                                                    log.level === 'error' ? 'bg-red-100 text-red-800' 
+                                                    : log.level === 'warn' ? 'bg-yellow-100 text-yellow-800' 
+                                                    : 'bg-blue-100 text-blue-800'
+                                                }>
                                                     {log.level}
                                                 </Badge>
                                            </TableCell>

@@ -16,7 +16,7 @@ export default function ApiKeysPage() {
         <>
             <Header title="API Keys" />
             <main className="flex-1 flex-col gap-4 p-4 lg:gap-6 lg:p-6">
-                <Card>
+                <Card className="transition-all hover:shadow-lg">
                     <CardHeader className="flex flex-row items-center justify-between">
                         <div>
                             <CardTitle>API Key Management</CardTitle>
@@ -53,7 +53,7 @@ export default function ApiKeysPage() {
                                     </div>
                                     <div className="grid grid-cols-4 items-center gap-4">
                                         <Label htmlFor="key" className="text-right">API Key</Label>
-                                        <Input id="key" placeholder="Paste your API key here" className="col-span-3" />
+                                        <Input id="key" placeholder="Paste your API key here" className="col-span-3 font-mono" />
                                     </div>
                                 </div>
                                 <DialogFooter>
@@ -77,9 +77,13 @@ export default function ApiKeysPage() {
                                 {apiKeys.map((key) => (
                                     <TableRow key={key.id}>
                                         <TableCell className="font-medium">{key.service}</TableCell>
-                                        <TableCell>{key.key.substring(0, 18)}...</TableCell>
+                                        <TableCell className="font-mono text-muted-foreground">{key.key.substring(0, 18)}...</TableCell>
                                         <TableCell>
-                                            <Badge variant={key.status === 'active' ? 'default' : 'destructive'} className={key.status === 'active' ? 'bg-green-500' : ''}>
+                                            <Badge variant={key.status === 'active' ? 'default' : 'destructive'} 
+                                                className={key.status === 'active' 
+                                                    ? 'bg-green-100 text-green-800 dark:bg-green-900/50 dark:text-green-300 border-green-200 dark:border-green-500/50' 
+                                                    : 'bg-red-100 text-red-800 dark:bg-red-900/50 dark:text-red-300 border-red-200 dark:border-red-500/50'
+                                                }>
                                                 {key.status}
                                             </Badge>
                                         </TableCell>
@@ -95,7 +99,7 @@ export default function ApiKeysPage() {
                                                 <DropdownMenuContent align="end">
                                                     <DropdownMenuLabel>Actions</DropdownMenuLabel>
                                                     <DropdownMenuItem>Edit</DropdownMenuItem>
-                                                    <DropdownMenuItem className="text-destructive">Revoke</DropdownMenuItem>
+                                                    <DropdownMenuItem className="text-destructive hover:text-destructive">Revoke</DropdownMenuItem>
                                                 </DropdownMenuContent>
                                             </DropdownMenu>
                                         </TableCell>

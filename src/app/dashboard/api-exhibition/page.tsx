@@ -16,9 +16,9 @@ import { Textarea } from "@/components/ui/textarea";
 export default function ApiExhibitionPage() {
     const getStatusClass = (status: 'published' | 'draft' | 'deprecated') => {
         switch (status) {
-            case 'published': return 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300 border-green-300';
-            case 'draft': return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300 border-yellow-300';
-            case 'deprecated': return 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300 border-red-300';
+            case 'published': return 'bg-green-100 text-green-800 dark:bg-green-900/50 dark:text-green-300 border-green-200 dark:border-green-500/50';
+            case 'draft': return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/50 dark:text-yellow-300 border-yellow-200 dark:border-yellow-500/50';
+            case 'deprecated': return 'bg-red-100 text-red-800 dark:bg-red-900/50 dark:text-red-300 border-red-200 dark:border-red-500/50';
         }
     };
 
@@ -35,7 +35,7 @@ export default function ApiExhibitionPage() {
         <>
             <Header title="API Exhibition" />
             <main className="flex-1 flex-col gap-4 p-4 lg:gap-6 lg:p-6">
-                <Card>
+                <Card className="transition-all hover:shadow-lg">
                     <CardHeader className="flex flex-row items-center justify-between">
                         <div>
                             <CardTitle>Exposed API Console</CardTitle>
@@ -108,11 +108,11 @@ export default function ApiExhibitionPage() {
                                     <TableRow key={api.id}>
                                         <TableCell className="font-medium">{api.name}</TableCell>
                                         <TableCell>
-                                            <Badge variant="outline" className={cn("font-mono", getMethodClass(api.method))}>{api.method}</Badge>
+                                            <Badge variant="outline" className={cn("font-mono font-semibold", getMethodClass(api.method))}>{api.method}</Badge>
                                             <span className="ml-2 font-mono text-muted-foreground">{api.endpoint}</span>
                                         </TableCell>
                                         <TableCell>
-                                            <Badge variant="outline" className={cn("border", getStatusClass(api.status))}>
+                                            <Badge variant="outline" className={cn("border font-semibold", getStatusClass(api.status))}>
                                                 {api.status}
                                             </Badge>
                                         </TableCell>
@@ -129,7 +129,7 @@ export default function ApiExhibitionPage() {
                                                     <DropdownMenuLabel>Actions</DropdownMenuLabel>
                                                     <DropdownMenuItem>View Details</DropdownMenuItem>
                                                     <DropdownMenuItem>Disable</DropdownMenuItem>
-                                                    <DropdownMenuItem className="text-destructive">Delete</DropdownMenuItem>
+                                                    <DropdownMenuItem className="text-destructive hover:text-destructive">Delete</DropdownMenuItem>
                                                 </DropdownMenuContent>
                                             </DropdownMenu>
                                         </TableCell>

@@ -11,9 +11,9 @@ import { RetellAgent } from "@/components/dashboard/retell-agent";
 export default function FunctionConnectPage() {
     const getIcon = (service: 'WhatsApp' | 'Twilio' | 'CRM') => {
         switch (service) {
-            case 'WhatsApp': return <MessageSquare className="h-5 w-5" />;
-            case 'Twilio': return <Phone className="h-5 w-5" />;
-            case 'CRM': return <WorkflowIcon className="h-5 w-5" />;
+            case 'WhatsApp': return <MessageSquare className="h-5 w-5 text-green-500" />;
+            case 'Twilio': return <Phone className="h-5 w-5 text-red-500" />;
+            case 'CRM': return <WorkflowIcon className="h-5 w-5 text-blue-500" />;
         }
     };
     
@@ -26,24 +26,28 @@ export default function FunctionConnectPage() {
                     <RetellAgent />
                 </div>
                 <div className="md:col-span-1">
-                    <Card className="h-full">
+                    <Card className="h-full transition-all hover:shadow-lg">
                         <CardHeader>
                             <CardTitle>Existing Workflows</CardTitle>
                             <CardDescription>Manage your automated data flows between services.</CardDescription>
                         </CardHeader>
                         <CardContent className="space-y-4">
                             {workflows.map(wf => (
-                                <Card key={wf.id} className="overflow-hidden">
+                                <Card key={wf.id} className="overflow-hidden transition-all hover:shadow-md">
                                     <CardHeader className="flex flex-row items-start bg-muted/50 gap-4 p-4">
-                                        <div className="flex items-center justify-center w-12 h-12 rounded-lg bg-primary text-primary-foreground">
+                                        <div className="flex items-center justify-center w-12 h-12 rounded-lg bg-background border">
                                            {getIcon(wf.trigger.service)}
                                         </div>
                                         <div className="flex-1">
                                             <CardTitle className="text-lg">{wf.name}</CardTitle>
                                             <CardDescription>Trigger: {wf.trigger.event}</CardDescription>
                                         </div>
-                                        <Badge variant={wf.status === 'active' ? 'default' : 'secondary'} className={wf.status === 'active' ? 'bg-green-500' : ''}>
-                                            <Circle className={`mr-2 h-2 w-2 fill-current ${wf.status === 'active' ? 'text-white' : 'text-gray-400'}`} />
+                                        <Badge variant={wf.status === 'active' ? 'default' : 'secondary'} 
+                                            className={wf.status === 'active' 
+                                                ? 'bg-green-100 text-green-800'
+                                                : ''
+                                            }>
+                                            <Circle className={`mr-2 h-2 w-2 fill-current ${wf.status === 'active' ? 'text-green-600' : 'text-gray-400'}`} />
                                             {wf.status}
                                         </Badge>
                                     </CardHeader>

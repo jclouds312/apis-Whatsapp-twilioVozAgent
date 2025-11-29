@@ -87,9 +87,9 @@ export default function DashboardPage() {
 
     const getStatusClass = (status: 'published' | 'draft' | 'deprecated') => {
         switch (status) {
-            case 'published': return 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300 border-green-300';
-            case 'draft': return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300 border-yellow-300';
-            case 'deprecated': return 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300 border-red-300';
+            case 'published': return 'bg-green-100 text-green-800 dark:bg-green-900/50 dark:text-green-300 border-green-200 dark:border-green-500/50';
+            case 'draft': return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/50 dark:text-yellow-300 border-yellow-200 dark:border-yellow-500/50';
+            case 'deprecated': return 'bg-red-100 text-red-800 dark:bg-red-900/50 dark:text-red-300 border-red-200 dark:border-red-500/50';
         }
     };
 
@@ -113,34 +113,39 @@ export default function DashboardPage() {
                 value={totalApiCalls.toLocaleString()}
                 description="Updating in real-time"
                 Icon={Activity}
+                iconColor="text-primary"
             />
             <StatCard 
                 title="Active Workflows"
                 value={activeWorkflows.length.toString()}
                 description="Automating your business"
                 Icon={Workflow}
+                iconColor="text-orange-500"
             />
             <StatCard 
                 title="Published APIs"
                 value={publishedApis.toString()}
                 description="Exposed to the world"
                 Icon={CodeXml}
+                iconColor="text-purple-500"
             />
             <StatCard 
                 title="Errors (24h)"
                 value={errorsToday.toString()}
                 description="Needs attention"
                 Icon={AlertCircle}
+                iconColor="text-destructive"
             />
             <StatCard 
                 title="Active Users"
                 value={users.length.toString()}
                 description="Across all roles"
                 Icon={Users}
+                iconColor="text-green-500"
             />
         </div>
         <div className="grid gap-4 lg:grid-cols-5">
-            <Card className="lg:col-span-3">
+            <Card className="lg:col-span-3 transition-all hover:shadow-lg">
                 <CardHeader>
                     <CardTitle>API Traffic</CardTitle>
                     <CardDescription>Live connection showing API call volume over time.</CardDescription>
@@ -149,7 +154,7 @@ export default function DashboardPage() {
                     <AreaChartComponent data={apiTrafficData} dataKey="API Calls" xAxisKey="date" />
                 </CardContent>
             </Card>
-            <Card className="lg:col-span-2">
+            <Card className="lg:col-span-2 transition-all hover:shadow-lg">
                 <CardHeader>
                     <CardTitle>Exposed APIs</CardTitle>
                     <CardDescription>Your public and private facing APIs.</CardDescription>
@@ -173,7 +178,7 @@ export default function DashboardPage() {
                                         </div>
                                     </TableCell>
                                     <TableCell className="text-right">
-                                        <Badge variant="outline" className={cn("text-xs", getStatusClass(api.status))}>
+                                        <Badge variant="outline" className={cn("text-xs font-semibold", getStatusClass(api.status))}>
                                             {api.status}
                                         </Badge>
                                     </TableCell>
@@ -185,7 +190,7 @@ export default function DashboardPage() {
             </Card>
         </div>
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
-             <Card className="lg:col-span-3">
+             <Card className="lg:col-span-3 transition-all hover:shadow-lg">
                 <CardHeader>
                     <CardTitle>Recent Activity</CardTitle>
                     <CardDescription>Live feed from all services.</CardDescription>
@@ -214,7 +219,7 @@ export default function DashboardPage() {
                   </ScrollArea>
                 </CardContent>
             </Card>
-             <Card className="lg:col-span-2">
+             <Card className="lg:col-span-2 transition-all hover:shadow-lg">
                 <CardHeader>
                     <CardTitle>Active Workflows</CardTitle>
                     <CardDescription>A list of your currently running automations.</CardDescription>
