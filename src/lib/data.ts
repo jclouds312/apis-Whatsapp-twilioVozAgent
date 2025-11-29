@@ -6,17 +6,17 @@ export const apiKeys: ApiKey[] = [
   { id: 'key_waba_1', service: 'WhatsApp Business', key: 'WA-xxxx-xxxx-xxxx-E7G8', status: 'active', createdAt: '2024-05-01' },
   { id: 'key_tw_1', service: 'Twilio', key: 'TW-xxxx-xxxx-xxxx-F9H1', status: 'active', createdAt: '2024-04-22' },
   { id: 'key_crm_1', service: 'CRM Hubspot', key: 'CRM-xxxx-xxxx-xxxx-A1B2', status: 'active', createdAt: '2024-03-15' },
-  { id: 'key_waba_2', service: 'WhatsApp Business', key: 'WA-xxxx-xxxx-xxxx-C3D4', status: 'revoked', createdAt: '2023-11-10' },
+  { id: 'key_waba_2', service: 'WhatsApp Business', key: 'WA-xxxx_xxxx-xxxx-C3D4', status: 'revoked', createdAt: '2023-11-10' },
 ];
 
 export const logs: Log[] = [
-  { id: 'log_1', timestamp: '2024-07-21T10:00:00Z', level: 'info', service: 'Function Connect', message: 'Workflow "New Lead from WA" triggered successfully.' },
-  { id: 'log_2', timestamp: '2024-07-21T10:00:01Z', level: 'info', service: 'CRM Connector', message: 'Successfully created contact in CRM for +1...2345.' },
-  { id: 'log_3', timestamp: '2024-07-21T10:05:14Z', level: 'warn', service: 'Twilio', message: 'Voice call to +1...5678 failed: No answer.' },
-  { id: 'log_4', timestamp: '2024-07-21T10:10:22Z', level: 'error', service: 'API Exhibition', message: 'Endpoint /v1/products returned 500 Internal Server Error.' },
-  { id: 'log_5', timestamp: '2024-07-21T10:12:00Z', level: 'info', service: 'WhatsApp', message: 'Sent template `order_confirmation` to +1...9012.' },
-  { id: 'log_6', timestamp: '2024-07-21T09:55:30Z', level: 'info', service: 'Function Connect', message: 'Workflow "Support Ticket from Twilio" triggered.' },
-  { id: 'log_7', timestamp: '2024-07-21T09:45:10Z', level: 'error', service: 'CRM Connector', message: 'Failed to update deal: Invalid ID `deal_abc`.' },
+  { id: 'log_1', timestamp: new Date(Date.now() - 1000 * 60 * 5).toISOString(), level: 'info', service: 'Function Connect', message: 'Workflow "New Lead from WA" triggered successfully.' },
+  { id: 'log_2', timestamp: new Date(Date.now() - 1000 * 60 * 4).toISOString(), level: 'info', service: 'CRM Connector', message: 'Successfully created contact in CRM for +1...2345.' },
+  { id: 'log_3', timestamp: new Date(Date.now() - 1000 * 60 * 3).toISOString(), level: 'warn', service: 'Twilio', message: 'Voice call to +1...5678 failed: No answer.' },
+  { id: 'log_4', timestamp: new Date(Date.now() - 1000 * 60 * 2).toISOString(), level: 'error', service: 'API Exhibition', message: 'Endpoint /v1/products returned 500 Internal Server Error.' },
+  { id: 'log_5', timestamp: new Date(Date.now() - 1000 * 60 * 1).toISOString(), level: 'info', service: 'WhatsApp', message: 'Sent template `order_confirmation` to +1...9012.' },
+  { id: 'log_6', timestamp: new Date(Date.now() - 1000 * 60 * 10).toISOString(), level: 'info', service: 'Function Connect', message: 'Workflow "Support Ticket from Twilio" triggered.' },
+  { id: 'log_7', timestamp: new Date(Date.now() - 1000 * 60 * 15).toISOString(), level: 'error', service: 'CRM Connector', message: 'Failed to update deal: Invalid ID `deal_abc`.' },
 ];
 
 export const users: User[] = [
@@ -40,7 +40,7 @@ export const workflows: Workflow[] = [
             { name: 'Send Confirmation', description: 'Send `lead_received` template via WhatsApp.' },
         ],
         status: 'active',
-        lastRun: '2024-07-21T10:00:00Z',
+        lastRun: new Date(Date.now() - 1000 * 60 * 5).toISOString(),
     },
     {
         id: 'wf_2',
@@ -55,7 +55,7 @@ export const workflows: Workflow[] = [
             { name: 'Notify Agent', description: 'Send internal notification.' },
         ],
         status: 'active',
-        lastRun: '2024-07-21T09:55:30Z',
+        lastRun: new Date(Date.now() - 1000 * 60 * 10).toISOString(),
     },
     {
         id: 'wf_3',
@@ -69,18 +69,8 @@ export const workflows: Workflow[] = [
             { name: 'Send Thank You Message', description: 'Send `deal_won` template via WhatsApp.' },
         ],
         status: 'inactive',
-        lastRun: '2024-07-19T14:00:00Z',
+        lastRun: new Date(Date.now() - 1000 * 60 * 60 * 24 * 2).toISOString(),
     }
-];
-
-export const apiTrafficData = [
-    { date: '2024-07-15', 'API Calls': 0 },
-    { date: '2024-07-16', 'API Calls': 0 },
-    { date: '2024-07-17', 'API Calls': 0 },
-    { date: '2024-07-18', 'API Calls': 0 },
-    { date: '2024-07-19', 'API Calls': 0 },
-    { date: '2024-07-20', 'API Calls': 0 },
-    { date: '2024-07-21', 'API Calls': 0 },
 ];
 
 export const exposedApis: ExposedApi[] = [
@@ -96,10 +86,10 @@ export const conversations: Conversation[] = [
         contactName: 'John Agent',
         contactAvatar: users.find(u => u.id === 'usr_2')?.avatarUrl || '',
         lastMessage: 'Sure, I can do that. When do you need it by?',
-        lastMessageTime: '2024-07-22T10:30:00Z',
+        lastMessageTime: new Date(Date.now() - 1000 * 60 * 2).toISOString(),
         messages: [
-            { id: 'msg_1_1', contactId: 'usr_2', content: 'Hey, I have a question about my last order.', timestamp: '2024-07-22T10:29:00Z', isSender: false },
-            { id: 'msg_1_2', contactId: 'usr_1', content: 'Sure, I can do that. When do you need it by?', timestamp: '2024-07-22T10:30:00Z', isSender: true },
+            { id: 'msg_1_1', contactId: 'usr_2', content: 'Hey, I have a question about my last order.', timestamp: new Date(Date.now() - 1000 * 60 * 2.5).toISOString(), isSender: false },
+            { id: 'msg_1_2', contactId: 'usr_1', content: 'Sure, I can do that. When do you need it by?', timestamp: new Date(Date.now() - 1000 * 60 * 2).toISOString(), isSender: true },
         ],
     },
     {
@@ -107,10 +97,10 @@ export const conversations: Conversation[] = [
         contactName: 'Sarah Developer',
         contactAvatar: users.find(u => u.id === 'usr_3')?.avatarUrl || '',
         lastMessage: 'Got it, thanks!',
-        lastMessageTime: '2024-07-22T09:15:00Z',
+        lastMessageTime: new Date(Date.now() - 1000 * 60 * 30).toISOString(),
         messages: [
-            { id: 'msg_2_1', contactId: 'usr_1', content: 'Here is the report you requested.', timestamp: '2024-07-22T09:14:00Z', isSender: true },
-            { id: 'msg_2_2', contactId: 'usr_3', content: 'Got it, thanks!', timestamp: '2024-07-22T09:15:00Z', isSender: false },
+            { id: 'msg_2_1', contactId: 'usr_1', content: 'Here is the report you requested.', timestamp: new Date(Date.now() - 1000 * 60 * 30.5).toISOString(), isSender: true },
+            { id: 'msg_2_2', contactId: 'usr_3', content: 'Got it, thanks!', timestamp: new Date(Date.now() - 1000 * 60 * 30).toISOString(), isSender: false },
         ],
     },
     {
@@ -118,10 +108,10 @@ export const conversations: Conversation[] = [
         contactName: 'Mike Manager',
         contactAvatar: users.find(u => u.id === 'usr_4')?.avatarUrl || '',
         lastMessage: 'See you then!',
-        lastMessageTime: '2024-07-21T18:45:00Z',
+        lastMessageTime: new Date(Date.now() - 1000 * 60 * 60 * 5).toISOString(),
         messages: [
-             { id: 'msg_3_1', contactId: 'usr_4', content: 'Meeting at 3 PM tomorrow.', timestamp: '2024-07-21T18:44:00Z', isSender: false },
-             { id: 'msg_3_2', contactId: 'usr_1', content: 'See you then!', timestamp: '2024-07-21T18:45:00Z', isSender: true },
+             { id: 'msg_3_1', contactId: 'usr_4', content: 'Meeting at 3 PM tomorrow.', timestamp: new Date(Date.now() - 1000 * 60 * 60 * 5.1).toISOString(), isSender: false },
+             { id: 'msg_3_2', contactId: 'usr_1', content: 'See you then!', timestamp: new Date(Date.now() - 1000 * 60 * 60 * 5).toISOString(), isSender: true },
         ],
     },
 ];
