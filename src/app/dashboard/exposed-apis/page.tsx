@@ -15,16 +15,20 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import type { ExposedApi } from "@/lib/types";
-import { useUser, useFirestore, useCollection, useMemoFirebase } from '@/firebase';
-import { addDocumentNonBlocking } from '@/firebase/non-blocking-updates';
-import { collection } from "firebase/firestore";
+import { useUser, useFirestore, useCollection, useMemoFirebase, addDocumentNonBlocking, deleteDocumentNonBlocking, updateDocumentNonBlocking } from '@/firebase';
+import { collection, doc } from "firebase/firestore";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useToast } from "@/hooks/use-toast";
 
 
 export default function ExposedApisPage() {
-    const [open, setOpen] = useState(false);
+    const [addOpen, setAddOpen] = useState(false);
+    const [editOpen, setEditOpen] = useState(false);
+    const [selectedApi, setSelectedApi] = useState<ExposedApi | null>(null);
+
     const { user, isUserLoading } = useUser();
     const firestore = useFirestore();
+    const { toast } = useToast();
 
     const exposedApisQuery = useMemoFirebase(() => {
         if (!firestore || !user?.uid) return null;
@@ -66,7 +70,36 @@ export default function ExposedApisPage() {
         };
         
         addDocumentNonBlocking(exposedApisQuery, newApiData);
-        setOpen(false);
+        toast({ title: 'API Exposed', description: `API "${newApiData.name}" has been saved as a draft.`});
+        setAddOpen(false);
+    }
+    
+    const handleUpdateApi = (event: React.FormEvent<HTMLFormElement>) => {
+        event.preventDefault();
+        if (!firestore || !user?.uid || !selectedApi) return;
+
+        const formData = new FormData(event.currentTarget);
+        const updatedData: Partial<ExposedApi> = {
+            name: formData.get('name') as string,
+            description: formData.get('description') as string,
+            endpoint: formData.get('endpoint') as string,
+            method: formData.get('method') as 'GET' | 'POST' | 'PUT' | 'DELETE',
+            version: formData.get('version') as string,
+            status: formData.get('status') as 'published' | 'draft' | 'deprecated',
+        };
+        
+        const apiDocRef = doc(firestore, 'users', user.uid, 'exposedApis', selectedApi.id);
+        updateDocumentNonBlocking(apiDocRef, updatedData);
+        toast({ title: 'API Updated', description: `API "${updatedData.name}" has been successfully updated.`});
+        setEditOpen(false);
+        setSelectedApi(null);
+    }
+    
+    const handleDeleteApi = (api: ExposedApi) => {
+        if(!firestore || !user?.uid) return;
+        const apiDocRef = doc(firestore, 'users', user.uid, 'exposedApis', api.id);
+        deleteDocumentNonBlocking(apiDocRef);
+        toast({ variant: 'destructive', title: 'API Deleted', description: `API "${api.name}" has been permanently deleted.`});
     }
 
     return (
@@ -79,7 +112,7 @@ export default function ExposedApisPage() {
                             <CardTitle>Exposed API Console</CardTitle>
                             <CardDescription>Document, secure, and expose your internal APIs to other systems.</CardDescription>
                         </div>
-                        <Dialog open={open} onOpenChange={setOpen}>
+                        <Dialog open={addOpen} onOpenChange={setAddOpen}>
                             <DialogTrigger asChild>
                                 <Button size="sm" className="gap-1" disabled={isUserLoading || !user}>
                                     <PlusCircle className="h-3.5 w-3.5" />
@@ -97,11 +130,11 @@ export default function ExposedApisPage() {
                                     <div className="grid gap-4 py-4">
                                         <div className="grid grid-cols-4 items-center gap-4">
                                             <Label htmlFor="name" className="text-right">API Name</Label>
-                                            <Input id="name" name="name" placeholder="e.g., Get Products" className="col-span-3" />
+                                            <Input id="name" name="name" placeholder="e.g., Get Products" className="col-span-3" required />
                                         </div>
                                         <div className="grid grid-cols-4 items-center gap-4">
                                             <Label htmlFor="description" className="text-right">Description</Label>
-                                            <Textarea id="description" name="description" placeholder="Describe what this API does." className="col-span-3" />
+                                            <Textarea id="description" name="description" placeholder="Describe what this API does." className="col-span-3" required />
                                         </div>
                                         <div className="grid grid-cols-4 items-center gap-4">
                                             <Label htmlFor="endpoint" className="text-right">Endpoint</Label>
@@ -117,12 +150,12 @@ export default function ExposedApisPage() {
                                                         <SelectItem value="DELETE">DELETE</SelectItem>
                                                     </SelectContent>
                                                 </Select>
-                                                <Input id="endpoint" name="endpoint" placeholder="/v1/products" className="flex-1 font-mono" />
+                                                <Input id="endpoint" name="endpoint" placeholder="/v1/products" className="flex-1 font-mono" required/>
                                             </div>
                                         </div>
                                         <div className="grid grid-cols-4 items-center gap-4">
                                             <Label htmlFor="version" className="text-right">Version</Label>
-                                            <Input id="version" name="version" placeholder="1.0.0" className="col-span-3" />
+                                            <Input id="version" name="version" placeholder="1.0.0" className="col-span-3" required/>
                                         </div>
                                     </div>
                                     <DialogFooter>
@@ -167,20 +200,74 @@ export default function ExposedApisPage() {
                                         </TableCell>
                                         <TableCell>{api.version}</TableCell>
                                         <TableCell>
-                                            <DropdownMenu>
-                                                <DropdownMenuTrigger asChild>
-                                                    <Button aria-haspopup="true" size="icon" variant="ghost">
-                                                        <MoreHorizontal className="h-4 w-4" />
-                                                        <span className="sr-only">Toggle menu</span>
-                                                    </Button>
-                                                </DropdownMenuTrigger>
-                                                <DropdownMenuContent align="end">
-                                                    <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                                                    <DropdownMenuItem>View Details</DropdownMenuItem>
-                                                    <DropdownMenuItem>Disable</DropdownMenuItem>
-                                                    <DropdownMenuItem className="text-destructive hover:text-destructive">Delete</DropdownMenuItem>
-                                                </DropdownMenuContent>
-                                            </DropdownMenu>
+                                            <Dialog open={editOpen && selectedApi?.id === api.id} onOpenChange={(open) => { if (!open) setSelectedApi(null); setEditOpen(open)}}>
+                                                <DropdownMenu>
+                                                    <DropdownMenuTrigger asChild>
+                                                        <Button aria-haspopup="true" size="icon" variant="ghost">
+                                                            <MoreHorizontal className="h-4 w-4" />
+                                                            <span className="sr-only">Toggle menu</span>
+                                                        </Button>
+                                                    </DropdownMenuTrigger>
+                                                    <DropdownMenuContent align="end">
+                                                        <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                                                        <DropdownMenuItem onSelect={() => { setSelectedApi(api); setEditOpen(true); }}>Edit</DropdownMenuItem>
+                                                        <DropdownMenuItem className="text-destructive hover:text-destructive focus:text-destructive focus:bg-destructive/10" onClick={() => handleDeleteApi(api)}>Delete</DropdownMenuItem>
+                                                    </DropdownMenuContent>
+                                                </DropdownMenu>
+                                                 <DialogContent>
+                                                    <form onSubmit={handleUpdateApi}>
+                                                        <DialogHeader>
+                                                            <DialogTitle>Edit Exposed API</DialogTitle>
+                                                            <DialogDescription>
+                                                                Update the configuration for this exposed API.
+                                                            </DialogDescription>
+                                                        </DialogHeader>
+                                                        <div className="grid gap-4 py-4">
+                                                            <div className="grid grid-cols-4 items-center gap-4">
+                                                                <Label htmlFor="name-edit" className="text-right">API Name</Label>
+                                                                <Input id="name-edit" name="name" defaultValue={api.name} className="col-span-3" required />
+                                                            </div>
+                                                            <div className="grid grid-cols-4 items-center gap-4">
+                                                                <Label htmlFor="description-edit" className="text-right">Description</Label>
+                                                                <Textarea id="description-edit" name="description" defaultValue={api.description} className="col-span-3" required />
+                                                            </div>
+                                                            <div className="grid grid-cols-4 items-center gap-4">
+                                                                <Label htmlFor="endpoint-edit" className="text-right">Endpoint</Label>
+                                                                <div className="col-span-3 flex gap-2">
+                                                                    <Select name="method" defaultValue={api.method}>
+                                                                        <SelectTrigger className="w-[100px]"><SelectValue /></SelectTrigger>
+                                                                        <SelectContent>
+                                                                            <SelectItem value="GET">GET</SelectItem>
+                                                                            <SelectItem value="POST">POST</SelectItem>
+                                                                            <SelectItem value="PUT">PUT</SelectItem>
+                                                                            <SelectItem value="DELETE">DELETE</SelectItem>
+                                                                        </SelectContent>
+                                                                    </Select>
+                                                                    <Input id="endpoint-edit" name="endpoint" defaultValue={api.endpoint} className="flex-1 font-mono" required />
+                                                                </div>
+                                                            </div>
+                                                            <div className="grid grid-cols-4 items-center gap-4">
+                                                                <Label htmlFor="version-edit" className="text-right">Version</Label>
+                                                                <Input id="version-edit" name="version" defaultValue={api.version} className="col-span-3" required />
+                                                            </div>
+                                                            <div className="grid grid-cols-4 items-center gap-4">
+                                                                <Label htmlFor="status-edit" className="text-right">Status</Label>
+                                                                 <Select name="status" defaultValue={api.status}>
+                                                                    <SelectTrigger className="col-span-3"><SelectValue /></SelectTrigger>
+                                                                    <SelectContent>
+                                                                        <SelectItem value="draft">Draft</SelectItem>
+                                                                        <SelectItem value="published">Published</SelectItem>
+                                                                        <SelectItem value="deprecated">Deprecated</SelectItem>
+                                                                    </SelectContent>
+                                                                </Select>
+                                                            </div>
+                                                        </div>
+                                                        <DialogFooter>
+                                                            <Button type="submit">Save Changes</Button>
+                                                        </DialogFooter>
+                                                    </form>
+                                                </DialogContent>
+                                            </Dialog>
                                         </TableCell>
                                     </TableRow>
                                 ))}

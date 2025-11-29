@@ -145,45 +145,6 @@
       },
       "required": ["name", "email", "role"]
     },
-    "Workflow": {
-      "title": "Workflow",
-      "type": "object",
-      "description": "Defines a workflow within Function Connect.",
-      "properties": {
-        "name": { "type": "string" },
-        "description": { "type": "string" },
-        "trigger": {
-            "type": "object",
-            "properties": {
-                "service": { "type": "string", "enum": ["WhatsApp", "Twilio", "CRM"]},
-                "event": { "type": "string" }
-            },
-             "required": ["service", "event"]
-        },
-        "steps": {
-            "type": "array",
-            "items": {
-                "type": "object",
-                "properties": {
-                    "name": { "type": "string" },
-                    "description": { "type": "string" }
-                },
-                 "required": ["name", "description"]
-            }
-        },
-        "status": { "type": "string", "enum": ["active", "inactive"] },
-        "lastRun": { "type": "string", "format": "date-time" },
-        "userId": { "type": "string" }
-      },
-      "required": [
-        "name",
-        "description",
-        "steps",
-        "userId",
-        "trigger",
-        "status"
-      ]
-    },
     "Conversation": {
       "title": "Conversation",
       "type": "object",
@@ -229,10 +190,6 @@
     "/users/{userId}/exposedApis/{exposedApiId}": {
       "schema": { "$ref": "#/entities/ExposedApi" },
       "description": "Stores APIs exposed by a user."
-    },
-    "/users/{userId}/workflows/{workflowId}": {
-      "schema": { "$ref": "#/entities/Workflow" },
-      "description": "Stores workflows created by a user."
     },
     "/users/{userId}/conversations/{conversationId}": {
         "schema": { "$ref": "#/entities/Conversation" },

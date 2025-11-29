@@ -5,7 +5,6 @@ import { usePathname } from 'next/navigation';
 import {
   CodeXml,
   LayoutDashboard,
-  PlusCircle,
   ScrollText,
   Users,
   Workflow,
@@ -61,12 +60,10 @@ const navItems = [
   { href: '/dashboard/exposed-apis', icon: CodeXml, label: 'Exposed APIs' },
   { href: '/dashboard/function-connect', icon: Workflow, label: 'Function Connect' },
   {
-    href: '/dashboard/integrations',
-    icon: PlusCircle,
-    label: 'Integrations',
-    subItems: [
-      { href: '/dashboard/crm', icon: CrmIcon, label: 'CRM', color: 'text-[#00A4BD]' },
-    ]
+    href: '/dashboard/crm',
+    icon: CrmIcon,
+    label: 'CRM',
+    color: 'text-[#00A4BD]',
   },
   {
     href: '/dashboard/ai-agents',
