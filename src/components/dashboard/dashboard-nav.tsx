@@ -44,8 +44,8 @@ export function DashboardNav() {
                 tooltip={label}
                 className="justify-start"
               >
-                <Icon className="h-6 w-6" />
-                <span>{label}</span>
+                <Icon className="h-8 w-8" />
+                <span className="text-lg">{label}</span>
               </SidebarMenuButton>
             </Link>
           </SidebarMenuItem>
