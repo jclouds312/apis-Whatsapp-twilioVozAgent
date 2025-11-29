@@ -71,18 +71,19 @@ const navItems = [
 
 export function DashboardNav() {
   const pathname = usePathname();
-  const [openSections, setOpenSections] = useState<Record<string, boolean>>(
-    // Initialize all sections to be closed by default
-    navItems.reduce((acc, item) => {
-        if (item.label) {
-            acc[item.label] = false;
-        }
-        return acc;
-    }, {} as Record<string, boolean>)
-  );
+  const [openSections, setOpenSections] = useState<Record<string, boolean>>(() => {
+    const initialState: Record<string, boolean> = {};
+    navItems.forEach(item => {
+      if (item.subItems) {
+        initialState[item.label] = item.subItems.some(sub => pathname.startsWith(sub.href));
+      }
+    });
+    return initialState;
+  });
 
   useEffect(() => {
-    // Find the parent item of the currently active sub-item
+    // This effect ensures that the correct section is open on initial load
+    // or when navigating directly to a sub-page.
     const activeParent = navItems.find(item => 
       item.subItems && item.subItems.some(sub => pathname.startsWith(sub.href))
     );
@@ -98,26 +99,25 @@ export function DashboardNav() {
 
   return (
     <nav className="flex flex-col gap-2 px-4 py-2">
-      {navItems.map(({ href, icon: Icon, label, subItems }) =>
-        subItems ? (
-          <Collapsible key={label} open={openSections[label]} onOpenChange={() => toggleSection(label)} className="w-full">
+      {navItems.map((item) =>
+        item.subItems ? (
+          <Collapsible key={item.label} open={openSections[item.label] ?? false} onOpenChange={() => toggleSection(item.label)} className="w-full">
             <CollapsibleTrigger asChild>
               <Button
                 variant="ghost"
                 className={cn(
                   "w-full justify-start text-lg h-12",
-                  // An item is active if its own href matches, or if a sub-item's href matches
-                  (pathname.startsWith(href)) && "bg-sidebar-accent text-sidebar-accent-foreground"
+                  item.subItems.some(sub => pathname.startsWith(sub.href)) && "bg-sidebar-accent text-sidebar-accent-foreground"
                 )}
               >
-                <Icon className="h-6 w-6 mr-4" />
-                {label}
-                <ChevronDown className={cn("ml-auto h-5 w-5 transition-transform", openSections[label] && "rotate-180")} />
+                <item.icon className="h-6 w-6 mr-4" />
+                {item.label}
+                <ChevronDown className={cn("ml-auto h-5 w-5 transition-transform", openSections[item.label] && "rotate-180")} />
               </Button>
             </CollapsibleTrigger>
             <CollapsibleContent className="py-1 pl-8">
               <div className="flex flex-col gap-1 border-l-2 border-sidebar-border/50">
-                {subItems.map(subItem => {
+                {item.subItems.map(subItem => {
                    const SubIcon = subItem.icon;
                    return (
                     <Link
@@ -139,16 +139,16 @@ export function DashboardNav() {
             </CollapsibleContent>
           </Collapsible>
         ) : (
-          <Link key={href} href={href}>
+          <Link key={item.href} href={item.href}>
             <Button
               variant="ghost"
               className={cn(
                 "w-full justify-start text-lg h-12",
-                pathname === href && "bg-sidebar-accent text-sidebar-accent-foreground"
+                pathname === item.href && "bg-sidebar-accent text-sidebar-accent-foreground"
               )}
             >
-              <Icon className="h-6 w-6 mr-4" />
-              {label}
+              <item.icon className="h-6 w-6 mr-4" />
+              {item.label}
             </Button>
           </Link>
         )

@@ -142,15 +142,15 @@ export default function UsersPage() {
                                                         </div>
                                                         <div className="grid grid-cols-4 items-center gap-4">
                                                             <Label htmlFor={`role-${user.id}`} className="text-right">Role</Label>
-                                                            <Select defaultValue={user.role.toLowerCase()}>
+                                                            <Select defaultValue={user.role}>
                                                                 <SelectTrigger className="col-span-3">
                                                                     <SelectValue placeholder="Select a role" />
                                                                 </SelectTrigger>
                                                                 <SelectContent>
-                                                                    <SelectItem value="admin">Admin</SelectItem>
-                                                                    <SelectItem value="manager">Manager</SelectItem>
-                                                                    <SelectItem value="developer">Developer</SelectItem>
-                                                                    <SelectItem value="agent">Agent</SelectItem>
+                                                                    <SelectItem value="Admin">Admin</SelectItem>
+                                                                    <SelectItem value="Manager">Manager</SelectItem>
+                                                                    <SelectItem value="Developer">Developer</SelectItem>
+                                                                    <SelectItem value="Agent">Agent</SelectItem>
                                                                 </SelectContent>
                                                             </Select>
                                                         </div>
