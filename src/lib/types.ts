@@ -49,16 +49,17 @@ export type ExposedApi = {
 
 export type Message = {
   id: string;
-  contactId: string;
+  contactId: string; // The ID of the other person in the conversation
   content: string;
   timestamp: string;
-  isSender: boolean;
+  isSender: boolean; // True if the current user sent the message
 };
 
 export type Conversation = {
   id: string;
   contactName: string;
   contactAvatar: string;
+  contactId: string; // Phone number for WhatsApp
   lastMessage: string;
   lastMessageTime: string;
   messages: Message[];

@@ -85,6 +85,7 @@ export const conversations: Conversation[] = [
         id: 'conv_1',
         contactName: 'John Agent',
         contactAvatar: users.find(u => u.id === 'usr_2')?.avatarUrl || '',
+        contactId: '15550001111', // Example phone number
         lastMessage: 'Sure, I can do that. When do you need it by?',
         lastMessageTime: new Date(Date.now() - 1000 * 20).toISOString(),
         messages: [
@@ -96,6 +97,7 @@ export const conversations: Conversation[] = [
         id: 'conv_2',
         contactName: 'Sarah Developer',
         contactAvatar: users.find(u => u.id === 'usr_3')?.avatarUrl || '',
+        contactId: '15550002222',
         lastMessage: 'Got it, thanks!',
         lastMessageTime: new Date(Date.now() - 1000 * 60 * 5).toISOString(),
         messages: [
@@ -107,6 +109,7 @@ export const conversations: Conversation[] = [
         id: 'conv_3',
         contactName: 'Mike Manager',
         contactAvatar: users.find(u => u.id === 'usr_4')?.avatarUrl || '',
+        contactId: '15550003333',
         lastMessage: 'See you then!',
         lastMessageTime: new Date(Date.now() - 1000 * 60 * 60 * 1).toISOString(),
         messages: [
