@@ -17,7 +17,7 @@ export default function DashboardLayout({
         <SidebarHeader>
           <Link href="/dashboard" className="flex items-center gap-2 font-semibold text-lg text-sidebar-foreground">
             <Sparkles className="h-6 w-6 text-accent" />
-            <span>OmniFlow</span>
+            <span>APIs Manager</span>
           </Link>
         </SidebarHeader>
         <SidebarContent>

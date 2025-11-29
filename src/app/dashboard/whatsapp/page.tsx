@@ -11,7 +11,7 @@ export default function WhatsAppPage() {
 
     return (
         <>
-            <Header title="WhatsApp Console" />
+            <Header title="WhatsApp" />
             <main className="flex-1 flex-col gap-4 p-4 lg:gap-6 lg:p-6">
                  <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
                     <Card className="lg:col-span-1">

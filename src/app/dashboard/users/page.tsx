@@ -42,7 +42,7 @@ export default function UsersPage() {
                                 <DialogHeader>
                                 <DialogTitle>Add New User</DialogTitle>
                                 <DialogDescription>
-                                    Invite a new team member to OmniFlow.
+                                    Invite a new team member to APIs Manager.
                                 </DialogDescription>
                                 </DialogHeader>
                                 <div className="grid gap-4 py-4">

@@ -1,10 +1,10 @@
-# OmniFlow: Plataforma Unificada de Gestión y Orquestación de APIs
+# APIs Manager: Plataforma Unificada de Gestión y Orquestación de APIs
 
-OmniFlow es un panel de administración integral diseñado para centralizar, gestionar y automatizar las interacciones entre diversos servicios y APIs. La plataforma proporciona una consola unificada para administrar claves de API, exponer y documentar APIs internas, conectar flujos de trabajo entre servicios (como CRM, WhatsApp y Twilio) y gestionar usuarios con roles específicos.
+APIs Manager es un panel de administración integral diseñado para centralizar, gestionar y automatizar las interacciones entre diversos servicios y APIs. La plataforma proporciona una consola unificada para administrar claves de API, exponer y documentar APIs internas, conectar flujos de trabajo entre servicios (como CRM, WhatsApp y Twilio) y gestionar usuarios con roles específicos.
 
 ## Concepto del Proyecto
 
-En el ecosistema digital actual, las empresas dependen de una multitud de servicios SaaS y APIs internas para operar. La gestión de estas integraciones puede volverse compleja, fragmentada y difícil de escalar. OmniFlow nace como la solución a este problema, ofreciendo un "centro de comando" unificado que permite a los equipos técnicos y de negocio:
+En el ecosistema digital actual, las empresas dependen de una multitud de servicios SaaS y APIs internas para operar. La gestión de estas integraciones puede volverse compleja, fragmentada y difícil de escalar. APIs Manager nace como la solución a este problema, ofreciendo un "centro de comando" unificado que permite a los equipos técnicos y de negocio:
 
 -   **Centralizar la Seguridad**: Gestionar todas las credenciales de API de servicios externos en un único lugar seguro.
 -   **Exponer y Monetizar APIs**: Convertir funcionalidades internas en APIs seguras, documentadas y listas para ser consumidas por clientes o socios.

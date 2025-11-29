@@ -14,7 +14,8 @@ import {
   Sparkles,
   Github,
   PhoneForwarded,
-  PhoneCall
+  PhoneCall,
+  Voicemail
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import {
@@ -29,8 +30,8 @@ const navItems = [
   { href: '/dashboard/api-keys', icon: KeyRound, label: 'API Keys' },
   { href: '/dashboard/api-exhibition', icon: CodeXml, label: 'API Exhibition' },
   { href: '/dashboard/function-connect', icon: Workflow, label: 'Function Connect' },
-  { href: '/dashboard/whatsapp', icon: MessageSquare, label: 'WhatsApp Console' },
-  { href: '/dashboard/twilio', icon: PhoneCall, label: 'Twilio Console' },
+  { href: '/dashboard/whatsapp', icon: MessageSquare, label: 'WhatsApp' },
+  { href: '/dashboard/twilio', icon: Voicemail, label: 'Twilio Voice' },
   { href: '/dashboard/logs', icon: ScrollText, label: 'Logs & Audit' },
   { href: '/dashboard/users', icon: Users, label: 'Users & Roles' },
 ];

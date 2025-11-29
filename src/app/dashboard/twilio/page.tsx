@@ -15,13 +15,13 @@ export default function TwilioPage() {
 
     return (
         <>
-            <Header title="Twilio Console" />
+            <Header title="Twilio Voice" />
             <main className="flex-1 flex-col gap-4 p-4 lg:gap-6 lg:p-6">
                 <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
                     <Card className="lg:col-span-1">
                         <CardHeader>
                             <CardTitle>Twilio Connection</CardTitle>
-                            <CardDescription>Manage your Twilio API credentials.</CardDescription>
+                            <CardDescription>Manage your Twilio API credentials for Voice.</CardDescription>
                         </CardHeader>
                         <CardContent className="space-y-4">
                             <div className="space-y-2">
@@ -50,8 +50,8 @@ export default function TwilioPage() {
 
                     <Card className="lg:col-span-2">
                          <CardHeader>
-                            <CardTitle>Recent Twilio Activity</CardTitle>
-                             <CardDescription>Last voice and SMS events.</CardDescription>
+                            <CardTitle>Recent Voice Activity</CardTitle>
+                             <CardDescription>Last voice and SMS events from Twilio.</CardDescription>
                         </CardHeader>
                         <CardContent>
                            <Table>
