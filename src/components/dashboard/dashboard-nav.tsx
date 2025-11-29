@@ -12,6 +12,7 @@ import {
   ChevronDown,
   Bot,
   Settings,
+  Volume2,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import {
@@ -64,6 +65,7 @@ const navItems = [
     subItems: [
       { href: '/dashboard/ai-agents/retell', label: 'Retell Agent' },
       { href: '/dashboard/ai-agents/workflow-suggester', label: 'Workflow Suggester' },
+      { href: '/dashboard/ai-agents/text-to-speech', icon: Volume2, label: 'Text-to-Speech' },
     ]
   },
   { href: '/dashboard/logs', icon: ScrollText, label: 'Logs & Audit' },

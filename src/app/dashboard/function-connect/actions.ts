@@ -2,6 +2,7 @@
 
 import { suggestOptimalWorkflows } from '@/ai/flows/suggest-optimal-workflows';
 import { retellAgent } from '@/ai/flows/retell-agent';
+import { generateSpeech } from '@/ai/flows/text-to-speech';
 import { z } from 'zod';
 
 const suggestionSchema = z.object({
@@ -61,4 +62,31 @@ export async function getRetellSuggestion(prevState: any, formData: FormData) {
     console.error(e);
     return { suggestion: null, errors: { _form: ['Failed to generate suggestion.'] } };
   }
+}
+
+const ttsSchema = z.object({
+  textToConvert: z.string().min(2, { message: 'Text must be at least 2 characters long.' }),
+});
+
+export async function textToSpeech(prevState: any, formData: FormData) {
+    const validatedFields = ttsSchema.safeParse({
+        textToConvert: formData.get('textToConvert'),
+    });
+
+    if (!validatedFields.success) {
+        return {
+            errors: validatedFields.error.flatten().fieldErrors,
+            audioData: null,
+        };
+    }
+
+    const { textToConvert } = validatedFields.data;
+
+    try {
+        const result = await generateSpeech(textToConvert);
+        return { audioData: result.audio, errors: null };
+    } catch (e: any) {
+        console.error('Text-to-speech error:', e);
+        return { audioData: null, errors: { _form: [e.message || 'Failed to generate audio.'] } };
+    }
 }
