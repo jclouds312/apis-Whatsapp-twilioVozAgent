@@ -6,17 +6,13 @@
  *
  * Data Structure: The data is organized hierarchically. A top-level `/users` collection serves
  * as the root for all user-specific data. A few administrative collections like `/apiLogs`,
- * `/dashboardUsers`, and `/roles` exist at the top level and are inaccessible to clients by default,
- * assuming they are managed by a trusted backend service.
+ * and `/dashboardUsers` exist at the top level.
  *
  * Key Security Decisions:
  * - Default Deny: All paths are closed by default. Access must be explicitly granted.
  * - Strict Ownership: A user can only read or write data within their own document tree
  *   (i.e., `/users/{request.auth.uid}/...`).
  * - No User Listing: It is not possible for any user to list all documents in the `/users` collection.
- * - Backend-Managed Collections: Collections like `/apiLogs`, `/dashboardUsers`, and `/roles` are
- *   locked down from all client-side access. They are intended for use by backend processes or
- *   administrators with elevated privileges not defined in these rules.
  *
  * Denormalization for Authorization: The rules rely on path-based security, which is a form of
  * denormalization. The user's ID is part of the document path, making ownership checks extremely
@@ -147,18 +143,19 @@ service cloud.firestore {
 
 
     // ------------------------------------------------------------------------
-    // Backend & Admin Collections (Client Access Denied)
+    // Backend & Admin Collections
     // ------------------------------------------------------------------------
 
     /**
-     * @description API logs are backend-written and should not be accessible by clients for reading.
+     * @description API logs are backend-written but can be read by any authenticated user for dashboard visibility.
      * @path /apiLogs/{apiLogId}
-     * @allow No client operation is permitted.
-     * @deny Any authenticated user attempting to read an API log. (get)
-     * @principle Data written by backend services should be protected from all client access.
+     * @allow Any signed-in user can read logs.
+     * @deny Writes are forbidden from the client.
+     * @principle Data visibility for authenticated users is a valid use case for admin panels.
      */
     match /apiLogs/{apiLogId} {
-      allow read, write: if false;
+      allow get, list: if isSignedIn();
+      allow write: if false;
     }
 
     /**
@@ -177,5 +174,3 @@ service cloud.firestore {
     }
   }
 }
-
-    
