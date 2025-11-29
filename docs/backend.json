@@ -1,44 +1,46 @@
+
 {
   "entities": {
     "ApiKey": {
       "$schema": "http://json-schema.org/draft-07/schema#",
       "title": "ApiKey",
       "type": "object",
-      "description": "Represents an API Key used for authenticating requests to the system.",
+      "description": "Represents an API Key used for authenticating with external services.",
       "properties": {
-        "id": {
+        "service": {
           "type": "string",
-          "description": "Unique identifier for the API key."
-        },
-        "apiKey": {
-          "type": "string",
-          "description": "The actual API key value (encrypted)."
+          "description": "The name of the service this key is for (e.g., 'WhatsApp Business', 'Twilio')."
         },
         "description": {
           "type": "string",
-          "description": "Description of the API key's purpose."
+          "description": "A user-provided description for the API key's purpose."
+        },
+        "key": {
+          "type": "string",
+          "description": "The actual API key value (should be encrypted at rest)."
+        },
+        "status": {
+          "type": "string",
+          "description": "The status of the API key.",
+          "enum": ["active", "revoked"]
         },
         "createdAt": {
           "type": "string",
           "description": "Timestamp indicating when the API key was created.",
           "format": "date-time"
         },
-        "expiresAt": {
-          "type": "string",
-          "description": "Timestamp indicating when the API key expires (optional).",
-          "format": "date-time"
-        },
         "userId": {
           "type": "string",
-          "description": "Reference to User. (Relationship: User 1:N ApiKey)"
+          "description": "The ID of the user who owns this key. (Relationship: User 1:N ApiKey)"
         }
       },
       "required": [
-        "id",
-        "apiKey",
-        "description",
+        "service",
+        "key",
+        "status",
         "createdAt",
-        "userId"
+        "userId",
+        "description"
       ]
     },
     "WhatsappSetting": {

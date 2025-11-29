@@ -2,6 +2,7 @@ export type ApiKey = {
   id: string;
   service: string;
   key: string;
+  description: string;
   status: 'active' | 'revoked';
   createdAt: any; // Allow any for Firestore Timestamp
   userId: string;
