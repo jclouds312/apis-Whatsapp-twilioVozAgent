@@ -1,57 +1,74 @@
+
+'use client';
+
 import { Header } from "@/components/dashboard/header";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
-import { CheckCircle, XCircle } from "lucide-react";
+import { CheckCircle, XCircle, Phone } from "lucide-react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { logs } from "@/lib/data";
 import { format } from "date-fns";
+import { useState } from "react";
+import { useToast } from "@/hooks/use-toast";
 
 export default function TwilioPage() {
-    const isConnected = true; // Mock status
+    const [isConnected, setIsConnected] = useState(false);
+    const { toast } = useToast();
     const twilioLogs = logs.filter(log => log.service === 'Twilio');
+
+    const handleConnect = () => {
+        setIsConnected(true);
+        toast({
+            title: "Configuration Saved",
+            description: "Successfully connected to Twilio.",
+        })
+    }
 
     return (
         <>
             <Header title="Twilio Voice" />
-            <main className="flex-1 flex-col gap-4 p-4 lg:gap-6 lg:p-6">
+            <main className="flex-1 grid gap-6 p-4 lg:p-6">
                 <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-                    <Card className="lg:col-span-1">
+                    <Card className="lg:col-span-1 flex flex-col">
                         <CardHeader>
                             <CardTitle>Twilio Connection</CardTitle>
                             <CardDescription>Manage your Twilio API credentials for Voice.</CardDescription>
                         </CardHeader>
-                        <CardContent className="space-y-4">
+                        <CardContent className="space-y-4 flex-grow">
                             <div className="space-y-2">
                                 <Label htmlFor="twilio-sid">Account SID</Label>
-                                <Input id="twilio-sid" defaultValue="AC1521875f599e92e8bdc38f75c97751cb" />
+                                <Input id="twilio-sid" placeholder="AC..." defaultValue="AC1521875f599e92e8bdc38f75c97751cb" />
                             </div>
                             <div className="space-y-2">
                                 <Label htmlFor="twilio-token">Auth Token</Label>
-                                <Input id="twilio-token" type="password" defaultValue="••••••••••••••••••••••••" />
+                                <Input id="twilio-token" type="password" placeholder="Your auth token" defaultValue="••••••••••••••••••••••••" />
                             </div>
-                             <div className="flex items-center space-x-2">
+                             <div className="flex items-center space-x-2 pt-2">
                                 {isConnected ? (
                                     <CheckCircle className="h-5 w-5 text-green-500" />
                                 ) : (
                                     <XCircle className="h-5 w-5 text-red-500" />
                                 )}
-                                <span className="text-sm font-medium">
+                                <span className={`text-sm font-medium ${isConnected ? "text-green-600" : "text-red-600"}`}>
                                     {isConnected ? "Connected" : "Not Connected"}
                                 </span>
                             </div>
                         </CardContent>
                         <CardHeader>
-                             <Button>Save Configuration</Button>
+                             <Button onClick={handleConnect}>Save Configuration</Button>
                         </CardHeader>
                     </Card>
 
                     <Card className="lg:col-span-2">
-                         <CardHeader>
-                            <CardTitle>Recent Voice Activity</CardTitle>
-                             <CardDescription>Last voice and SMS events from Twilio.</CardDescription>
+                         <CardHeader className="flex flex-row items-center justify-between">
+                            <div>
+                                <CardTitle>Recent Voice Activity</CardTitle>
+                                <CardDescription>Last voice and SMS events from Twilio.</CardDescription>
+                            </div>
+                            <Phone className="h-6 w-6 text-muted-foreground" />
                         </CardHeader>
                         <CardContent>
                            <Table>

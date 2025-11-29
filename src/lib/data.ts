@@ -20,10 +20,10 @@ export const logs: Log[] = [
 ];
 
 export const users: User[] = [
-  { id: 'usr_1', name: 'Admin User', email: 'admin@omniflow.io', role: 'Admin', avatarUrl: userAvatar },
-  { id: 'usr_2', name: 'John Agent', email: 'john.agent@omniflow.io', role: 'Agent', avatarUrl: 'https://picsum.photos/seed/user2/100/100' },
-  { id: 'usr_3', name: 'Sarah Developer', email: 'sarah.dev@omniflow.io', role: 'Developer', avatarUrl: 'https://picsum.photos/seed/user3/100/100' },
-  { id: 'usr_4', name: 'Mike Manager', email: 'mike.manager@omniflow.io', role: 'Manager', avatarUrl: 'https://picsum.photos/seed/user4/100/100' },
+  { id: 'usr_1', name: 'Admin User', email: 'admin@apimanager.io', role: 'Admin', avatarUrl: userAvatar },
+  { id: 'usr_2', name: 'John Agent', email: 'john.agent@apimanager.io', role: 'Agent', avatarUrl: 'https://picsum.photos/seed/user2/100/100' },
+  { id: 'usr_3', name: 'Sarah Developer', email: 'sarah.dev@apimanager.io', role: 'Developer', avatarUrl: 'https://picsum.photos/seed/user3/100/100' },
+  { id: 'usr_4', name: 'Mike Manager', email: 'mike.manager@apimanager.io', role: 'Manager', avatarUrl: 'https://picsum.photos/seed/user4/100/100' },
 ];
 
 export const workflows: Workflow[] = [
@@ -93,19 +93,19 @@ export const exposedApis: ExposedApi[] = [
 export const conversations: Conversation[] = [
     {
         id: 'conv_1',
-        contactName: 'Alice',
-        contactAvatar: 'https://picsum.photos/seed/alice/100/100',
+        contactName: 'John Agent',
+        contactAvatar: users.find(u => u.id === 'usr_2')?.avatarUrl || '',
         lastMessage: 'Sure, I can do that. When do you need it by?',
         lastMessageTime: '2024-07-22T10:30:00Z',
         messages: [
-            { id: 'msg_1_1', contactId: 'usr_2', content: 'Hey Alice, can you help me with the new design?', timestamp: '2024-07-22T10:29:00Z', isSender: false },
+            { id: 'msg_1_1', contactId: 'usr_2', content: 'Hey, I have a question about my last order.', timestamp: '2024-07-22T10:29:00Z', isSender: false },
             { id: 'msg_1_2', contactId: 'usr_1', content: 'Sure, I can do that. When do you need it by?', timestamp: '2024-07-22T10:30:00Z', isSender: true },
         ],
     },
     {
         id: 'conv_2',
-        contactName: 'Bob',
-        contactAvatar: 'https://picsum.photos/seed/bob/100/100',
+        contactName: 'Sarah Developer',
+        contactAvatar: users.find(u => u.id === 'usr_3')?.avatarUrl || '',
         lastMessage: 'Got it, thanks!',
         lastMessageTime: '2024-07-22T09:15:00Z',
         messages: [
@@ -115,8 +115,8 @@ export const conversations: Conversation[] = [
     },
     {
         id: 'conv_3',
-        contactName: 'Charlie',
-        contactAvatar: 'https://picsum.photos/seed/charlie/100/100',
+        contactName: 'Mike Manager',
+        contactAvatar: users.find(u => u.id === 'usr_4')?.avatarUrl || '',
         lastMessage: 'See you then!',
         lastMessageTime: '2024-07-21T18:45:00Z',
         messages: [
