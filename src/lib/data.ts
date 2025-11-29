@@ -3,10 +3,10 @@ import type { ApiKey, Log, User, Workflow, ExposedApi, Conversation } from '@/li
 export const userAvatar = "https://picsum.photos/seed/user1/100/100";
 
 export const apiKeys: ApiKey[] = [
-  { id: 'key_waba_1', service: 'WhatsApp Business', key: 'WA-xxxx-xxxx-xxxx-E7G8', status: 'active', createdAt: '2024-05-01' },
-  { id: 'key_tw_1', service: 'Twilio', key: 'TW-xxxx-xxxx-xxxx-F9H1', status: 'active', createdAt: '2024-04-22' },
-  { id: 'key_crm_1', service: 'CRM Hubspot', key: 'CRM-xxxx-xxxx-xxxx-A1B2', status: 'active', createdAt: '2024-03-15' },
-  { id: 'key_waba_2', service: 'WhatsApp Business', key: 'WA-xxxx_xxxx-xxxx-C3D4', status: 'revoked', createdAt: '2023-11-10' },
+  { id: 'key_waba_1', service: 'WhatsApp Business', key: 'WA-xxxx-xxxx-xxxx-E7G8', status: 'active', createdAt: new Date(Date.now() - 1000 * 60 * 60 * 24 * 7).toISOString() },
+  { id: 'key_tw_1', service: 'Twilio', key: 'TW-xxxx-xxxx-xxxx-F9H1', status: 'active', createdAt: new Date(Date.now() - 1000 * 60 * 60 * 24 * 14).toISOString() },
+  { id: 'key_crm_1', service: 'CRM Hubspot', key: 'CRM-xxxx-xxxx-xxxx-A1B2', status: 'active', createdAt: new Date(Date.now() - 1000 * 60 * 60 * 24 * 30).toISOString() },
+  { id: 'key_waba_2', service: 'WhatsApp Business', key: 'WA-xxxx_xxxx-xxxx-C3D4', status: 'revoked', createdAt: new Date(Date.now() - 1000 * 60 * 60 * 24 * 90).toISOString() },
 ];
 
 export const logs: Log[] = [

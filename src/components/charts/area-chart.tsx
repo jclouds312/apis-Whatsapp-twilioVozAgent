@@ -6,7 +6,7 @@ import {
   ChartContainer,
   ChartTooltipContent,
 } from '@/components/ui/chart';
-import { format } from 'date-fns';
+import { format, parseISO } from 'date-fns';
 
 type AreaChartComponentProps = {
   data: any[];
@@ -33,10 +33,10 @@ export function AreaChartComponent({ data, dataKey, xAxisKey }: AreaChartCompone
                 axisLine={false}
                 tickMargin={8}
                 tickFormatter={(value) => {
-                    if (value.includes(" ")) { // It's a datetime string
-                        return format(new Date(value), 'HH:mm');
+                    if (typeof value === 'string') {
+                       return format(parseISO(value), 'HH:mm:ss');
                     }
-                    return value.slice(5) // It's just a date
+                    return '';
                 }}
             />
             <YAxis
@@ -44,7 +44,10 @@ export function AreaChartComponent({ data, dataKey, xAxisKey }: AreaChartCompone
                 axisLine={false}
                 tickMargin={8}
             />
-            <Tooltip content={<ChartTooltipContent />} />
+            <Tooltip 
+              content={<ChartTooltipContent />} 
+              cursor={false}
+            />
             <defs>
                 <linearGradient id="fillCalls" x1="0" y1="0" x2="0" y2="1">
                 <stop
@@ -65,6 +68,7 @@ export function AreaChartComponent({ data, dataKey, xAxisKey }: AreaChartCompone
                 fill="url(#fillCalls)"
                 stroke="var(--color-calls)"
                 stackId="a"
+                dot={false}
             />
         </AreaChart>
     </ChartContainer>

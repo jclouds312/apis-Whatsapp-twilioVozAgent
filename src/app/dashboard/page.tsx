@@ -7,52 +7,55 @@ import { AreaChartComponent } from "@/components/charts/area-chart";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { workflows, logs, exposedApis } from "@/lib/data";
+import { workflows, logs, exposedApis, users } from "@/lib/data";
 import { Activity, Workflow, AlertCircle, Users, CodeXml, Circle } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { format, formatDistanceToNow } from "date-fns";
+import { format, formatDistanceToNow, parseISO } from "date-fns";
 import { cn } from '@/lib/utils';
 
-const initialApiTrafficData = Array.from({ length: 7 }, (_, i) => {
+const initialApiTrafficData = Array.from({ length: 15 }, (_, i) => {
     const d = new Date();
-    d.setDate(d.getDate() - (6 - i));
+    d.setSeconds(d.getSeconds() - (14 - i) * 3);
     return {
-        date: d.toISOString().split('T')[0],
+        date: d.toISOString(),
         'API Calls': 0,
     };
 });
 
 export default function DashboardPage() {
     const [apiTrafficData, setApiTrafficData] = useState(initialApiTrafficData);
-    const totalApiCalls = apiTrafficData.reduce((sum, item) => sum + item['API Calls'], 0);
+    
     const activeWorkflows = workflows.filter(w => w.status === 'active');
-    const errorsToday = logs.filter(l => l.level === 'error').length;
-    const publishedApis = exposedApis.filter(api => api.status === 'published').length;
+    const recentLogs = logs.slice(0, 10);
+    const topExposedApis = exposedApis.slice(0, 4);
+
+    const [totalApiCalls, setTotalApiCalls] = useState(0);
+    const [errorsToday, setErrorsToday] = useState(0);
 
     useEffect(() => {
+        setErrorsToday(logs.filter(l => l.level === 'error' && (new Date().getTime() - new Date(l.timestamp).getTime()) < 86400000).length);
+        
         const interval = setInterval(() => {
             setApiTrafficData(prevData => {
-                const newData = [...prevData];
-                const lastIndex = newData.length - 1;
-                const newCalls = newData[lastIndex]['API Calls'] + Math.floor(Math.random() * 50) + 10;
+                const now = new Date();
+                const newCallCount = Math.floor(Math.random() * 50) + 10;
+                const newEntry = {
+                    date: now.toISOString(),
+                    'API Calls': newCallCount,
+                };
                 
-                // Shift data to the left
-                const shiftedData = newData.slice(1);
-                const newDate = new Date();
+                const shiftedData = [...prevData.slice(1), newEntry];
+                
+                setTotalApiCalls(currentTotal => currentTotal + newCallCount);
 
-                // To prevent date labels from being the same, we'll just add the current time to the label
-                const newDateLabel = format(newDate, 'yyyy-MM-dd HH:mm:ss');
-
-                return [
-                    ...shiftedData,
-                    { date: newDateLabel, 'API Calls': newCalls }
-                ];
-
+                return shiftedData;
             });
         }, 3000);
 
         return () => clearInterval(interval);
     }, []);
+
+    const publishedApis = exposedApis.filter(api => api.status === 'published').length;
 
     const getStatusClass = (status: 'published' | 'draft' | 'deprecated') => {
         switch (status) {
@@ -103,7 +106,7 @@ export default function DashboardPage() {
             />
             <StatCard 
                 title="Active Users"
-                value="4"
+                value={users.length.toString()}
                 description="Across all roles"
                 Icon={Users}
             />
@@ -132,7 +135,7 @@ export default function DashboardPage() {
                             </TableRow>
                         </TableHeader>
                         <TableBody>
-                            {exposedApis.slice(0,4).map(api => (
+                            {topExposedApis.map(api => (
                                 <TableRow key={api.id}>
                                     <TableCell>
                                         <div className="font-medium">{api.name}</div>
@@ -162,7 +165,7 @@ export default function DashboardPage() {
                 <CardContent>
                   <ScrollArea className="h-72">
                     <div className="space-y-4">
-                      {logs.slice(0, 10).map((log) => (
+                      {recentLogs.map((log) => (
                         <div key={log.id} className="flex items-start gap-4">
                           <div className="flex-shrink-0 pt-1">
                             {log.level === 'error' && <AlertCircle className="h-5 w-5 text-destructive" />}
@@ -174,7 +177,7 @@ export default function DashboardPage() {
                               <span className="font-semibold text-primary">{log.service}:</span> {log.message}
                             </p>
                             <p className="text-sm text-muted-foreground">
-                              {formatDistanceToNow(new Date(log.timestamp), { addSuffix: true })}
+                              {formatDistanceToNow(parseISO(log.timestamp), { addSuffix: true })}
                             </p>
                           </div>
                         </div>
@@ -205,7 +208,7 @@ export default function DashboardPage() {
                                             Trigger: {wf.trigger.event}
                                         </div>
                                     </TableCell>
-                                    <TableCell className="text-right">{format(new Date(wf.lastRun), 'PP')}</TableCell>
+                                    <TableCell className="text-right">{format(parseISO(wf.lastRun), 'PPpp')}</TableCell>
                                 </TableRow>
                             ))}
                         </TableBody>
