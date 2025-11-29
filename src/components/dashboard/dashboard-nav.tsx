@@ -11,11 +11,6 @@ import {
   ScrollText,
   Users,
   Workflow,
-  Sparkles,
-  Github,
-  PhoneForwarded,
-  PhoneCall,
-  Voicemail
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import {
@@ -23,7 +18,6 @@ import {
   SidebarMenuItem,
   SidebarMenuButton,
 } from '@/components/ui/sidebar';
-import { Separator } from '../ui/separator';
 
 const navItems = [
   { href: '/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
@@ -40,7 +34,7 @@ export function DashboardNav() {
   const pathname = usePathname();
 
   return (
-    <nav className="grid items-start text-sm font-medium">
+    <nav className="grid items-start text-base font-medium">
       <SidebarMenu>
         {navItems.map(({ href, icon: Icon, label }) => (
           <SidebarMenuItem key={href}>
@@ -50,7 +44,7 @@ export function DashboardNav() {
                 tooltip={label}
                 className="justify-start"
               >
-                <Icon className="h-4 w-4" />
+                <Icon className="h-5 w-5" />
                 <span>{label}</span>
               </SidebarMenuButton>
             </Link>
