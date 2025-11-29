@@ -8,30 +8,35 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { MoreHorizontal, PlusCircle } from "lucide-react";
+import { Copy, Eye, EyeOff, MoreHorizontal, PlusCircle } from "lucide-react";
 import { apiKeys as initialApiKeys } from "@/lib/data";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import type { ApiKey } from "@/lib/types";
+import { useToast } from "@/hooks/use-toast";
+import { useLogs } from "@/context/LogContext";
 
 function ApiKeysTabContent() {
+    const { toast } = useToast();
+    const { addLog } = useLogs();
     const [isClient, setIsClient] = useState(false);
     const [keys, setKeys] = useState<ApiKey[]>(initialApiKeys);
     const [open, setOpen] = useState(false);
     const [service, setService] = useState('');
+    const [revealedKeys, setRevealedKeys] = useState<Record<string, boolean>>({});
 
     useEffect(() => {
         setIsClient(true);
     }, []);
 
-    const serviceMap: { [key: string]: string } = {
+    const serviceMap: { [key: string]: string } = useMemo(() => ({
         whatsapp: "WhatsApp Business",
         twilio: "Twilio",
         crm: "CRM Hubspot",
         other: "Other"
-    };
+    }), []);
 
     const handleAddKey = (event: React.FormEvent<HTMLFormElement>) => {
         event.preventDefault();
@@ -44,8 +49,26 @@ function ApiKeysTabContent() {
             createdAt: new Date().toISOString()
         };
         setKeys(prev => [...prev, newKey]);
+        addLog({ service: 'Settings', level: 'info', message: `New API Key added for ${newKey.service}.` });
+        toast({ title: 'API Key Added', description: `A new key for ${newKey.service} has been saved.` });
         setOpen(false);
         setService('');
+    }
+
+    const toggleRevealKey = (id: string) => {
+        setRevealedKeys(prev => ({ ...prev, [id]: !prev[id] }));
+    }
+
+    const copyToClipboard = (text: string) => {
+        navigator.clipboard.writeText(text);
+        toast({ title: 'Copied to clipboard!' });
+    }
+
+    const getDisplayKey = (key: ApiKey) => {
+        if (revealedKeys[key.id]) {
+            return key.key;
+        }
+        return `${key.key.substring(0, 4)}...${key.key.substring(key.key.length - 4)}`;
     }
     
     return (
@@ -73,7 +96,7 @@ function ApiKeysTabContent() {
                             <div className="grid gap-4 py-4">
                                 <div className="grid grid-cols-4 items-center gap-4">
                                     <Label htmlFor="service" className="text-right">Service</Label>
-                                    <Select name="service" onValueChange={setService}>
+                                    <Select name="service" onValueChange={setService} defaultValue="">
                                         <SelectTrigger className="col-span-3">
                                             <SelectValue placeholder="Select a service" />
                                         </SelectTrigger>
@@ -102,7 +125,7 @@ function ApiKeysTabContent() {
                     <TableHeader>
                         <TableRow>
                             <TableHead>Service</TableHead>
-                            <TableHead>Key (Partial)</TableHead>
+                            <TableHead>API Key</TableHead>
                             <TableHead>Status</TableHead>
                             <TableHead>Created At</TableHead>
                             <TableHead><span className="sr-only">Actions</span></TableHead>
@@ -112,7 +135,17 @@ function ApiKeysTabContent() {
                         {keys.map((key) => (
                             <TableRow key={key.id}>
                                 <TableCell className="font-medium">{key.service}</TableCell>
-                                <TableCell className="font-mono text-muted-foreground">{key.key.substring(0, 18)}...</TableCell>
+                                <TableCell>
+                                    <div className="flex items-center gap-2 font-mono text-muted-foreground">
+                                       <span>{getDisplayKey(key)}</span>
+                                        <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => toggleRevealKey(key.id)}>
+                                            {revealedKeys[key.id] ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                                        </Button>
+                                        <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => copyToClipboard(key.key)}>
+                                            <Copy className="h-4 w-4" />
+                                        </Button>
+                                    </div>
+                                </TableCell>
                                 <TableCell>
                                     <Badge variant={key.status === 'active' ? 'default' : 'destructive'} 
                                         className={key.status === 'active' 

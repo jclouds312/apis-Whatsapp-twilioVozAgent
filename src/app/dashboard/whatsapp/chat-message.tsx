@@ -1,7 +1,7 @@
 'use client';
 
 import { AnimatePresence, motion } from 'framer-motion';
-import { Paperclip, SendHorizonal, ThumbsUp } from 'lucide-react';
+import { Bot, Paperclip, SendHorizonal, ThumbsUp } from 'lucide-react';
 import Image from 'next/image';
 import * as React from 'react';
 
@@ -81,10 +81,12 @@ export function ChatMessage({ conversation, currentUserAvatar }: ChatMessageProp
 
   if (!conversation) {
     return (
-      <div className="flex h-full items-center justify-center">
-        <div className="text-center text-muted-foreground">
-            <p>Select a conversation to start chatting.</p>
-        </div>
+      <div className="flex h-full flex-col items-center justify-center bg-muted/50 rounded-b-lg">
+        <Bot className="h-12 w-12 text-muted-foreground" />
+        <h3 className="mt-4 text-lg font-semibold">No Conversation Selected</h3>
+        <p className="text-muted-foreground text-center">
+            Select a conversation from the left panel to start chatting.
+        </p>
       </div>
     );
   }
