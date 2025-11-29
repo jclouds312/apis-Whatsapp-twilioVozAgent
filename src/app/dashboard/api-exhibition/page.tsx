@@ -7,6 +7,11 @@ import { MoreHorizontal, PlusCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
 
 export default function ApiExhibitionPage() {
     const getStatusClass = (status: 'published' | 'draft' | 'deprecated') => {
@@ -36,10 +41,56 @@ export default function ApiExhibitionPage() {
                             <CardTitle>Exposed API Console</CardTitle>
                             <CardDescription>Document, secure, and expose your internal APIs to the world.</CardDescription>
                         </div>
-                        <Button size="sm" className="gap-1">
-                            <PlusCircle className="h-3.5 w-3.5" />
-                            <span className="sr-only sm:not-sr-only sm:whitespace-nowrap">Expose API</span>
-                        </Button>
+                        <Dialog>
+                            <DialogTrigger asChild>
+                                <Button size="sm" className="gap-1">
+                                    <PlusCircle className="h-3.5 w-3.5" />
+                                    <span className="sr-only sm:not-sr-only sm:whitespace-nowrap">Expose API</span>
+                                </Button>
+                            </DialogTrigger>
+                             <DialogContent>
+                                <DialogHeader>
+                                    <DialogTitle>Expose a New API</DialogTitle>
+                                    <DialogDescription>
+                                        Define a new internal API to be documented and exposed.
+                                    </DialogDescription>
+                                </DialogHeader>
+                                <div className="grid gap-4 py-4">
+                                    <div className="grid grid-cols-4 items-center gap-4">
+                                        <Label htmlFor="name" className="text-right">API Name</Label>
+                                        <Input id="name" placeholder="e.g., Get Products" className="col-span-3" />
+                                    </div>
+                                    <div className="grid grid-cols-4 items-center gap-4">
+                                        <Label htmlFor="description" className="text-right">Description</Label>
+                                        <Textarea id="description" placeholder="Describe what this API does." className="col-span-3" />
+                                    </div>
+                                     <div className="grid grid-cols-4 items-center gap-4">
+                                        <Label htmlFor="endpoint" className="text-right">Endpoint</Label>
+                                        <div className="col-span-3 flex gap-2">
+                                            <Select defaultValue="GET">
+                                                <SelectTrigger className="w-[100px]">
+                                                    <SelectValue />
+                                                </SelectTrigger>
+                                                <SelectContent>
+                                                    <SelectItem value="GET">GET</SelectItem>
+                                                    <SelectItem value="POST">POST</SelectItem>
+                                                    <SelectItem value="PUT">PUT</SelectItem>
+                                                    <SelectItem value="DELETE">DELETE</SelectItem>
+                                                </SelectContent>
+                                            </Select>
+                                            <Input id="endpoint" placeholder="/v1/products" className="flex-1 font-mono" />
+                                        </div>
+                                    </div>
+                                    <div className="grid grid-cols-4 items-center gap-4">
+                                        <Label htmlFor="version" className="text-right">Version</Label>
+                                        <Input id="version" placeholder="1.0.0" className="col-span-3" />
+                                    </div>
+                                </div>
+                                <DialogFooter>
+                                    <Button type="submit">Save as Draft</Button>
+                                </DialogFooter>
+                            </DialogContent>
+                        </Dialog>
                     </CardHeader>
                     <CardContent>
                         <Table>
