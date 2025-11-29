@@ -1,3 +1,4 @@
+
 'use client';
 
 import Link from 'next/link';
@@ -9,10 +10,12 @@ import {
   LayoutDashboard,
   MessageSquare,
   Phone,
+  PlusCircle,
   ScrollText,
   Users,
   Workflow,
   ChevronDown,
+  Bot,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import {
@@ -54,28 +57,23 @@ const navItems = [
     ],
   },
   {
-    href: '/dashboard/whatsapp',
-    icon: MessageSquare,
-    label: 'WhatsApp',
-     subItems: [
-      { href: '/dashboard/whatsapp', label: 'Chats' },
-    ],
-  },
-  {
-    href: '/dashboard/twilio',
-    icon: Phone,
-    label: 'Twilio Voice',
-     subItems: [
-      { href: '/dashboard/twilio', label: 'Configuration' },
-    ],
-  },
-  {
-    href: '/dashboard/crm',
-    icon: Contact,
-    label: 'CRM',
+    href: '/dashboard/integrations',
+    icon: PlusCircle,
+    label: 'Integrations',
     subItems: [
-        { href: '/dashboard/crm', label: 'CRM Overview' },
+        { href: '/dashboard/whatsapp', icon: MessageSquare, label: 'WhatsApp' },
+        { href: '/dashboard/twilio', icon: Phone, label: 'Twilio Voice' },
+        { href: '/dashboard/crm', icon: Contact, label: 'CRM' },
     ]
+  },
+  {
+    href: '/dashboard/ai-agents',
+    icon: Bot,
+    label: 'AI Agents',
+    subItems: [
+      { href: '/dashboard/function-connect', label: 'Workflow Suggester' },
+      { href: '/dashboard/function-connect', label: 'Retell Agent' },
+    ],
   },
   {
     href: '/dashboard/logs',
@@ -100,9 +98,13 @@ export function DashboardNav() {
   const [openSections, setOpenSections] = useState<Record<string, boolean>>({});
 
   useEffect(() => {
-    const activeSection = navItems.find(item => item.subItems && item.subItems.some(sub => pathname.startsWith(sub.href)));
-    if (activeSection) {
-      setOpenSections(prev => ({ ...prev, [activeSection.label]: true }));
+    // Find the parent item of the currently active sub-item
+    const activeParent = navItems.find(item => 
+      item.subItems && item.subItems.some(sub => pathname.startsWith(sub.href))
+    );
+    
+    if (activeParent) {
+      setOpenSections(prev => ({ ...prev, [activeParent.label]: true }));
     }
   }, [pathname]);
 
@@ -114,13 +116,14 @@ export function DashboardNav() {
     <nav className="flex flex-col gap-2 px-4 py-2">
       {navItems.map(({ href, icon: Icon, label, subItems }) =>
         subItems ? (
-          <Collapsible key={label} open={openSections[label]} onOpenChange={() => toggleSection(label)}>
+          <Collapsible key={label} open={openSections[label]} onOpenChange={() => toggleSection(label)} className="w-full">
             <CollapsibleTrigger asChild>
               <Button
                 variant="ghost"
                 className={cn(
                   "w-full justify-start text-lg h-12",
-                  pathname.startsWith(href) && "bg-sidebar-accent text-sidebar-accent-foreground"
+                  // An item is active if its own href matches, or if a sub-item's href matches
+                  (pathname.startsWith(href) && href !== '/dashboard') && "bg-sidebar-accent text-sidebar-accent-foreground"
                 )}
               >
                 <Icon className="h-6 w-6 mr-4" />
@@ -130,18 +133,24 @@ export function DashboardNav() {
             </CollapsibleTrigger>
             <CollapsibleContent className="py-1 pl-8">
               <div className="flex flex-col gap-1 border-l-2 border-sidebar-border/50">
-                {subItems.map(subItem => (
-                  <Link
-                    key={subItem.href}
-                    href={subItem.href}
-                    className={cn(
-                      'block pl-4 pr-3 py-2 rounded-md text-base hover:bg-sidebar-accent/50',
-                      pathname === subItem.href ? 'bg-sidebar-accent/80 text-sidebar-accent-foreground font-semibold' : 'text-sidebar-foreground/80'
-                    )}
-                  >
-                    {subItem.label}
-                  </Link>
-                ))}
+                {subItems.map(subItem => {
+                   const SubIcon = subItem.icon;
+                   return (
+                    <Link
+                        key={subItem.href}
+                        href={subItem.href}
+                        className={cn(
+                        'block pl-4 pr-3 py-2 rounded-md text-base hover:bg-sidebar-accent/50',
+                        pathname === subItem.href ? 'bg-sidebar-accent/80 text-sidebar-accent-foreground font-semibold' : 'text-sidebar-foreground/80'
+                        )}
+                    >
+                        <div className="flex items-center">
+                           {SubIcon && <SubIcon className="h-5 w-5 mr-3" />}
+                           <span>{subItem.label}</span>
+                        </div>
+                    </Link>
+                   )
+                })}
               </div>
             </CollapsibleContent>
           </Collapsible>
