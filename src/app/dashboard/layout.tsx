@@ -27,9 +27,7 @@ export default function DashboardLayout({
         </SidebarFooter>
       </Sidebar>
       <SidebarInset>
-        <div className="flex flex-col">
-            {children}
-        </div>
+        {children}
       </SidebarInset>
     </SidebarProvider>
   );

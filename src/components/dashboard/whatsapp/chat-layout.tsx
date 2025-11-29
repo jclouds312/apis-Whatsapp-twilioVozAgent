@@ -1,0 +1,73 @@
+// Inspired by: https://github.com/dillionverma/llm.report/blob/main/components/chat-layout.tsx
+
+"use client"
+
+import { useState, useEffect } from "react";
+import {
+  ResizableHandle,
+  ResizablePanel,
+  ResizablePanelGroup,
+} from "@/components/ui/resizable"
+import { Separator } from "@/components/ui/separator";
+import { TooltipProvider } from "@/components/ui/tooltip";
+import { cn } from "@/lib/utils";
+import type { Conversation } from "@/lib/types";
+import { ChatList } from "./chat-list";
+import { ChatMessage } from "./chat-message";
+
+interface ChatLayoutProps {
+  defaultLayout: number[] | undefined
+  defaultCollapsed?: boolean
+  navCollapsedSize: number
+  conversations: Conversation[]
+  currentUserAvatar: string
+}
+
+export function ChatLayout({ 
+    defaultLayout = [320, 1080],
+    navCollapsedSize,
+    conversations,
+    currentUserAvatar,
+}: ChatLayoutProps) {
+    const [isCollapsed, setIsCollapsed] = useState(false);
+    const [selectedConversation, setSelectedConversation] = useState<Conversation | null>(conversations[0] || null);
+
+    const onLayout = (sizes: number[]) => {
+        document.cookie = `react-resizable-panels:layout=${JSON.stringify(sizes)}`
+    }
+    
+    return (
+        <TooltipProvider delayDuration={0}>
+            <ResizablePanelGroup
+                direction="horizontal"
+                onLayout={onLayout}
+                className="h-full max-h-[calc(100vh-4rem)] items-stretch"
+            >
+                <ResizablePanel
+                    defaultSize={defaultLayout[0]}
+                    collapsible={true}
+                    minSize={15}
+                    maxSize={20}
+                    onCollapse={() => setIsCollapsed(true)}
+                    onExpand={() => setIsCollapsed(false)}
+                    className={cn(isCollapsed && "min-w-[50px] transition-all duration-300 ease-in-out")}
+                >
+                    <ChatList 
+                        conversations={conversations}
+                        isCollapsed={isCollapsed}
+                        onSelectConversation={setSelectedConversation}
+                        selectedConversationId={selectedConversation?.id}
+                    />
+                </ResizablePanel>
+                <ResizableHandle withHandle />
+                <ResizablePanel defaultSize={defaultLayout[1]} minSize={30}>
+                     <ChatMessage
+                        key={selectedConversation?.id}
+                        conversation={selectedConversation}
+                        currentUserAvatar={currentUserAvatar}
+                    />
+                </ResizablePanel>
+            </ResizablePanelGroup>
+        </TooltipProvider>
+    )
+}

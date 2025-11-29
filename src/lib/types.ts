@@ -46,3 +46,20 @@ export type ExposedApi = {
   endpoint: string;
   version: string;
 };
+
+export type Message = {
+  id: string;
+  contactId: string;
+  content: string;
+  timestamp: string;
+  isSender: boolean;
+};
+
+export type Conversation = {
+  id: string;
+  contactName: string;
+  contactAvatar: string;
+  lastMessage: string;
+  lastMessageTime: string;
+  messages: Message[];
+};
