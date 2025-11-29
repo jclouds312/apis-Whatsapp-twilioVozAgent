@@ -4,7 +4,6 @@ import { useState } from "react";
 import { Header } from "@/components/dashboard/header";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { users as initialUsers } from "@/lib/data";
 import { MoreHorizontal, PlusCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
@@ -16,6 +15,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import Image from "next/image";
 import { Badge } from "@/components/ui/badge";
 import type { User } from "@/lib/types";
+import { useUser, useFirestore, useCollection, useMemoFirebase, addDocumentNonBlocking, deleteDocumentNonBlocking, updateDocumentNonBlocking } from '@/firebase';
+import { collection, doc } from "firebase/firestore";
+import { Skeleton } from "@/components/ui/skeleton";
+
 
 const roleClasses: Record<string, string> = {
     'Admin': 'bg-red-100 text-red-800 dark:bg-red-900/50 dark:text-red-300 border-red-200 dark:border-red-500/50',
@@ -24,104 +27,47 @@ const roleClasses: Record<string, string> = {
     'Agent': 'bg-green-100 text-green-800 dark:bg-green-900/50 dark:text-green-300 border-green-200 dark:border-green-500/50',
 }
 
-function EditUserDialog({ user, onSave }: { user: User, onSave: (updatedUser: User) => void }) {
-    const [open, setOpen] = useState(false);
-    
-    const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
-        event.preventDefault();
-        const formData = new FormData(event.currentTarget);
-        const updatedUser: User = {
-            ...user,
-            name: formData.get('name') as string,
-            email: formData.get('email') as string,
-            role: formData.get('role') as User['role'],
-        };
-        onSave(updatedUser);
-        setOpen(false);
-    }
-
-    return (
-        <Dialog open={open} onOpenChange={setOpen}>
-            <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                    <Button aria-haspopup="true" size="icon" variant="ghost">
-                        <MoreHorizontal className="h-4 w-4" />
-                        <span className="sr-only">Toggle menu</span>
-                    </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end">
-                    <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                    <DialogTrigger asChild>
-                      <DropdownMenuItem onSelect={(e) => e.preventDefault()}>Edit</DropdownMenuItem>
-                    </DialogTrigger>
-                    <DropdownMenuItem className="text-destructive">Remove</DropdownMenuItem>
-                </DropdownMenuContent>
-            </DropdownMenu>
-             <DialogContent>
-                <form onSubmit={handleSubmit}>
-                    <DialogHeader>
-                        <DialogTitle>Edit User: {user.name}</DialogTitle>
-                        <DialogDescription>
-                            Update the details for this user.
-                        </DialogDescription>
-                    </DialogHeader>
-                    <div className="grid gap-4 py-4">
-                        <div className="grid grid-cols-4 items-center gap-4">
-                            <Label htmlFor={`name-${user.id}`} className="text-right">Name</Label>
-                            <Input id={`name-${user.id}`} name="name" defaultValue={user.name} className="col-span-3" />
-                        </div>
-                        <div className="grid grid-cols-4 items-center gap-4">
-                            <Label htmlFor={`email-${user.id}`} className="text-right">Email</Label>
-                            <Input id={`email-${user.id}`} name="email" type="email" defaultValue={user.email} className="col-span-3" />
-                        </div>
-                        <div className="grid grid-cols-4 items-center gap-4">
-                            <Label htmlFor={`role-${user.id}`} className="text-right">Role</Label>
-                            <Select name="role" defaultValue={user.role}>
-                                <SelectTrigger className="col-span-3">
-                                    <SelectValue placeholder="Select a role" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    <SelectItem value="Admin">Admin</SelectItem>
-                                    <SelectItem value="Manager">Manager</SelectItem>
-                                    <SelectItem value="Developer">Developer</SelectItem>
-                                    <SelectItem value="Agent">Agent</SelectItem>
-                                </SelectContent>
-                            </Select>
-                        </div>
-                    </div>
-                    <DialogFooter>
-                        <Button type="submit">Save Changes</Button>
-                    </DialogFooter>
-                </form>
-            </DialogContent>
-        </Dialog>
-    )
-}
 
 export default function UsersPage() {
-    const [users, setUsers] = useState<User[]>(initialUsers);
     const [addUserOpen, setAddUserOpen] = useState(false);
     
+    const { user: authUser, isUserLoading } = useUser();
+    const firestore = useFirestore();
+
+    // In a real multi-user app, this would be more complex (e.g., /organizations/{orgId}/users)
+    // For simplicity, we assume users can see other users, but rules would lock this down.
+    const usersQuery = useMemoFirebase(() => {
+        if (!firestore) return null;
+        return collection(firestore, 'dashboardUsers');
+    }, [firestore]);
+    
+    const { data: users, isLoading } = useCollection<User>(usersQuery);
+
     const handleAddUser = (event: React.FormEvent<HTMLFormElement>) => {
         event.preventDefault();
+        if (!usersQuery) return;
+
         const formData = new FormData(event.currentTarget);
-        const newUser: User = {
-            id: `usr_${Date.now()}`,
+        const newUser: Omit<User, 'id'> = {
             name: formData.get('name') as string,
             email: formData.get('email') as string,
             role: formData.get('role') as User['role'],
             avatarUrl: `https://picsum.photos/seed/user${Date.now()}/100/100`
         };
-        setUsers(prev => [...prev, newUser]);
+        addDocumentNonBlocking(usersQuery, newUser);
         setAddUserOpen(false);
     }
 
-    const handleUpdateUser = (updatedUser: User) => {
-        setUsers(prev => prev.map(u => u.id === updatedUser.id ? updatedUser : u));
-    }
-    
+    const handleUpdateUser = (userId: string, updatedData: Partial<User>) => {
+       if (!firestore) return;
+       const userDocRef = doc(firestore, 'dashboardUsers', userId);
+       updateDocumentNonBlocking(userDocRef, updatedData);
+    };
+
     const handleRemoveUser = (userId: string) => {
-        setUsers(prev => prev.filter(u => u.id !== userId));
+        if (!firestore) return;
+        const userDocRef = doc(firestore, 'dashboardUsers', userId);
+        deleteDocumentNonBlocking(userDocRef);
     };
 
     return (
@@ -136,7 +82,7 @@ export default function UsersPage() {
                         </div>
                          <Dialog open={addUserOpen} onOpenChange={setAddUserOpen}>
                             <DialogTrigger asChild>
-                                <Button size="sm" className="gap-1">
+                                <Button size="sm" className="gap-1" disabled={isUserLoading || !authUser}>
                                     <PlusCircle className="h-3.5 w-3.5" />
                                     <span className="sr-only sm:not-sr-only sm:whitespace-nowrap">Add User</span>
                                 </Button>
@@ -191,7 +137,22 @@ export default function UsersPage() {
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
-                                {users.map((user) => (
+                                {isLoading && Array.from({length: 4}).map((_, i) => (
+                                    <TableRow key={i}>
+                                        <TableCell>
+                                            <div className="flex items-center gap-3">
+                                                <Skeleton className="h-8 w-8 rounded-full" />
+                                                <div>
+                                                    <Skeleton className="h-4 w-24 mb-1" />
+                                                    <Skeleton className="h-3 w-32" />
+                                                </div>
+                                            </div>
+                                        </TableCell>
+                                        <TableCell><Skeleton className="h-6 w-20 rounded-full" /></TableCell>
+                                        <TableCell><Skeleton className="h-8 w-8" /></TableCell>
+                                    </TableRow>
+                                ))}
+                                {users?.map((user) => (
                                     <TableRow key={user.id}>
                                         <TableCell>
                                             <div className="flex items-center gap-3">
@@ -235,13 +196,12 @@ export default function UsersPage() {
                                                     <form onSubmit={(e) => {
                                                         e.preventDefault();
                                                         const formData = new FormData(e.currentTarget);
-                                                        const updatedUser: User = {
-                                                            ...user,
+                                                        const updatedData = {
                                                             name: formData.get('name') as string,
                                                             email: formData.get('email') as string,
                                                             role: formData.get('role') as User['role'],
                                                         };
-                                                        handleUpdateUser(updatedUser);
+                                                        handleUpdateUser(user.id, updatedData);
                                                         // find a way to close the dialog
                                                         const closeButton = e.currentTarget.closest('div[role="dialog"]')?.querySelector('button[aria-label="Close"]');
                                                         if (closeButton instanceof HTMLElement) {
@@ -289,6 +249,11 @@ export default function UsersPage() {
                                 ))}
                             </TableBody>
                         </Table>
+                         {!isLoading && users?.length === 0 && (
+                            <div className="text-center text-muted-foreground p-8">
+                                No users found. Click &quot;Add User&quot; to get started.
+                            </div>
+                        )}
                     </CardContent>
                 </Card>
             </main>

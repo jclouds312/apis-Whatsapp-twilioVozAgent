@@ -7,13 +7,14 @@ import { AreaChartComponent } from "@/components/charts/area-chart";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { workflows as initialWorkflows, exposedApis, users } from "@/lib/data";
 import { Activity, Workflow, AlertCircle, Users, CodeXml, Circle } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { formatDistanceToNow, parseISO } from "date-fns";
 import { cn } from '@/lib/utils';
 import type { Log, Workflow as WorkflowType } from '@/lib/types';
 import { useLogs } from '@/context/LogContext';
+import { useUser, useFirestore, useCollection, useMemoFirebase } from '@/firebase';
+import { collection } from "firebase/firestore";
 
 
 const initialApiTrafficData = Array.from({ length: 15 }, (_, i) => {
@@ -28,13 +29,36 @@ const initialApiTrafficData = Array.from({ length: 15 }, (_, i) => {
 export default function DashboardPage() {
     const { logs } = useLogs();
     const [apiTrafficData, setApiTrafficData] = useState(initialApiTrafficData);
-    const [activeWorkflows, setActiveWorkflows] = useState<WorkflowType[]>([]);
     
-    const topExposedApis = exposedApis.slice(0, 4);
-
     const [totalApiCalls, setTotalApiCalls] = useState(0);
     const [errorsToday, setErrorsToday] = useState(0);
     const [isClient, setIsClient] = useState(false);
+
+    const { user, isUserLoading } = useUser();
+    const firestore = useFirestore();
+
+    const exposedApisQuery = useMemoFirebase(() => {
+        if (!firestore || !user?.uid) return null;
+        return collection(firestore, 'users', user.uid, 'exposedApis');
+    }, [firestore, user?.uid]);
+    const { data: exposedApis } = useCollection(exposedApisQuery);
+    
+    const workflowsQuery = useMemoFirebase(() => {
+        if (!firestore || !user?.uid) return null;
+        return collection(firestore, 'users', user.uid, 'workflows');
+    }, [firestore, user?.uid]);
+    const { data: workflows } = useCollection<WorkflowType>(workflowsQuery);
+
+    const usersQuery = useMemoFirebase(() => {
+        if (!firestore || !user?.uid) return null;
+        // This is a simplification. In a real app, you'd likely have a separate 'teams' or 'organizations' collection.
+        // For now, we'll just count the current user.
+        return collection(firestore, 'users');
+    }, [firestore, user?.uid]);
+    const { data: users } = useCollection(usersQuery);
+
+    const activeWorkflows = workflows?.filter(w => w.status === 'active') || [];
+    const publishedApis = exposedApis?.filter(api => api.status === 'published').length || 0;
 
 
     useEffect(() => {
@@ -42,7 +66,6 @@ export default function DashboardPage() {
         
         const updateData = () => {
             setErrorsToday(logs.filter(l => l.level === 'error' && (new Date().getTime() - new Date(l.timestamp).getTime()) < 86400000).length);
-            setActiveWorkflows(initialWorkflows.filter(w => w.status === 'active'));
         };
 
         updateData();
@@ -62,17 +85,6 @@ export default function DashboardPage() {
 
                 return shiftedData;
             });
-
-             if (Math.random() > 0.8) { 
-                setActiveWorkflows(prev => {
-                    if (prev.length === 0) return [];
-                    const randomIndex = Math.floor(Math.random() * prev.length);
-                    const updatedWf = { ...prev[randomIndex], lastRun: new Date().toISOString() };
-                    const newWorkflows = [...prev];
-                    newWorkflows[randomIndex] = updatedWf;
-                    return newWorkflows;
-                })
-             }
         }, 5000); 
 
         return () => clearInterval(interval);
@@ -82,8 +94,6 @@ export default function DashboardPage() {
     useEffect(() => {
        setErrorsToday(logs.filter(l => l.level === 'error' && (new Date().getTime() - new Date(l.timestamp).getTime()) < 86400000).length);
     }, [logs])
-
-    const publishedApis = exposedApis.filter(api => api.status === 'published').length;
 
     const getStatusClass = (status: 'published' | 'draft' | 'deprecated') => {
         switch (status) {
@@ -138,7 +148,7 @@ export default function DashboardPage() {
             />
             <StatCard 
                 title="Active Users"
-                value={users.length.toString()}
+                value={users?.length.toString() ?? '...'}
                 description="Across all roles"
                 Icon={Users}
                 iconColor="text-green-500"
@@ -168,7 +178,7 @@ export default function DashboardPage() {
                             </TableRow>
                         </TableHeader>
                         <TableBody>
-                            {topExposedApis.map(api => (
+                            {exposedApis?.slice(0, 4).map(api => (
                                 <TableRow key={api.id}>
                                     <TableCell>
                                         <div className="font-medium">{api.name}</div>

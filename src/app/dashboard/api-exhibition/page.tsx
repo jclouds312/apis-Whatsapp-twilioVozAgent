@@ -5,7 +5,6 @@ import { Header } from "@/components/dashboard/header";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { exposedApis as initialExposedApis } from "@/lib/data";
 import { MoreHorizontal, PlusCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
@@ -16,10 +15,22 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import type { ExposedApi } from "@/lib/types";
+import { useUser, useFirestore, useCollection, useMemoFirebase, addDocumentNonBlocking } from '@/firebase';
+import { collection, serverTimestamp } from "firebase/firestore";
+import { Skeleton } from "@/components/ui/skeleton";
+
 
 export default function ApiExhibitionPage() {
     const [open, setOpen] = useState(false);
-    const [exposedApis, setExposedApis] = useState<ExposedApi[]>(initialExposedApis);
+    const { user, isUserLoading } = useUser();
+    const firestore = useFirestore();
+
+    const exposedApisQuery = useMemoFirebase(() => {
+        if (!firestore || !user?.uid) return null;
+        return collection(firestore, 'users', user.uid, 'exposedApis');
+    }, [firestore, user?.uid]);
+
+    const { data: exposedApis, isLoading } = useCollection<ExposedApi>(exposedApisQuery);
 
     const getStatusClass = (status: 'published' | 'draft' | 'deprecated') => {
         switch (status) {
@@ -40,17 +51,20 @@ export default function ApiExhibitionPage() {
 
     const handleAddApi = (event: React.FormEvent<HTMLFormElement>) => {
         event.preventDefault();
+        if (!exposedApisQuery || !user) return;
+
         const formData = new FormData(event.currentTarget);
-        const newApi: ExposedApi = {
-            id: `api_${Date.now()}`,
+        const newApiData = {
             name: formData.get('name') as string,
             description: formData.get('description') as string,
             endpoint: formData.get('endpoint') as string,
             method: formData.get('method') as 'GET' | 'POST' | 'PUT' | 'DELETE',
             version: formData.get('version') as string,
             status: 'draft',
+            userId: user.uid,
         };
-        setExposedApis(prev => [...prev, newApi]);
+        
+        addDocumentNonBlocking(exposedApisQuery, newApiData);
         setOpen(false);
     }
 
@@ -66,7 +80,7 @@ export default function ApiExhibitionPage() {
                         </div>
                         <Dialog open={open} onOpenChange={setOpen}>
                             <DialogTrigger asChild>
-                                <Button size="sm" className="gap-1">
+                                <Button size="sm" className="gap-1" disabled={isUserLoading || !user}>
                                     <PlusCircle className="h-3.5 w-3.5" />
                                     <span className="sr-only sm:not-sr-only sm:whitespace-nowrap">Expose API</span>
                                 </Button>
@@ -129,7 +143,16 @@ export default function ApiExhibitionPage() {
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
-                                {exposedApis.map((api) => (
+                                {isLoading && Array.from({length: 3}).map((_, i) => (
+                                    <TableRow key={i}>
+                                        <TableCell><Skeleton className="h-5 w-32" /></TableCell>
+                                        <TableCell><Skeleton className="h-5 w-48" /></TableCell>
+                                        <TableCell><Skeleton className="h-6 w-20 rounded-full" /></TableCell>
+                                        <TableCell><Skeleton className="h-5 w-16" /></TableCell>
+                                        <TableCell><Skeleton className="h-8 w-8" /></TableCell>
+                                    </TableRow>
+                                ))}
+                                {exposedApis?.map((api) => (
                                     <TableRow key={api.id}>
                                         <TableCell className="font-medium">{api.name}</TableCell>
                                         <TableCell>
@@ -162,6 +185,11 @@ export default function ApiExhibitionPage() {
                                 ))}
                             </TableBody>
                         </Table>
+                         {!isLoading && exposedApis?.length === 0 && (
+                            <div className="text-center text-muted-foreground p-8">
+                                No exposed APIs yet. Click &quot;Expose API&quot; to get started.
+                            </div>
+                        )}
                     </CardContent>
                 </Card>
             </main>

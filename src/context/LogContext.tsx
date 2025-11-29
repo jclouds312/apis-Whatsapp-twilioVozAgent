@@ -2,7 +2,6 @@
 
 import { createContext, useContext, useState, ReactNode, useCallback } from 'react';
 import type { Log } from '@/lib/types';
-import { logs as initialLogs } from '@/lib/data';
 
 type LogContextType = {
   logs: Log[];
@@ -12,7 +11,7 @@ type LogContextType = {
 const LogContext = createContext<LogContextType | undefined>(undefined);
 
 export function LogProvider({ children }: { children: ReactNode }) {
-  const [logs, setLogs] = useState<Log[]>(initialLogs);
+  const [logs, setLogs] = useState<Log[]>([]);
 
   const addLog = useCallback((log: Omit<Log, 'id' | 'timestamp'>) => {
     const newLog: Log = {

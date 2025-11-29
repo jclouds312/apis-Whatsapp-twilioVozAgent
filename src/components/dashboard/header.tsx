@@ -27,15 +27,16 @@ import {
 import { Input } from "@/components/ui/input"
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar"
-import { userAvatar } from "@/lib/data"
 import { SidebarTrigger } from "../ui/sidebar"
 import Image from "next/image"
+import { useUser } from "@/firebase"
 
 type HeaderProps = {
     title: string;
 }
 
 export function Header({ title }: HeaderProps) {
+  const { user } = useUser();
   return (
     <header className="flex h-14 items-center gap-4 border-b bg-card px-4 lg:h-[60px] lg:px-6">
         <SidebarTrigger className="md:hidden"/>
@@ -46,8 +47,8 @@ export function Header({ title }: HeaderProps) {
           <DropdownMenuTrigger asChild>
             <Button variant="secondary" size="icon" className="rounded-full">
               <Avatar>
-                <AvatarImage src={userAvatar} alt="User Avatar" data-ai-hint="person face" />
-                <AvatarFallback>AD</AvatarFallback>
+                <AvatarImage src={user?.photoURL ?? `https://picsum.photos/seed/user-placeholder/100/100`} alt="User Avatar" data-ai-hint="person face" />
+                <AvatarFallback>{user?.displayName?.charAt(0) ?? 'U'}</AvatarFallback>
               </Avatar>
               <span className="sr-only">Toggle user menu</span>
             </Button>

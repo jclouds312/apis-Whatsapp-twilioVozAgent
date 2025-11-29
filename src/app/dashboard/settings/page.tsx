@@ -9,7 +9,6 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Copy, Eye, EyeOff, MoreHorizontal, PlusCircle } from "lucide-react";
-import { apiKeys as initialApiKeys } from "@/lib/data";
 import { useEffect, useState, useMemo } from "react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
@@ -17,15 +16,28 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel,
 import type { ApiKey } from "@/lib/types";
 import { useToast } from "@/hooks/use-toast";
 import { useLogs } from "@/context/LogContext";
+import { useUser, useFirestore, useCollection, useMemoFirebase, addDocumentNonBlocking, deleteDocumentNonBlocking } from '@/firebase';
+import { collection, serverTimestamp } from "firebase/firestore";
+import { Skeleton } from "@/components/ui/skeleton";
+
 
 function ApiKeysTabContent() {
     const { toast } = useToast();
     const { addLog } = useLogs();
     const [isClient, setIsClient] = useState(false);
-    const [keys, setKeys] = useState<ApiKey[]>(initialApiKeys);
     const [open, setOpen] = useState(false);
     const [service, setService] = useState('');
     const [revealedKeys, setRevealedKeys] = useState<Record<string, boolean>>({});
+
+    const { user, isUserLoading } = useUser();
+    const firestore = useFirestore();
+
+    const apiKeysQuery = useMemoFirebase(() => {
+        if (!firestore || !user?.uid) return null;
+        return collection(firestore, 'users', user.uid, 'apiKeys');
+    }, [firestore, user?.uid]);
+
+    const { data: keys, isLoading } = useCollection<ApiKey>(apiKeysQuery);
 
     useEffect(() => {
         setIsClient(true);
@@ -40,17 +52,21 @@ function ApiKeysTabContent() {
 
     const handleAddKey = (event: React.FormEvent<HTMLFormElement>) => {
         event.preventDefault();
+        if (!apiKeysQuery || !user) return;
+
         const formData = new FormData(event.currentTarget);
-        const newKey: ApiKey = {
-            id: `key_${Date.now()}`,
+        const newKeyData = {
             service: serviceMap[service] || 'Other',
             key: formData.get('key') as string,
             status: 'active',
-            createdAt: new Date().toISOString()
+            createdAt: serverTimestamp(),
+            userId: user.uid,
         };
-        setKeys(prev => [...prev, newKey]);
-        addLog({ service: 'Settings', level: 'info', message: `New API Key added for ${newKey.service}.` });
-        toast({ title: 'API Key Added', description: `A new key for ${newKey.service} has been saved.` });
+        
+        addDocumentNonBlocking(apiKeysQuery, newKeyData);
+
+        addLog({ service: 'Settings', level: 'info', message: `New API Key added for ${newKeyData.service}.` });
+        toast({ title: 'API Key Added', description: `A new key for ${newKeyData.service} has been saved.` });
         setOpen(false);
         setService('');
     }
@@ -80,7 +96,7 @@ function ApiKeysTabContent() {
                 </div>
                 <Dialog open={open} onOpenChange={setOpen}>
                     <DialogTrigger asChild>
-                        <Button size="sm" className="gap-1">
+                        <Button size="sm" className="gap-1" disabled={isUserLoading || !user}>
                             <PlusCircle className="h-3.5 w-3.5" />
                             <span className="sr-only sm:not-sr-only sm:whitespace-nowrap">Add Key</span>
                         </Button>
@@ -132,7 +148,16 @@ function ApiKeysTabContent() {
                         </TableRow>
                     </TableHeader>
                     <TableBody>
-                        {keys.map((key) => (
+                        {isLoading && Array.from({ length: 3 }).map((_, i) => (
+                            <TableRow key={i}>
+                                <TableCell><Skeleton className="h-5 w-24" /></TableCell>
+                                <TableCell><Skeleton className="h-5 w-48" /></TableCell>
+                                <TableCell><Skeleton className="h-6 w-20 rounded-full" /></TableCell>
+                                <TableCell><Skeleton className="h-5 w-24" /></TableCell>
+                                <TableCell><Skeleton className="h-8 w-8" /></TableCell>
+                            </TableRow>
+                        ))}
+                        {keys?.map((key) => (
                             <TableRow key={key.id}>
                                 <TableCell className="font-medium">{key.service}</TableCell>
                                 <TableCell>
@@ -155,7 +180,7 @@ function ApiKeysTabContent() {
                                         {key.status}
                                     </Badge>
                                 </TableCell>
-                                <TableCell>{isClient ? new Date(key.createdAt).toLocaleDateString() : ''}</TableCell>
+                                <TableCell>{isClient && key.createdAt ? new Date((key.createdAt as any).seconds * 1000).toLocaleDateString() : '...'}</TableCell>
                                 <TableCell>
                                     <DropdownMenu>
                                         <DropdownMenuTrigger asChild>
@@ -175,6 +200,11 @@ function ApiKeysTabContent() {
                         ))}
                     </TableBody>
                 </Table>
+                 {!isLoading && keys?.length === 0 && (
+                    <div className="text-center text-muted-foreground p-8">
+                        No API Keys found. Click &quot;Add Key&quot; to get started.
+                    </div>
+                )}
             </CardContent>
         </Card>
     );

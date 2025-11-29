@@ -2,16 +2,27 @@
 
 import { Header } from "@/components/dashboard/header";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { workflows as initialWorkflows } from "@/lib/data";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Circle, MessageSquare, Phone, Workflow as WorkflowIcon } from "lucide-react";
 import { useEffect, useState } from "react";
 import type { Workflow } from "@/lib/types";
+import { useUser, useFirestore, useCollection, useMemoFirebase } from '@/firebase';
+import { collection } from 'firebase/firestore';
+import { Skeleton } from "@/components/ui/skeleton";
+
 
 export default function FunctionConnectPage() {
     const [isClient, setIsClient] = useState(false);
-    const [workflows, setWorkflows] = useState<Workflow[]>(initialWorkflows);
+    const { user, isUserLoading } = useUser();
+    const firestore = useFirestore();
+
+    const workflowsQuery = useMemoFirebase(() => {
+        if (!firestore || !user?.uid) return null;
+        return collection(firestore, 'users', user.uid, 'workflows');
+    }, [firestore, user?.uid]);
+    
+    const { data: workflows, isLoading } = useCollection<Workflow>(workflowsQuery);
 
 
     useEffect(() => {
@@ -36,7 +47,28 @@ export default function FunctionConnectPage() {
                         <CardDescription>Manage your automated data flows between services.</CardDescription>
                     </CardHeader>
                     <CardContent className="space-y-4">
-                        {workflows.map(wf => (
+                        {isLoading && Array.from({ length: 2 }).map((_, i) => (
+                           <Card key={i} className="overflow-hidden">
+                               <CardHeader className="flex flex-row items-start bg-muted/50 gap-4 p-4">
+                                   <Skeleton className="w-12 h-12 rounded-lg" />
+                                   <div className="flex-1 space-y-2">
+                                       <Skeleton className="h-5 w-3/5" />
+                                       <Skeleton className="h-4 w-2/5" />
+                                   </div>
+                                   <Skeleton className="h-6 w-20 rounded-full" />
+                               </CardHeader>
+                               <CardContent className="p-4 space-y-2">
+                                    <Skeleton className="h-4 w-1/4" />
+                                    <Skeleton className="h-4 w-full" />
+                                    <Skeleton className="h-4 w-full" />
+                               </CardContent>
+                               <CardFooter className="bg-muted/50 p-4 flex justify-between items-center">
+                                   <Skeleton className="h-4 w-1/3" />
+                                   <Skeleton className="h-8 w-16" />
+                               </CardFooter>
+                           </Card> 
+                        ))}
+                        {workflows?.map(wf => (
                             <Card key={wf.id} className="overflow-hidden transition-all hover:shadow-md">
                                 <CardHeader className="flex flex-row items-start bg-muted/50 gap-4 p-4">
                                     <div className="flex items-center justify-center w-12 h-12 rounded-lg bg-background border">
@@ -64,13 +96,18 @@ export default function FunctionConnectPage() {
                                     </ol>
                                 </CardContent>
                                 <CardFooter className="bg-muted/50 p-4 flex justify-between items-center">
-                                    <p className="text-xs text-muted-foreground">Last run: {isClient ? new Date(wf.lastRun).toLocaleString() : ''}</p>
+                                    <p className="text-xs text-muted-foreground">Last run: {isClient && wf.lastRun ? new Date((wf.lastRun as any).seconds * 1000).toLocaleString() : 'N/A'}</p>
                                     <div>
                                         <Button variant="outline" size="sm">Edit</Button>
                                     </div>
                                 </CardFooter>
                             </Card>
                         ))}
+                         {!isLoading && workflows?.length === 0 && (
+                            <div className="text-center text-muted-foreground p-8">
+                                No workflows found.
+                            </div>
+                        )}
                     </CardContent>
                 </Card>
             </main>

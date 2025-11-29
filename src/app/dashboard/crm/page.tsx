@@ -4,18 +4,37 @@
 import { Header } from "@/components/dashboard/header";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { StatCard } from "@/components/dashboard/stat-card";
-import { apiKeys, logs as initialLogs, workflows } from "@/lib/data";
 import { Badge } from "@/components/ui/badge";
 import { CheckCircle, XCircle, Users, TrendingUp, Workflow as WorkflowIcon } from "lucide-react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { format } from "date-fns";
+import { useUser, useFirestore, useCollection, useMemoFirebase } from '@/firebase';
+import { collection } from 'firebase/firestore';
+import type { ApiKey, Log, Workflow } from '@/lib/types';
+import { useLogs } from '@/context/LogContext';
 
 export default function CrmPage() {
-    const isCrmConnected = apiKeys.some(key => key.service.toLowerCase().includes('crm') && key.status === 'active');
-    const crmLogs = initialLogs.filter(log => log.service === 'CRM Connector');
-    const crmWorkflows = workflows.filter(wf => 
+    const { user } = useUser();
+    const firestore = useFirestore();
+    const { logs } = useLogs();
+
+    const apiKeysQuery = useMemoFirebase(() => {
+        if (!firestore || !user?.uid) return null;
+        return collection(firestore, 'users', user.uid, 'apiKeys');
+    }, [firestore, user?.uid]);
+    const { data: apiKeys } = useCollection<ApiKey>(apiKeysQuery);
+
+    const workflowsQuery = useMemoFirebase(() => {
+        if (!firestore || !user?.uid) return null;
+        return collection(firestore, 'users', user.uid, 'workflows');
+    }, [firestore, user?.uid]);
+    const { data: workflows } = useCollection<Workflow>(workflowsQuery);
+
+    const isCrmConnected = apiKeys?.some(key => key.service.toLowerCase().includes('crm') && key.status === 'active');
+    const crmLogs = logs.filter(log => log.service === 'CRM Connector');
+    const crmWorkflows = workflows?.filter(wf => 
         wf.trigger.service === 'CRM' || wf.steps.some(step => step.description.toLowerCase().includes('crm'))
-    );
+    ) || [];
 
     return (
         <>

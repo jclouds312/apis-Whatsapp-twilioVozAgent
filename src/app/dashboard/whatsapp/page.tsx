@@ -2,8 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { Header } from "@/components/dashboard/header";
-import { ChatLayout } from "@/components/dashboard/whatsapp/chat-layout";
-import { conversations, userAvatar, apiKeys } from "@/lib/data";
+import { ChatLayout } from "./chat-layout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { StatCard } from "@/components/dashboard/stat-card";
 import { CheckCircle, Circle, MessageSquare, Send, Workflow, XCircle } from "lucide-react";
@@ -13,6 +12,9 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge";
 import { format, parseISO } from "date-fns";
 import { cn } from "@/lib/utils";
+import { useUser, useFirestore, useCollection, useMemoFirebase } from '@/firebase';
+import { collection } from 'firebase/firestore';
+import type { Conversation, ApiKey } from "@/lib/types";
 
 const initialMessageTraffic = Array.from({ length: 15 }, (_, i) => {
     const d = new Date();
@@ -27,8 +29,22 @@ const initialMessageTraffic = Array.from({ length: 15 }, (_, i) => {
 export default function WhatsAppPage() {
     const { logs } = useLogs();
     const [messageTraffic, setMessageTraffic] = useState(initialMessageTraffic);
+    const { user } = useUser();
+    const firestore = useFirestore();
+
+    const apiKeysQuery = useMemoFirebase(() => {
+        if (!firestore || !user?.uid) return null;
+        return collection(firestore, 'users', user.uid, 'apiKeys');
+    }, [firestore, user?.uid]);
+    const { data: apiKeys } = useCollection<ApiKey>(apiKeysQuery);
+
+    const conversationsQuery = useMemoFirebase(() => {
+        if (!firestore || !user?.uid) return null;
+        return collection(firestore, 'users', user.uid, 'conversations');
+    }, [firestore, user?.uid]);
+    const { data: conversations } = useCollection<Conversation>(conversationsQuery);
     
-    const isWhatsAppConnected = apiKeys.some(key => key.service === 'WhatsApp Business' && key.status === 'active');
+    const isWhatsAppConnected = apiKeys?.some(key => key.service === 'WhatsApp Business' && key.status === 'active');
     const whatsappLogs = logs.filter(log => log.service === 'WhatsApp').slice(0, 5);
 
     useEffect(() => {
@@ -88,7 +104,7 @@ export default function WhatsAppPage() {
                     />
                      <StatCard 
                         title="Active Conversations"
-                        value={conversations.length.toString()}
+                        value={conversations?.length.toString() ?? '0'}
                         description="Live chats with contacts"
                         Icon={Send}
                         iconColor="text-blue-500"
@@ -153,8 +169,8 @@ export default function WhatsAppPage() {
                      <ChatLayout
                         defaultLayout={[25, 45, 30]}
                         navCollapsedSize={8}
-                        conversations={conversations}
-                        currentUserAvatar={userAvatar}
+                        conversations={conversations || []}
+                        currentUserAvatar={user?.photoURL || "https://picsum.photos/seed/user1/100/100"}
                     />
                 </div>
             </main>

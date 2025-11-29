@@ -3,7 +3,8 @@ export type ApiKey = {
   service: string;
   key: string;
   status: 'active' | 'revoked';
-  createdAt: string;
+  createdAt: any; // Allow any for Firestore Timestamp
+  userId: string;
 };
 
 export type Log = {
@@ -34,7 +35,8 @@ export type Workflow = {
         description: string;
     }[];
     status: 'active' | 'inactive';
-    lastRun: string;
+    lastRun: any; // Allow any for Firestore Timestamp
+    userId: string;
 };
 
 export type ExposedApi = {
@@ -45,6 +47,7 @@ export type ExposedApi = {
   method: 'GET' | 'POST' | 'PUT' | 'DELETE';
   endpoint: string;
   version: string;
+  userId: string;
 };
 
 export type Message = {
@@ -72,6 +75,7 @@ export type Conversation = {
   agentNotes: string;
   orderHistory: Order[];
   lastMessage: string;
-  lastMessageTime: string;
+  lastMessageTime: any; // Allow any for Firestore Timestamp
   messages: Message[];
+  userId: string;
 };
