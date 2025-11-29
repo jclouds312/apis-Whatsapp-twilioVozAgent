@@ -79,9 +79,9 @@ function ApiKeysTabContent() {
     const handleRevokeKey = (key: ApiKey) => {
         if (!firestore || !user?.uid) return;
         const keyDocRef = doc(firestore, 'users', user.uid, 'apiKeys', key.id);
-        updateDocumentNonBlocking(keyDocRef, { status: 'revoked' });
+        deleteDocumentNonBlocking(keyDocRef);
         addLog({ service: 'Settings', level: 'warn', message: `API Key for ${key.service} has been revoked.` });
-        toast({ variant: 'destructive', title: 'API Key Revoked', description: `The key for ${key.service} is no longer active.` });
+        toast({ variant: 'destructive', title: 'API Key Revoked', description: `The key for ${key.service} has been permanently deleted.` });
     }
 
     const handleEditKey = (event: React.FormEvent<HTMLFormElement>) => {
@@ -122,7 +122,7 @@ function ApiKeysTabContent() {
             <CardHeader className="flex flex-row items-center justify-between">
                 <div>
                     <CardTitle>API Key Management</CardTitle>
-                    <CardDescription>Manage credentials for integrated services.</CardDescription>
+                    <CardDescription>Manage credentials for integrated services like WhatsApp and Twilio.</CardDescription>
                 </div>
                 <Dialog open={addKeyOpen} onOpenChange={setAddKeyOpen}>
                     <DialogTrigger asChild>
@@ -212,7 +212,7 @@ function ApiKeysTabContent() {
                                     <Badge variant={key.status === 'active' ? 'default' : 'destructive'} 
                                         className={key.status === 'active' 
                                             ? 'bg-green-100 text-green-800 dark:bg-green-900/50 dark:text-green-300 border-green-200 dark:border-green-500/50' 
-                                            : 'bg-red-100 text-red-800 dark:bg-red-900/50 dark:text-red-300 border-red-200 dark:border-red-500/50'
+                                            : 'bg-stone-100 text-stone-800 dark:bg-stone-900/50 dark:text-stone-300 border-stone-200 dark:border-stone-500/50'
                                         }>
                                         {key.status}
                                     </Badge>
@@ -230,7 +230,7 @@ function ApiKeysTabContent() {
                                             <DropdownMenuContent align="end">
                                                 <DropdownMenuLabel>Actions</DropdownMenuLabel>
                                                 <DropdownMenuItem onSelect={() => { setSelectedKey(key); setEditKeyOpen(true); }}>Edit</DropdownMenuItem>
-                                                <DropdownMenuItem className="text-destructive hover:text-destructive" onClick={() => handleRevokeKey(key)}>Revoke</DropdownMenuItem>
+                                                <DropdownMenuItem className="text-destructive hover:text-destructive focus:text-destructive focus:bg-destructive/10" onClick={() => handleRevokeKey(key)}>Revoke</DropdownMenuItem>
                                             </DropdownMenuContent>
                                         </DropdownMenu>
                                         <DialogContent>
