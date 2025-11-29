@@ -34,7 +34,7 @@ export function DashboardNav() {
   const pathname = usePathname();
 
   return (
-    <nav className="grid items-start text-base font-medium">
+    <nav className="grid items-start text-lg font-medium">
       <SidebarMenu>
         {navItems.map(({ href, icon: Icon, label }) => (
           <SidebarMenuItem key={href}>
@@ -44,7 +44,7 @@ export function DashboardNav() {
                 tooltip={label}
                 className="justify-start"
               >
-                <Icon className="h-5 w-5" />
+                <Icon className="h-6 w-6" />
                 <span>{label}</span>
               </SidebarMenuButton>
             </Link>
