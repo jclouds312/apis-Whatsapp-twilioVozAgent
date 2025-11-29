@@ -74,13 +74,13 @@ export const workflows: Workflow[] = [
 ];
 
 export const apiTrafficData = [
-    { date: '2024-07-15', 'API Calls': 2400 },
-    { date: '2024-07-16', 'API Calls': 1398 },
-    { date: '2024-07-17', 'API Calls': 9800 },
-    { date: '2024-07-18', 'API Calls': 3908 },
-    { date: '2024-07-19', 'API Calls': 4800 },
-    { date: '2024-07-20', 'API Calls': 3800 },
-    { date: '2024-07-21', 'API Calls': 4300 },
+    { date: '2024-07-15', 'API Calls': 0 },
+    { date: '2024-07-16', 'API Calls': 0 },
+    { date: '2024-07-17', 'API Calls': 0 },
+    { date: '2024-07-18', 'API Calls': 0 },
+    { date: '2024-07-19', 'API Calls': 0 },
+    { date: '2024-07-20', 'API Calls': 0 },
+    { date: '2024-07-21', 'API Calls': 0 },
 ];
 
 export const exposedApis: ExposedApi[] = [
