@@ -1,0 +1,125 @@
+
+'use client';
+
+import { Header } from "@/components/dashboard/header";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { StatCard } from "@/components/dashboard/stat-card";
+import { apiKeys, logs as initialLogs, workflows } from "@/lib/data";
+import { Badge } from "@/components/ui/badge";
+import { CheckCircle, XCircle, Users, TrendingUp, Contact, Workflow as WorkflowIcon } from "lucide-react";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { format } from "date-fns";
+
+export default function CrmPage() {
+    const isCrmConnected = apiKeys.some(key => key.service.toLowerCase().includes('crm') && key.status === 'active');
+    const crmLogs = initialLogs.filter(log => log.service === 'CRM Connector');
+    const crmWorkflows = workflows.filter(wf => 
+        wf.trigger.service === 'CRM' || wf.steps.some(step => step.description.toLowerCase().includes('crm'))
+    );
+
+    return (
+        <>
+            <Header title="CRM Integration" />
+            <main className="flex-1 flex flex-col gap-6 p-4 lg:p-6">
+                <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+                    <Card>
+                        <CardHeader>
+                            <CardTitle>Connection Status</CardTitle>
+                            <CardDescription>CRM API Key status.</CardDescription>
+                        </CardHeader>
+                        <CardContent className="flex items-center space-x-2 pt-2">
+                             {isCrmConnected ? (
+                                <CheckCircle className="h-6 w-6 text-green-500" />
+                            ) : (
+                                <XCircle className="h-6 w-6 text-red-500" />
+                            )}
+                            <span className={`text-lg font-medium ${isCrmConnected ? "text-green-600" : "text-red-600"}`}>
+                                {isCrmConnected ? "Connected" : "Not Connected"}
+                            </span>
+                        </CardContent>
+                    </Card>
+                     <StatCard 
+                        title="New Leads (24h)"
+                        value="18"
+                        description="From all connected channels"
+                        Icon={TrendingUp}
+                    />
+                     <StatCard 
+                        title="Contacts Synced"
+                        value="1,204"
+                        description="Total contacts in CRM"
+                        Icon={Users}
+                    />
+                     <StatCard 
+                        title="Active CRM Workflows"
+                        value={crmWorkflows.filter(wf => wf.status === 'active').length.toString()}
+                        description="Automations involving CRM"
+                        Icon={WorkflowIcon}
+                    />
+                </div>
+                <div className="grid gap-6 md:grid-cols-2">
+                     <Card>
+                         <CardHeader>
+                            <CardTitle>Recent CRM Activity</CardTitle>
+                            <CardDescription>Live feed of CRM-related events.</CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                           <Table>
+                               <TableHeader>
+                                   <TableRow>
+                                       <TableHead>Timestamp</TableHead>
+                                       <TableHead>Level</TableHead>
+                                       <TableHead>Message</TableHead>
+                                   </TableRow>
+                               </TableHeader>
+                               <TableBody>
+                                   {crmLogs.map(log => (
+                                       <TableRow key={log.id}>
+                                           <TableCell className="text-muted-foreground">{format(new Date(log.timestamp), "HH:mm:ss")}</TableCell>
+                                           <TableCell>
+                                                <Badge variant={log.level === 'error' ? 'destructive' : 'default'} className={log.level === 'warn' ? 'bg-yellow-500' : ''}>
+                                                    {log.level}
+                                                </Badge>
+                                           </TableCell>
+                                           <TableCell>{log.message}</TableCell>
+                                       </TableRow>
+                                   ))}
+                               </TableBody>
+                           </Table>
+                        </CardContent>
+                    </Card>
+                     <Card>
+                         <CardHeader>
+                            <CardTitle>Related Workflows</CardTitle>
+                            <CardDescription>Automations that interact with your CRM.</CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                           <Table>
+                               <TableHeader>
+                                   <TableRow>
+                                       <TableHead>Workflow Name</TableHead>
+                                       <TableHead>Trigger</TableHead>
+                                       <TableHead>Status</TableHead>
+                                   </TableRow>
+                               </TableHeader>
+                               <TableBody>
+                                   {crmWorkflows.map(wf => (
+                                       <TableRow key={wf.id}>
+                                           <TableCell className="font-medium">{wf.name}</TableCell>
+                                           <TableCell className="text-muted-foreground">{wf.trigger.service}: {wf.trigger.event}</TableCell>
+                                           <TableCell>
+                                                <Badge variant={wf.status === 'active' ? 'default' : 'secondary'} className={wf.status === 'active' ? 'bg-green-500' : ''}>
+                                                    {wf.status}
+                                                </Badge>
+                                           </TableCell>
+                                       </TableRow>
+                                   ))}
+                               </TableBody>
+                           </Table>
+                        </CardContent>
+                    </Card>
+                </div>
+            </main>
+        </>
+    )
+}

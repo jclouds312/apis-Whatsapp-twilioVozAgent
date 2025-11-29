@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import {
   CodeXml,
+  Contact,
   KeyRound,
   LayoutDashboard,
   MessageSquare,
@@ -26,6 +27,7 @@ const navItems = [
   { href: '/dashboard/function-connect', icon: Workflow, label: 'Function Connect' },
   { href: '/dashboard/whatsapp', icon: MessageSquare, label: 'WhatsApp' },
   { href: '/dashboard/twilio', icon: Phone, label: 'Twilio Voice' },
+  { href: '/dashboard/crm', icon: Contact, label: 'CRM' },
   { href: '/dashboard/logs', icon: ScrollText, label: 'Logs & Audit' },
   { href: '/dashboard/users', icon: Users, label: 'Users & Roles' },
 ];
