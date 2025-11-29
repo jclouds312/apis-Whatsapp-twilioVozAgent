@@ -6,7 +6,6 @@ import { usePathname } from 'next/navigation';
 import {
   CodeXml,
   Contact,
-  KeyRound,
   LayoutDashboard,
   MessageSquare,
   Phone,
@@ -26,6 +25,7 @@ import {
 } from '@/components/ui/collapsible';
 import { Button } from '@/components/ui/button';
 import { useState, useEffect } from 'react';
+import { useSidebar } from '@/components/ui/sidebar';
 
 const navItems = [
   { 
@@ -81,6 +81,8 @@ const navItems = [
 
 export function DashboardNav() {
   const pathname = usePathname();
+  const { setOpenMobile, isMobile } = useSidebar();
+
   const [openSections, setOpenSections] = useState<Record<string, boolean>>(() => {
     const initialState: Record<string, boolean> = {};
     navItems.forEach(item => {
@@ -99,7 +101,14 @@ export function DashboardNav() {
     if (activeParent && !openSections[activeParent.label]) {
       setOpenSections(prev => ({ ...prev, [activeParent.label]: true }));
     }
-  }, [pathname, openSections]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pathname]);
+
+  const handleLinkClick = () => {
+    if (isMobile) {
+      setOpenMobile(false);
+    }
+  };
 
   const toggleSection = (label: string) => {
     setOpenSections(prev => ({...prev, [label]: !prev[label]}));
@@ -131,6 +140,7 @@ export function DashboardNav() {
                     <Link
                         key={subItem.href}
                         href={subItem.href}
+                        onClick={handleLinkClick}
                         className={cn(
                         'block pl-4 pr-3 py-2 rounded-md text-base hover:bg-sidebar-accent/50',
                         pathname === subItem.href ? 'bg-sidebar-accent/80 text-sidebar-accent-foreground font-semibold' : 'text-sidebar-foreground/80'
@@ -147,7 +157,7 @@ export function DashboardNav() {
             </CollapsibleContent>
           </Collapsible>
         ) : (
-          <Link key={item.href} href={item.href}>
+          <Link key={item.href} href={item.href} onClick={handleLinkClick}>
             <Button
               variant="ghost"
               className={cn(

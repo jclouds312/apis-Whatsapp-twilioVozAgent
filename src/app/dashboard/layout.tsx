@@ -1,14 +1,15 @@
+
 'use client';
 
-import { SidebarProvider, Sidebar, SidebarHeader, SidebarContent, SidebarFooter, SidebarInset } from '@/components/ui/sidebar';
+import { SidebarProvider, Sidebar, SidebarHeader, SidebarContent, SidebarFooter } from '@/components/ui/sidebar';
 import Link from 'next/link';
-import { Sparkles } from 'lucide-react';
 import { DashboardNav } from '@/components/dashboard/dashboard-nav';
+import { LogProvider } from '@/context/LogContext';
 
 const Logo = () => (
   <svg
-    width="28"
-    height="28"
+    width="24"
+    height="24"
     viewBox="0 0 28 28"
     fill="none"
     xmlns="http://www.w3.org/2000/svg"
@@ -59,23 +60,25 @@ export default function DashboardLayout({
 }) {
 
   return (
-    <SidebarProvider>
-      <Sidebar>
-        <SidebarHeader>
-          <Link href="/dashboard" className="flex items-center gap-2 font-semibold text-lg text-sidebar-foreground">
-            <Logo />
-            <span>APIs Manager</span>
-          </Link>
-        </SidebarHeader>
-        <SidebarContent>
-          <DashboardNav />
-        </SidebarContent>
-        <SidebarFooter>
-        </SidebarFooter>
-      </Sidebar>
-      <SidebarInset>
-        {children}
-      </SidebarInset>
-    </SidebarProvider>
+    <LogProvider>
+      <SidebarProvider>
+        <Sidebar>
+          <SidebarHeader>
+            <Link href="/dashboard" className="flex items-center gap-2 font-semibold text-lg text-sidebar-foreground">
+              <Logo />
+              <span className="text-base font-semibold">APIs Manager</span>
+            </Link>
+          </SidebarHeader>
+          <SidebarContent>
+            <DashboardNav />
+          </SidebarContent>
+          <SidebarFooter>
+          </SidebarFooter>
+        </Sidebar>
+        <main className="flex flex-1 flex-col bg-background">
+          {children}
+        </main>
+      </SidebarProvider>
+    </LogProvider>
   );
 }
