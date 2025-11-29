@@ -187,19 +187,6 @@
         "status"
       ]
     },
-    "User": {
-      "$schema": "http://json-schema.org/draft-07/schema#",
-      "title": "User",
-      "type": "object",
-      "description": "Represents a user of the system.",
-      "properties": {
-        "id": {
-          "type": "string",
-          "description": "Unique identifier for the user."
-        }
-      },
-      "required": ["id"]
-    },
     "Conversation": {
       "$schema": "http://json-schema.org/draft-07/schema#",
       "title": "Conversation",
@@ -252,10 +239,6 @@
     ]
   },
   "firestore": {
-    "/users/{userId}": {
-      "schema": { "$ref": "#/entities/User" },
-      "description": "Collection to store user profiles."
-    },
     "/users/{userId}/apiKeys/{apiKeyId}": {
       "schema": { "$ref": "#/entities/ApiKey" },
       "description": "Stores API keys for integrated third-party services like WhatsApp, Twilio, etc."

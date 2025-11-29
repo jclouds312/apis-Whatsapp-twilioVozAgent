@@ -21,10 +21,8 @@ export type ApiLog = {
 
 export type DashboardUser = {
   id: string;
-  username: string;
-  email: string;
-  roleId: string;
   name: string;
+  email: string;
   avatarUrl: string;
   role: 'Admin' | 'Agent' | 'Developer' | 'Manager';
 };
@@ -84,8 +82,5 @@ export type Conversation = {
   lastMessageTime: any; // Allow any for Firestore Timestamp
   userId: string;
 };
-
-// This type was previously User, changing to DashboardUser for clarity
-export type User = DashboardUser;
 
     

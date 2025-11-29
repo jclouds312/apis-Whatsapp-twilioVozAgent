@@ -9,7 +9,7 @@ import {
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
 import type { Conversation } from "@/lib/types";
-import { ChatList } from "./chat-list";
+import { ChatList } from "@/components/dashboard/whatsapp/chat-list";
 import { ChatMessage } from "./chat-message";
 import { ContactPanel } from "./contact-panel";
 

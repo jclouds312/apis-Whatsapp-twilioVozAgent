@@ -1,3 +1,4 @@
+
 /**
  * Core Philosophy: This ruleset enforces a strict user-ownership model. All user-generated data,
  * including settings, API keys, and workflows, is stored in subcollections under a path specific
@@ -80,70 +81,67 @@ service cloud.firestore {
     // User Data
     // ------------------------------------------------------------------------
 
-    /**
-     * @description Controls access to a user's own profile document.
-     * @path /users/{userId}
-     * @allow A signed-in user (uid: "user123") creating their own document (at /users/user123). (create)
-     * @deny A user ("userABC") trying to read another user's document ("/users/user123"). (get)
-     * @principle A user's root document can be created by that user but should be otherwise protected.
-     */
     match /users/{userId} {
-      allow get: if isOwner(userId);
-      allow list: if false; // Disallow listing all users for security.
-      allow create: if isOwner(userId) && request.resource.data.id == userId;
-      allow update: if isExistingOwner(userId) && request.resource.data.id == resource.data.id;
-      allow delete: if false; // User self-deletion should be a backend process.
-    }
+      // This collection is a placeholder for user-specific subcollections.
+      // Direct access to the user document itself is disallowed for now.
+      allow read, write: if false;
 
-    /**
-     * @description Secures a user's API keys. Only the owner can manage them.
-     * @path /users/{userId}/apiKeys/{apiKeyId}
-     * @allow User "user123" can create a new API key in their own subcollection. (create)
-     * @deny User "userABC" cannot list the API keys of "user123". (list)
-     * @principle Enforces strict ownership over sensitive credentials like API keys.
-     */
-    match /users/{userId}/apiKeys/{apiKeyId} {
-      allow get, list: if isOwner(userId);
-      allow create: if isOwner(userId) && newDocHasCorrectOwner(userId);
-      allow update: if isExistingOwner(userId) && ownerIsImmutable();
-      allow delete: if isExistingOwner(userId);
-    }
-    
-    /**
-     * @description Secures a user's Exposed APIs. Only the owner can manage them.
-     * @path /users/{userId}/exposedApis/{exposedApiId}
-     */
-    match /users/{userId}/exposedApis/{exposedApiId} {
-      allow get, list, create, update, delete: if isOwner(userId);
-    }
-
-    /**
-     * @description Secures user-defined workflows. Only the owner can manage them.
-     * @path /users/{userId}/workflows/{workflowId}
-     * @allow User "user123" can create a new workflow for themselves. (create)
-     * @deny User "userABC" cannot delete the workflow of "user123". (delete)
-     * @principle Enforces strict ownership over a user's created content and logic.
-     */
-    match /users/{userId}/workflows/{workflowId} {
-      allow get, list: if isOwner(userId);
-      allow create: if isOwner(userId) && newDocHasCorrectOwner(userId);
-      allow update: if isExistingOwner(userId) && ownerIsImmutable();
-      allow delete: if isExistingOwner(userId);
-    }
-
-    /**
-     * @description Secures a user's conversations. Only the owner can manage them.
-     * @path /users/{userId}/conversations/{conversationId}
-     */
-     match /users/{userId}/conversations/{conversationId} {
-      allow get, list, create, update, delete: if isOwner(userId);
+      /**
+       * @description Secures a user's API keys. Only the owner can manage them.
+       * @path /users/{userId}/apiKeys/{apiKeyId}
+       * @allow User "user123" can create a new API key in their own subcollection. (create)
+       * @deny User "userABC" cannot list the API keys of "user123". (list)
+       * @principle Enforces strict ownership over sensitive credentials like API keys.
+       */
+      match /apiKeys/{apiKeyId} {
+        allow get, list: if isOwner(userId);
+        allow create: if isOwner(userId) && newDocHasCorrectOwner(userId);
+        allow update: if isExistingOwner(userId) && ownerIsImmutable();
+        allow delete: if isExistingOwner(userId);
+      }
       
       /**
-       * @description Secures messages within a conversation.
-       * @path /users/{userId}/conversations/{conversationId}/messages/{messageId}
+       * @description Secures a user's Exposed APIs. Only the owner can manage them.
+       * @path /users/{userId}/exposedApis/{exposedApiId}
        */
-      match /messages/{messageId} {
-        allow get, list, create, update, delete: if isOwner(userId);
+      match /exposedApis/{exposedApiId} {
+        allow get, list: if isOwner(userId);
+        allow create: if isOwner(userId) && newDocHasCorrectOwner(userId);
+        allow update: if isExistingOwner(userId) && ownerIsImmutable();
+        allow delete: if isExistingOwner(userId);
+      }
+
+      /**
+       * @description Secures user-defined workflows. Only the owner can manage them.
+       * @path /users/{userId}/workflows/{workflowId}
+       * @allow User "user123" can create a new workflow for themselves. (create)
+       * @deny User "userABC" cannot delete the workflow of "user123". (delete)
+       * @principle Enforces strict ownership over a user's created content and logic.
+       */
+      match /workflows/{workflowId} {
+        allow get, list: if isOwner(userId);
+        allow create: if isOwner(userId) && newDocHasCorrectOwner(userId);
+        allow update: if isExistingOwner(userId) && ownerIsImmutable();
+        allow delete: if isExistingOwner(userId);
+      }
+
+      /**
+       * @description Secures a user's conversations. Only the owner can manage them.
+       * @path /users/{userId}/conversations/{conversationId}
+       */
+       match /conversations/{conversationId} {
+        allow get, list, create, update: if isOwner(userId);
+        allow delete: if isOwner(userId); // Allow deleting whole conversations
+        
+        /**
+         * @description Secures messages within a conversation.
+         * @path /users/{userId}/conversations/{conversationId}/messages/{messageId}
+         */
+        match /messages/{messageId} {
+          allow get, list, create: if isOwner(userId);
+          // Generally, messages shouldn't be updated or deleted by clients to maintain chat integrity
+          allow update, delete: if false; 
+        }
       }
     }
 
@@ -153,7 +151,7 @@ service cloud.firestore {
     // ------------------------------------------------------------------------
 
     /**
-     * @description API logs are backend-written and should not be accessible by clients.
+     * @description API logs are backend-written and should not be accessible by clients for reading.
      * @path /apiLogs/{apiLogId}
      * @allow No client operation is permitted.
      * @deny Any authenticated user attempting to read an API log. (get)
@@ -164,15 +162,20 @@ service cloud.firestore {
     }
 
     /**
-     * @description Dashboard user profiles are for admin purposes and should not be client-accessible.
+     * @description Dashboard user profiles are for admin purposes. We allow read for now
+     * so the user list page can function, but in a real multi-tenant app, this would
+     * be locked down further (e.g., only list users within the same organization).
      * @path /dashboardUsers/{dashboardUserId}
-     * @allow No client operation is permitted.
-     * @deny Any authenticated user attempting to list dashboard users. (list)
-     * @principle Administrative data should be protected from all client access.
+     * @allow Any signed-in user can see other dashboard users for simplicity.
+     * @deny A non-authenticated user cannot list users.
      */
     match /dashboardUsers/{dashboardUserId} {
-      allow read, write: if true; // In a real app, this would be admin-only
+      allow read: if isSignedIn();
+      // Write access should be restricted to Admins in a real application.
+      // For now, allow any signed-in user to add/edit/remove for demonstration.
+      allow write: if isSignedIn();
     }
   }
 }
+
     

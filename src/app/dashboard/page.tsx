@@ -110,7 +110,7 @@ export default function DashboardPage() {
   return (
     <>
       <Header title="Dashboard" />
-      <main className="flex flex-1 flex-col gap-4 p-4 lg:gap-6 lg:p-6 bg-background">
+      <main className="flex flex-1 flex-col gap-4 p-4 lg:gap-6 lg:p-6">
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
             <StatCard 
                 title="Total API Calls"
@@ -148,63 +148,65 @@ export default function DashboardPage() {
                 iconColor="text-green-500"
             />
         </div>
-        <div className="grid gap-4 lg:grid-cols-5">
-            <Card className="lg:col-span-3 transition-all hover:shadow-lg">
+        <div className="grid gap-4 lg:grid-cols-2">
+            <Card className="lg:col-span-1 transition-all hover:shadow-lg">
                 <CardHeader>
                     <CardTitle>API Traffic</CardTitle>
                     <CardDescription>Live call volume from the last minute.</CardDescription>
                 </CardHeader>
-                <CardContent>
+                <CardContent className="pl-2">
                     <AreaChartComponent data={apiTrafficData} dataKey="API Calls" xAxisKey="date" />
                 </CardContent>
             </Card>
-            <Card className="lg:col-span-2 transition-all hover:shadow-lg">
-                <CardHeader>
-                    <CardTitle>Exposed APIs</CardTitle>
-                    <CardDescription>Your public and private facing APIs.</CardDescription>
-                </CardHeader>
-                <CardContent>
-                    <Table>
-                        <TableHeader>
-                            <TableRow>
-                                <TableHead>API</TableHead>
-                                <TableHead className="text-right">Status</TableHead>
-                            </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                            {isLoadingApis && Array.from({length: 3}).map((_, i) => (
-                                <TableRow key={i}>
-                                    <TableCell><Skeleton className="h-5 w-3/4" /></TableCell>
-                                    <TableCell className="text-right"><Skeleton className="h-6 w-20 rounded-full inline-block" /></TableCell>
-                                </TableRow>
-                            ))}
-                            {exposedApis?.slice(0, 4).map(api => (
-                                <TableRow key={api.id}>
-                                    <TableCell>
-                                        <div className="font-medium">{api.name}</div>
-                                        <div className="text-sm text-muted-foreground hidden md:inline">
-                                            <Badge variant="outline" className={cn("font-mono text-xs", getMethodClass(api.method))}>{api.method}</Badge>
-                                            <span className="ml-2 font-mono text-muted-foreground text-xs">{api.endpoint}</span>
-                                        </div>
-                                    </TableCell>
-                                    <TableCell className="text-right">
-                                        <Badge variant="outline" className={cn("text-xs font-semibold", getStatusClass(api.status))}>
-                                            {api.status}
-                                        </Badge>
-                                    </TableCell>
-                                </TableRow>
-                            ))}
-                             {!isLoadingApis && exposedApis?.length === 0 && (
-                                <TableRow>
-                                    <TableCell colSpan={2} className="text-center text-muted-foreground p-8">
-                                        No exposed APIs yet.
-                                    </TableCell>
-                                </TableRow>
-                            )}
-                        </TableBody>
-                    </Table>
-                </CardContent>
-            </Card>
+            <div className="space-y-4">
+              <Card className="transition-all hover:shadow-lg">
+                  <CardHeader>
+                      <CardTitle>Exposed APIs</CardTitle>
+                      <CardDescription>Your public and private facing APIs.</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                      <Table>
+                          <TableHeader>
+                              <TableRow>
+                                  <TableHead>API</TableHead>
+                                  <TableHead className="text-right">Status</TableHead>
+                              </TableRow>
+                          </TableHeader>
+                          <TableBody>
+                              {isLoadingApis && Array.from({length: 3}).map((_, i) => (
+                                  <TableRow key={i}>
+                                      <TableCell><Skeleton className="h-5 w-3/4" /></TableCell>
+                                      <TableCell className="text-right"><Skeleton className="h-6 w-20 rounded-full inline-block" /></TableCell>
+                                  </TableRow>
+                              ))}
+                              {exposedApis?.slice(0, 4).map(api => (
+                                  <TableRow key={api.id}>
+                                      <TableCell>
+                                          <div className="font-medium">{api.name}</div>
+                                          <div className="text-sm text-muted-foreground hidden md:inline">
+                                              <Badge variant="outline" className={cn("font-mono text-xs", getMethodClass(api.method))}>{api.method}</Badge>
+                                              <span className="ml-2 font-mono text-muted-foreground text-xs">{api.endpoint}</span>
+                                          </div>
+                                      </TableCell>
+                                      <TableCell className="text-right">
+                                          <Badge variant="outline" className={cn("text-xs font-semibold", getStatusClass(api.status))}>
+                                              {api.status}
+                                          </Badge>
+                                      </TableCell>
+                                  </TableRow>
+                              ))}
+                              {!isLoadingApis && exposedApis?.length === 0 && (
+                                  <TableRow>
+                                      <TableCell colSpan={2} className="text-center text-muted-foreground p-8">
+                                          No exposed APIs yet.
+                                      </TableCell>
+                                  </TableRow>
+                              )}
+                          </TableBody>
+                      </Table>
+                  </CardContent>
+              </Card>
+            </div>
         </div>
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
              <Card className="lg:col-span-3 transition-all hover:shadow-lg">
@@ -289,3 +291,5 @@ export default function DashboardPage() {
     </>
   );
 }
+
+    
