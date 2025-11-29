@@ -1,4 +1,4 @@
-# APIs Manager: Plataforma Unificada de Gestión y Orquestación de APIs
+ok# APIs Manager: Plataforma Unificada de Gestión y Orquestación de APIs
 
 APIs Manager es un panel de administración integral diseñado para centralizar, gestionar y automatizar las interacciones entre diversos servicios y APIs. La plataforma proporciona una consola unificada para administrar claves de API, exponer y documentar APIs internas, conectar flujos de trabajo entre servicios (como CRM, WhatsApp y Twilio) y gestionar usuarios con roles específicos.
 
