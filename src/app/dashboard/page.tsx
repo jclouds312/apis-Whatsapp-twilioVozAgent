@@ -8,7 +8,7 @@ import { AreaChartComponent } from "@/components/charts/area-chart";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { Activity, Workflow, AlertCircle, Users, CodeXml, Circle } from "lucide-react";
+import { Activity, Workflow, AlertCircle, Users, CodeXml, Circle, ArrowRight } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { formatDistanceToNow, parseISO, subDays, isAfter } from "date-fns";
 import { cn } from '@/lib/utils';
@@ -16,6 +16,8 @@ import type { ApiLog, Workflow as WorkflowType, ExposedApi, DashboardUser } from
 import { useUser, useFirestore, useCollection, useMemoFirebase } from '@/firebase';
 import { collection, query, limit, orderBy } from "firebase/firestore";
 import { Skeleton } from '@/components/ui/skeleton';
+import Link from 'next/link';
+import { Button } from '@/components/ui/button';
 
 
 const initialApiTrafficData = Array.from({ length: 15 }, (_, i) => {
@@ -26,6 +28,61 @@ const initialApiTrafficData = Array.from({ length: 15 }, (_, i) => {
         'API Calls': 0,
     };
 });
+
+function WelcomeCard() {
+    return (
+        <Card className="lg:col-span-5 bg-gradient-to-br from-primary/10 to-background">
+            <CardHeader>
+                <CardTitle>Welcome to APIs Manager!</CardTitle>
+                <CardDescription>Your central hub for managing and orchestrating services is ready.</CardDescription>
+            </CardHeader>
+            <CardContent className="grid md:grid-cols-3 gap-4">
+                <p className="md:col-span-3 text-muted-foreground">
+                    It looks like you're just getting started. Here are a few quick links to help you begin:
+                </p>
+                <Link href="/dashboard/settings" passHref>
+                   <Card className="h-full hover:shadow-lg hover:-translate-y-1 transition-transform">
+                       <CardHeader>
+                           <CardTitle className="text-lg flex items-center gap-2"><CodeXml className="w-5 h-5 text-purple-500" /> API Keys</CardTitle>
+                       </CardHeader>
+                       <CardContent>
+                           <p className="text-sm text-muted-foreground">Add your first API Key for services like WhatsApp or Twilio.</p>
+                       </CardContent>
+                       <CardFooter>
+                           <Button variant="link" className="p-0">Go to Settings <ArrowRight className="w-4 h-4 ml-2" /></Button>
+                       </CardFooter>
+                   </Card>
+                </Link>
+                <Link href="/dashboard/whatsapp" passHref>
+                     <Card className="h-full hover:shadow-lg hover:-translate-y-1 transition-transform">
+                       <CardHeader>
+                           <CardTitle className="text-lg flex items-center gap-2"><Activity className="w-5 h-5 text-green-500" /> View Activity</CardTitle>
+                       </CardHeader>
+                       <CardContent>
+                           <p className="text-sm text-muted-foreground">Once connected, your live WhatsApp & Twilio activity will appear here.</p>
+                       </CardContent>
+                        <CardFooter>
+                           <Button variant="link" className="p-0">Explore WhatsApp <ArrowRight className="w-4 h-4 ml-2" /></Button>
+                       </CardFooter>
+                   </Card>
+                </Link>
+                 <Link href="/dashboard/users" passHref>
+                     <Card className="h-full hover:shadow-lg hover:-translate-y-1 transition-transform">
+                       <CardHeader>
+                           <CardTitle className="text-lg flex items-center gap-2"><Users className="w-5 h-5 text-blue-500" /> Manage Users</CardTitle>
+                       </CardHeader>
+                       <CardContent>
+                           <p className="text-sm text-muted-foreground">Invite and manage roles for your team members.</p>
+                       </CardContent>
+                        <CardFooter>
+                           <Button variant="link" className="p-0">Manage Users <ArrowRight className="w-4 h-4 ml-2" /></Button>
+                       </CardFooter>
+                   </Card>
+                </Link>
+            </CardContent>
+        </Card>
+    )
+}
 
 export default function DashboardPage() {
     const [apiTrafficData, setApiTrafficData] = useState(initialApiTrafficData);
@@ -65,6 +122,8 @@ export default function DashboardPage() {
     const errorsToday = logs?.filter(l => l.level === 'error' && isAfter(parseISO(l.timestamp), subDays(new Date(), 1))).length || 0;
     const totalApiCalls = logs?.length || 0;
     const recentLogs = logs?.slice(0, 15) || [];
+    
+    const isNewUser = !isLoadingLogs && !isLoadingApis && !isLoadingWorkflows && (logs?.length === 0 && exposedApis?.length === 0 && workflows?.length === 0);
 
     useEffect(() => {
         setIsClient(true);
@@ -107,12 +166,26 @@ export default function DashboardPage() {
         }
     }
 
+    const getActivityLogMessage = (log: ApiLog) => {
+        if (log.endpoint === 'WhatsApp Webhook') {
+            return `Webhook received from WhatsApp.`;
+        }
+        if (log.endpoint === '/api/whatsapp') {
+            if (log.statusCode === 200) {
+                return `Message sent successfully via WhatsApp API.`;
+            }
+            return `Failed to send message via WhatsApp API.`;
+        }
+        return `Request to ${log.endpoint} returned status ${log.statusCode}.`;
+    }
 
   return (
     <>
       <Header title="Dashboard" />
       <main className="flex flex-1 flex-col gap-4 p-4 lg:gap-6 lg:p-6">
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
+             {isNewUser && <WelcomeCard />}
+
             <StatCard 
                 title="Total API Calls"
                 value={isLoadingLogs ? '...' : totalApiCalls.toLocaleString()}
@@ -149,8 +222,8 @@ export default function DashboardPage() {
                 iconColor="text-green-500"
             />
         </div>
-        <div className="grid gap-4 lg:grid-cols-2">
-            <Card className="lg:col-span-1 transition-all hover:shadow-lg">
+        <div className="grid gap-4 lg:grid-cols-2 xl:grid-cols-5">
+            <Card className="lg:col-span-1 xl:col-span-3 transition-all hover:shadow-lg">
                 <CardHeader>
                     <CardTitle>API Traffic</CardTitle>
                     <CardDescription>Live call volume from the last minute.</CardDescription>
@@ -159,55 +232,53 @@ export default function DashboardPage() {
                     <AreaChartComponent data={apiTrafficData} dataKey="API Calls" xAxisKey="date" />
                 </CardContent>
             </Card>
-            <div className="space-y-4">
-              <Card className="transition-all hover:shadow-lg">
-                  <CardHeader>
-                      <CardTitle>Exposed APIs</CardTitle>
-                      <CardDescription>Your public and private facing APIs.</CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                      <Table>
-                          <TableHeader>
-                              <TableRow>
-                                  <TableHead>API</TableHead>
-                                  <TableHead className="text-right">Status</TableHead>
-                              </TableRow>
-                          </TableHeader>
-                          <TableBody>
-                              {isLoadingApis && Array.from({length: 3}).map((_, i) => (
-                                  <TableRow key={i}>
-                                      <TableCell><Skeleton className="h-5 w-3/4" /></TableCell>
-                                      <TableCell className="text-right"><Skeleton className="h-6 w-20 rounded-full inline-block" /></TableCell>
-                                  </TableRow>
-                              ))}
-                              {exposedApis?.slice(0, 4).map(api => (
-                                  <TableRow key={api.id}>
-                                      <TableCell>
-                                          <div className="font-medium">{api.name}</div>
-                                          <div className="text-sm text-muted-foreground hidden md:inline">
-                                              <Badge variant="outline" className={cn("font-mono text-xs", getMethodClass(api.method))}>{api.method}</Badge>
-                                              <span className="ml-2 font-mono text-muted-foreground text-xs">{api.endpoint}</span>
-                                          </div>
-                                      </TableCell>
-                                      <TableCell className="text-right">
-                                          <Badge variant="outline" className={cn("text-xs font-semibold", getStatusClass(api.status))}>
-                                              {api.status}
-                                          </Badge>
-                                      </TableCell>
-                                  </TableRow>
-                              ))}
-                              {!isLoadingApis && exposedApis?.length === 0 && (
-                                  <TableRow>
-                                      <TableCell colSpan={2} className="text-center text-muted-foreground p-8">
-                                          No exposed APIs yet.
-                                      </TableCell>
-                                  </TableRow>
-                              )}
-                          </TableBody>
-                      </Table>
-                  </CardContent>
-              </Card>
-            </div>
+            <Card className="lg:col-span-1 xl:col-span-2 transition-all hover:shadow-lg">
+                <CardHeader>
+                    <CardTitle>Exposed APIs</CardTitle>
+                    <CardDescription>Your public and private facing APIs.</CardDescription>
+                </CardHeader>
+                <CardContent>
+                    <Table>
+                        <TableHeader>
+                            <TableRow>
+                                <TableHead>API</TableHead>
+                                <TableHead className="text-right">Status</TableHead>
+                            </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                            {isLoadingApis && Array.from({length: 3}).map((_, i) => (
+                                <TableRow key={i}>
+                                    <TableCell><Skeleton className="h-5 w-3/4" /></TableCell>
+                                    <TableCell className="text-right"><Skeleton className="h-6 w-20 rounded-full inline-block" /></TableCell>
+                                </TableRow>
+                            ))}
+                            {exposedApis?.slice(0, 4).map(api => (
+                                <TableRow key={api.id}>
+                                    <TableCell>
+                                        <div className="font-medium">{api.name}</div>
+                                        <div className="text-sm text-muted-foreground">
+                                            <Badge variant="outline" className={cn("font-mono text-xs", getMethodClass(api.method))}>{api.method}</Badge>
+                                            <span className="ml-2 font-mono text-muted-foreground text-xs">{api.endpoint}</span>
+                                        </div>
+                                    </TableCell>
+                                    <TableCell className="text-right">
+                                        <Badge variant="outline" className={cn("text-xs font-semibold", getStatusClass(api.status))}>
+                                            {api.status}
+                                        </Badge>
+                                    </TableCell>
+                                </TableRow>
+                            ))}
+                            {!isLoadingApis && exposedApis?.length === 0 && (
+                                <TableRow>
+                                    <TableCell colSpan={2} className="text-center text-muted-foreground p-8">
+                                        No exposed APIs yet.
+                                    </TableCell>
+                                </TableRow>
+                            )}
+                        </TableBody>
+                    </Table>
+                </CardContent>
+            </Card>
         </div>
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
              <Card className="lg:col-span-3 transition-all hover:shadow-lg">
@@ -228,7 +299,7 @@ export default function DashboardPage() {
                           </div>
                           <div className="flex-1">
                             <p className="text-sm font-medium leading-none">
-                              <span className="font-semibold text-primary">{log.endpoint}:</span> {`Returned status ${log.statusCode}`}
+                               {getActivityLogMessage(log)}
                             </p>
                             <p className="text-sm text-muted-foreground">
                                {isClient ? formatDistanceToNow(parseISO(log.timestamp), { addSuffix: true }) : ''}
@@ -292,3 +363,5 @@ export default function DashboardPage() {
     </>
   );
 }
+
+    
