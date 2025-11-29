@@ -36,25 +36,16 @@ const navItems = [
     href: '/dashboard/api-keys',
     icon: KeyRound,
     label: 'API Keys',
-    subItems: [
-      { href: '/dashboard/api-keys', label: 'Manage Keys' },
-    ],
   },
   {
     href: '/dashboard/api-exhibition',
     icon: CodeXml,
     label: 'API Exhibition',
-    subItems: [
-      { href: '/dashboard/api-exhibition', label: 'Exposed APIs' },
-    ],
   },
   {
     href: '/dashboard/function-connect',
     icon: Workflow,
     label: 'Function Connect',
-     subItems: [
-      { href: '/dashboard/function-connect', label: 'Workflows' },
-    ],
   },
   {
     href: '/dashboard/integrations',
@@ -67,35 +58,28 @@ const navItems = [
     ]
   },
   {
-    href: '/dashboard/ai-agents',
-    icon: Bot,
-    label: 'AI Agents',
-    subItems: [
-      { href: '/dashboard/function-connect', label: 'Workflow Suggester' },
-      { href: '/dashboard/function-connect', label: 'Retell Agent' },
-    ],
-  },
-  {
     href: '/dashboard/logs',
     icon: ScrollText,
     label: 'Logs & Audit',
-    subItems: [
-      { href: '/dashboard/logs', label: 'System Logs' },
-    ],
   },
   {
     href: '/dashboard/users',
     icon: Users,
     label: 'Users & Roles',
-    subItems: [
-      { href: '/dashboard/users', label: 'Manage Users' },
-    ],
   },
 ];
 
 export function DashboardNav() {
   const pathname = usePathname();
-  const [openSections, setOpenSections] = useState<Record<string, boolean>>({});
+  const [openSections, setOpenSections] = useState<Record<string, boolean>>(
+    // Initialize all sections to be closed by default
+    navItems.reduce((acc, item) => {
+        if (item.label) {
+            acc[item.label] = false;
+        }
+        return acc;
+    }, {} as Record<string, boolean>)
+  );
 
   useEffect(() => {
     // Find the parent item of the currently active sub-item
@@ -123,7 +107,7 @@ export function DashboardNav() {
                 className={cn(
                   "w-full justify-start text-lg h-12",
                   // An item is active if its own href matches, or if a sub-item's href matches
-                  (pathname.startsWith(href) && href !== '/dashboard') && "bg-sidebar-accent text-sidebar-accent-foreground"
+                  (pathname.startsWith(href)) && "bg-sidebar-accent text-sidebar-accent-foreground"
                 )}
               >
                 <Icon className="h-6 w-6 mr-4" />
