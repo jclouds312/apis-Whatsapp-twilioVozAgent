@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Circle, MessageSquare, Phone, Workflow as WorkflowIcon } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
+import { RetellAgent } from "@/components/dashboard/retell-agent";
 
 export default function FunctionConnectPage() {
     const getIcon = (service: 'WhatsApp' | 'Twilio' | 'CRM') => {
@@ -19,12 +20,13 @@ export default function FunctionConnectPage() {
     return (
         <>
             <Header title="Function Connect" />
-            <main className="flex-1 grid grid-cols-1 lg:grid-cols-3 gap-4 p-4 lg:gap-6 lg:p-6">
-                <div className="lg:col-span-1">
+            <main className="flex-1 grid grid-cols-1 md:grid-cols-2 gap-4 p-4 lg:gap-6 lg:p-6">
+                <div className="flex flex-col gap-6">
                     <WorkflowSuggester />
+                    <RetellAgent />
                 </div>
-                <div className="lg:col-span-2">
-                    <Card>
+                <div className="md:col-span-1">
+                    <Card className="h-full">
                         <CardHeader>
                             <CardTitle>Existing Workflows</CardTitle>
                             <CardDescription>Manage your automated data flows between services.</CardDescription>
