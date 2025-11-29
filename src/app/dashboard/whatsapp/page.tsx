@@ -46,7 +46,7 @@ export default function WhatsAppPage() {
     
     const logsQuery = useMemoFirebase(() => {
         if (!firestore || !user?.uid) return null;
-        const q = query(collection(firestore, "apiLogs"), where("endpoint", "in", ["/api/whatsapp", "WhatsApp"]), orderBy('timestamp', 'desc'));
+        const q = query(collection(firestore, "apiLogs"), where("endpoint", "in", ["WhatsApp Webhook", "/api/whatsapp"]), orderBy('timestamp', 'desc'));
         return q;
     }, [firestore, user?.uid]);
     const { data: logs, isLoading: isLoadingLogs } = useCollection<ApiLog>(logsQuery);
@@ -72,22 +72,12 @@ export default function WhatsAppPage() {
 
                 const sentInInterval = logs.filter(log => {
                     const logDate = parseISO(log.timestamp);
-                    try {
-                        const reqBody = JSON.parse(log.requestBody);
-                        return log.level === 'info' && reqBody.type === 'text' && logDate >= intervalStart && logDate < intervalEnd;
-                    } catch {
-                        return false;
-                    }
+                    return log.endpoint === '/api/whatsapp' && logDate >= intervalStart && logDate < intervalEnd;
                 }).length;
 
                 const receivedInInterval = logs.filter(log => {
                      const logDate = parseISO(log.timestamp);
-                     try {
-                        const reqBody = JSON.parse(log.requestBody);
-                        return log.level === 'info' && reqBody.object === 'whatsapp_business_account' && logDate >= intervalStart && logDate < intervalEnd;
-                     } catch {
-                        return false;
-                     }
+                     return log.endpoint === 'WhatsApp Webhook' && logDate >= intervalStart && logDate < intervalEnd;
                 }).length;
 
                 return {
@@ -227,9 +217,13 @@ export default function WhatsAppPage() {
                             currentUserAvatar={user?.photoURL || `https://picsum.photos/seed/${user?.uid || 'user'}/100/100`}
                         />
                      )}
-                     {!isLoadingConversations && !conversations && (
+                     {!isLoadingConversations && !conversations?.length && (
                          <div className="h-full w-full rounded-lg border flex items-center justify-center bg-muted">
-                            <p className="text-muted-foreground">No conversations found.</p>
+                            <div className="text-center">
+                                <MessageSquare className="mx-auto h-12 w-12 text-gray-400" />
+                                <h3 className="mt-2 text-sm font-medium text-gray-900 dark:text-gray-200">No conversations</h3>
+                                <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">Conversations from WhatsApp will appear here automatically.</p>
+                            </div>
                         </div>
                      )}
                 </div>

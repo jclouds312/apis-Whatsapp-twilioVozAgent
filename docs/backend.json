@@ -2,7 +2,6 @@
 {
   "entities": {
     "ApiKey": {
-      "$schema": "http://json-schema.org/draft-07/schema#",
       "title": "ApiKey",
       "type": "object",
       "description": "Represents an API Key used for authenticating with external services.",
@@ -44,7 +43,6 @@
       ]
     },
     "ExposedApi": {
-      "$schema": "http://json-schema.org/draft-07/schema#",
       "title": "ExposedApi",
       "type": "object",
       "description": "Represents an API endpoint exposed by this platform for consumption by external systems.",
@@ -91,7 +89,6 @@
       ]
     },
     "ApiLog": {
-      "$schema": "http://json-schema.org/draft-07/schema#",
       "title": "ApiLog",
       "type": "object",
       "description": "Stores logs of API requests and responses.",
@@ -119,7 +116,7 @@
         },
         "apiKeyId": {
           "type": "string",
-          "description": "Reference to ApiKey. (Relationship: ApiKey 1:N ApiLog)"
+          "description": "Reference to ApiKey."
         },
         "level": {
           "type": "string",
@@ -137,7 +134,6 @@
       ]
     },
     "DashboardUser": {
-      "$schema": "http://json-schema.org/draft-07/schema#",
       "title": "DashboardUser",
       "type": "object",
       "description": "Represents a user who has access to the admin dashboard.",
@@ -150,7 +146,6 @@
       "required": ["name", "email", "role"]
     },
     "Workflow": {
-      "$schema": "http://json-schema.org/draft-07/schema#",
       "title": "Workflow",
       "type": "object",
       "description": "Defines a workflow within Function Connect.",
@@ -162,7 +157,8 @@
             "properties": {
                 "service": { "type": "string", "enum": ["WhatsApp", "Twilio", "CRM"]},
                 "event": { "type": "string" }
-            }
+            },
+             "required": ["service", "event"]
         },
         "steps": {
             "type": "array",
@@ -171,7 +167,8 @@
                 "properties": {
                     "name": { "type": "string" },
                     "description": { "type": "string" }
-                }
+                },
+                 "required": ["name", "description"]
             }
         },
         "status": { "type": "string", "enum": ["active", "inactive"] },
@@ -188,7 +185,6 @@
       ]
     },
     "Conversation": {
-      "$schema": "http://json-schema.org/draft-07/schema#",
       "title": "Conversation",
       "type": "object",
       "description": "Represents a chat conversation with a contact.",
@@ -219,7 +215,6 @@
       "required": ["contactName", "contactId", "lastMessage", "lastMessageTime", "userId"]
     },
     "Message": {
-      "$schema": "http://json-schema.org/draft-07/schema#",
       "title": "Message",
       "type": "object",
       "description": "Represents a single message within a conversation.",
@@ -241,15 +236,15 @@
   "firestore": {
     "/users/{userId}/apiKeys/{apiKeyId}": {
       "schema": { "$ref": "#/entities/ApiKey" },
-      "description": "Stores API keys for integrated third-party services like WhatsApp, Twilio, etc."
+      "description": "Stores API keys for a user."
     },
     "/users/{userId}/exposedApis/{exposedApiId}": {
       "schema": { "$ref": "#/entities/ExposedApi" },
-      "description": "Stores API endpoints exposed by this platform for consumption by external systems."
+      "description": "Stores APIs exposed by a user."
     },
     "/users/{userId}/workflows/{workflowId}": {
       "schema": { "$ref": "#/entities/Workflow" },
-      "description": "Collection to store workflows for each user. Secured by path-based ownership."
+      "description": "Stores workflows created by a user."
     },
     "/users/{userId}/conversations/{conversationId}": {
         "schema": { "$ref": "#/entities/Conversation" },
@@ -261,13 +256,11 @@
     },
     "/apiLogs/{apiLogId}": {
       "schema": { "$ref": "#/entities/ApiLog" },
-      "description": "Collection to store API logs. Consider partitioning by date for scalability."
+      "description": "Global collection for API logs from all users and services."
     },
     "/dashboardUsers/{dashboardUserId}": {
       "schema": { "$ref": "#/entities/DashboardUser" },
-      "description": "Collection to store dashboard users. Access controlled by roles."
+      "description": "Collection of all users who can access the dashboard."
     }
   }
 }
-
-    

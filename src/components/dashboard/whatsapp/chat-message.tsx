@@ -1,7 +1,7 @@
 'use client';
 
 import { AnimatePresence, motion } from 'framer-motion';
-import { Bot, Paperclip, SendHorizonal, ThumbsUp } from 'lucide-react';
+import { Bot, Paperclip, ThumbsUp } from 'lucide-react';
 import * as React from 'react';
 
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -14,14 +14,20 @@ import type { Conversation, Message } from '@/lib/types';
 import { cn } from '@/lib/utils';
 import { sendWhatsAppMessage } from '@/app/dashboard/whatsapp/actions';
 import { useToast } from '@/hooks/use-toast';
-import { useUser, useFirestore, addDocumentNonBlocking, useCollection, useMemoFirebase } from '@/firebase';
-import { collection, query, orderBy, serverTimestamp } from "firebase/firestore";
+import { useUser, useFirestore, addDocumentNonBlocking, useCollection, useMemoFirebase, updateDocumentNonBlocking } from '@/firebase';
+import { collection, query, orderBy, serverTimestamp, doc } from "firebase/firestore";
 
 
 interface ChatMessageProps {
   conversation: Conversation | null;
   currentUserAvatar: string;
 }
+
+const SendIcon = () => (
+    <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M10.8333 9.16669L0 0L20 10L0 20L10.8333 10.8333V15.8333L16.6667 12.5V7.5L10.8333 4.16669V9.16669Z" fill="currentColor"/>
+    </svg>
+)
 
 export function ChatMessage({ conversation, currentUserAvatar }: ChatMessageProps) {
   const [input, setInput] = React.useState('');
@@ -38,7 +44,6 @@ export function ChatMessage({ conversation, currentUserAvatar }: ChatMessageProp
   const scrollAreaRef = React.useRef<HTMLDivElement>(null);
 
   React.useEffect(() => {
-    // Scroll to bottom when messages change
     if (scrollAreaRef.current) {
         const viewport = scrollAreaRef.current.querySelector('div[data-radix-scroll-area-viewport]');
         if (viewport) {
@@ -54,7 +59,7 @@ export function ChatMessage({ conversation, currentUserAvatar }: ChatMessageProp
       setInput('');
 
       const newMessage: Omit<Message, 'id'> = {
-        contactId: conversation.contactId, // The recipient's ID
+        contactId: conversation.contactId,
         content: tempInput,
         timestamp: serverTimestamp(),
         isSender: true,
@@ -62,6 +67,13 @@ export function ChatMessage({ conversation, currentUserAvatar }: ChatMessageProp
       
       const messagesCollection = collection(firestore, 'users', user.uid, 'conversations', conversation.id, 'messages');
       addDocumentNonBlocking(messagesCollection, newMessage);
+
+      // Update the parent conversation document
+      const conversationDocRef = doc(firestore, 'users', user.uid, 'conversations', conversation.id);
+      updateDocumentNonBlocking(conversationDocRef, {
+        lastMessage: tempInput,
+        lastMessageTime: serverTimestamp()
+      });
 
       const result = await sendWhatsAppMessage(conversation.contactId, tempInput);
       
@@ -76,9 +88,6 @@ export function ChatMessage({ conversation, currentUserAvatar }: ChatMessageProp
               title: 'Failed to send message',
               description: result.error,
           });
-          // Note: With real-time updates from Firestore, we don't need to manually revert the UI.
-          // If the write fails due to permissions, the message won't appear.
-          // If the WhatsApp API fails, the message is still in our DB, which might be desired behavior.
       }
     }
   };
@@ -200,7 +209,7 @@ export function ChatMessage({ conversation, currentUserAvatar }: ChatMessageProp
             </Tooltip>
             <Button size="sm" className="ml-2" onClick={handleSend} disabled={!input.trim()}>
               Send
-              <SendHorizonal className="h-4 w-4 ml-2" />
+              <SendIcon />
             </Button>
           </div>
         </div>

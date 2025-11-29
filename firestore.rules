@@ -1,176 +1,72 @@
 
-/**
- * Core Philosophy: This ruleset enforces a strict user-ownership model. All user-generated data,
- * including settings, API keys, and workflows, is stored in subcollections under a path specific
- * to that user's ID (`/users/{userId}`). This ensures that users can only access their own data.
- *
- * Data Structure: The data is organized hierarchically. A top-level `/users` collection serves
- * as the root for all user-specific data. A few administrative collections like `/apiLogs`,
- * and `/dashboardUsers` exist at the top level.
- *
- * Key Security Decisions:
- * - Default Deny: All paths are closed by default. Access must be explicitly granted.
- * - Strict Ownership: A user can only read or write data within their own document tree
- *   (i.e., `/users/{request.auth.uid}/...`).
- * - No User Listing: It is not possible for any user to list all documents in the `/users` collection.
- *
- * Denormalization for Authorization: The rules rely on path-based security, which is a form of
- * denormalization. The user's ID is part of the document path, making ownership checks extremely
- * fast and simple (e.g., `request.auth.uid == userId`) without needing to read other documents
- * using `get()`. For documents created within a user's path, we also enforce that an internal
- * `userId` field matches the path parameter to maintain data integrity.
- *
- * Structural Segregation: The separation of user-specific data into `/users/{userId}` subcollections
- * from global or administrative collections ensures that queries for one type of data cannot
- * inadvertently expose the other. This is a secure and performant design.
- */
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // ------------------------------------------------------------------------
-    // Helper Functions
-    // ------------------------------------------------------------------------
-
-    /**
-     * Checks if the user is authenticated.
-     */
+    // Helper functions for auth and ownership checks
     function isSignedIn() {
       return request.auth != null;
     }
 
-    /**
-     * Checks if the authenticated user's UID matches the provided userId.
-     * This is the foundation of the user ownership model.
-     * @param userId The user ID to check against the authenticated user.
-     */
     function isOwner(userId) {
       return isSignedIn() && request.auth.uid == userId;
     }
 
-    /**
-     * Verifies ownership for an existing resource.
-     * CRITICAL: Ensures update/delete operations don't target non-existent documents.
-     * @param userId The user ID to check.
-     */
-    function isExistingOwner(userId) {
-      return isOwner(userId) && resource != null;
-    }
-
-    /**
-     * On create, validates that the new document's internal userId field
-     * matches the userId from the document path.
-     * @param userId The user ID from the path.
-     */
     function newDocHasCorrectOwner(userId) {
       return request.resource.data.userId == userId;
     }
 
-    /**
-     * On update, ensures the userId field is immutable.
-     */
     function ownerIsImmutable() {
       return request.resource.data.userId == resource.data.userId;
     }
 
-    // ------------------------------------------------------------------------
-    // User Data
-    // ------------------------------------------------------------------------
-
+    // User-specific data is nested under the user's UID
     match /users/{userId} {
-      // This collection is a placeholder for user-specific subcollections.
-      // Direct access to the user document itself is disallowed for now.
-      allow read, write: if false;
+      allow read, write: if false; // Disallow direct access to user document
 
-      /**
-       * @description Secures a user's API keys. Only the owner can manage them.
-       * @path /users/{userId}/apiKeys/{apiKeyId}
-       * @allow User "user123" can create a new API key in their own subcollection. (create)
-       * @deny User "userABC" cannot list the API keys of "user123". (list)
-       * @principle Enforces strict ownership over sensitive credentials like API keys.
-       */
+      // API Keys: Only the owner can manage their keys.
       match /apiKeys/{apiKeyId} {
-        allow get, list: if isOwner(userId);
-        allow create: if isOwner(userId) && newDocHasCorrectOwner(userId);
-        allow update: if isExistingOwner(userId) && ownerIsImmutable();
-        allow delete: if isExistingOwner(userId);
+        allow read, write: if isOwner(userId);
       }
       
-      /**
-       * @description Secures a user's Exposed APIs. Only the owner can manage them.
-       * @path /users/{userId}/exposedApis/{exposedApiId}
-       */
+      // Exposed APIs: Only the owner can manage their exposed APIs.
       match /exposedApis/{exposedApiId} {
-        allow get, list: if isOwner(userId);
-        allow create: if isOwner(userId) && newDocHasCorrectOwner(userId);
-        allow update: if isExistingOwner(userId) && ownerIsImmutable();
-        allow delete: if isExistingOwner(userId);
+        allow read, write: if isOwner(userId);
       }
 
-      /**
-       * @description Secures user-defined workflows. Only the owner can manage them.
-       * @path /users/{userId}/workflows/{workflowId}
-       * @allow User "user123" can create a new workflow for themselves. (create)
-       * @deny User "userABC" cannot delete the workflow of "user123". (delete)
-       * @principle Enforces strict ownership over a user's created content and logic.
-       */
+      // Workflows: Only the owner can manage their workflows.
       match /workflows/{workflowId} {
-        allow get, list: if isOwner(userId);
-        allow create: if isOwner(userId) && newDocHasCorrectOwner(userId);
-        allow update: if isExistingOwner(userId) && ownerIsImmutable();
-        allow delete: if isExistingOwner(userId);
+        allow read, write: if isOwner(userId);
       }
 
-      /**
-       * @description Secures a user's conversations. Only the owner can manage them.
-       * @path /users/{userId}/conversations/{conversationId}
-       */
-       match /conversations/{conversationId} {
-        allow get, list, create, update: if isOwner(userId);
-        allow delete: if isOwner(userId); // Allow deleting whole conversations
+      // Conversations: Only the owner can manage their conversations.
+      match /conversations/{conversationId} {
+        allow read, create, update, delete: if isOwner(userId) && (
+          (request.method == 'create' && newDocHasCorrectOwner(userId)) ||
+          (request.method != 'create')
+        );
         
-        /**
-         * @description Secures messages within a conversation.
-         * @path /users/{userId}/conversations/{conversationId}/messages/{messageId}
-         */
+        // Messages: Only the owner of the parent conversation can manage messages.
         match /messages/{messageId} {
-          allow get, list, create: if isOwner(userId);
-          // Generally, messages shouldn't be updated or deleted by clients to maintain chat integrity
+          allow read, create: if isOwner(userId);
+          // To maintain chat integrity, disallow client-side updates/deletes of messages.
           allow update, delete: if false; 
         }
       }
     }
 
-
-    // ------------------------------------------------------------------------
-    // Backend & Admin Collections
-    // ------------------------------------------------------------------------
-
-    /**
-     * @description API logs are backend-written but can be read by any authenticated user for dashboard visibility.
-     * @path /apiLogs/{apiLogId}
-     * @allow Any signed-in user can read logs.
-     * @deny Writes are forbidden from the client.
-     * @principle Data visibility for authenticated users is a valid use case for admin panels.
-     */
+    // Global Collections
+    // apiLogs can be read by any authenticated user for dashboard visibility.
+    // Writes should happen from a trusted backend server, not the client.
     match /apiLogs/{apiLogId} {
       allow get, list: if isSignedIn();
       allow write: if false;
     }
 
-    /**
-     * @description Dashboard user profiles are for admin purposes. We allow read for now
-     * so the user list page can function, but in a real multi-tenant app, this would
-     * be locked down further (e.g., only list users within the same organization).
-     * @path /dashboardUsers/{dashboardUserId}
-     * @allow Any signed-in user can see other dashboard users for simplicity.
-     * @deny A non-authenticated user cannot list users.
-     */
+    // dashboardUsers can be read and written to by any authenticated user.
+    // In a production app with roles, you would restrict write access to 'Admins'.
     match /dashboardUsers/{dashboardUserId} {
-      allow read: if isSignedIn();
-      // Write access should be restricted to Admins in a real application.
-      // For now, allow any signed-in user to add/edit/remove for demonstration.
-      allow write: if isSignedIn();
+      allow read, write: if isSignedIn();
     }
   }
 }

@@ -10,12 +10,33 @@ import { Textarea } from "@/components/ui/textarea";
 import type { Conversation, Order } from "@/lib/types";
 import { Phone } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useUser, useFirestore, updateDocumentNonBlocking } from '@/firebase';
+import { doc } from "firebase/firestore";
+import { useToast } from "@/hooks/use-toast";
+import { useState } from "react";
 
 interface ContactPanelProps {
     contact: Conversation | null;
 }
 
 export function ContactPanel({ contact }: ContactPanelProps) {
+    const [note, setNote] = useState(contact?.agentNotes || '');
+    const { user } = useUser();
+    const firestore = useFirestore();
+    const { toast } = useToast();
+
+    const handleSaveNote = () => {
+        if (!contact || !user || !firestore) return;
+
+        const conversationDocRef = doc(firestore, 'users', user.uid, 'conversations', contact.id);
+        updateDocumentNonBlocking(conversationDocRef, { agentNotes: note });
+
+        toast({
+            title: 'Note Saved',
+            description: `The note for ${contact.contactName} has been updated.`,
+        });
+    }
+
     if (!contact) {
         return (
             <div className="flex h-full flex-col items-center justify-center bg-muted/50 border-l p-4 text-center">
@@ -70,10 +91,11 @@ export function ContactPanel({ contact }: ContactPanelProps) {
                         <CardContent className="p-3 pt-0">
                             <Textarea 
                                 placeholder="Add a note for your team..." 
-                                defaultValue={contact.agentNotes}
+                                value={note}
+                                onChange={(e) => setNote(e.target.value)}
                                 className="text-sm"
                             />
-                             <Button size="sm" className="mt-2 w-full">Save Note</Button>
+                             <Button size="sm" className="mt-2 w-full" onClick={handleSaveNote}>Save Note</Button>
                         </CardContent>
                     </Card>
                     
@@ -104,12 +126,7 @@ export function ContactPanel({ contact }: ContactPanelProps) {
                                             </TableCell>
                                         </TableRow>
                                     ))}
-                                    {!contact.orderHistory && (
-                                        <TableRow>
-                                            <TableCell colSpan={3} className="text-center text-xs text-muted-foreground py-4">No orders found.</TableCell>
-                                        </TableRow>
-                                    )}
-                                     {contact.orderHistory?.length === 0 && (
+                                    {(!contact.orderHistory || contact.orderHistory.length === 0) && (
                                         <TableRow>
                                             <TableCell colSpan={3} className="text-center text-xs text-muted-foreground py-4">No orders found.</TableCell>
                                         </TableRow>
