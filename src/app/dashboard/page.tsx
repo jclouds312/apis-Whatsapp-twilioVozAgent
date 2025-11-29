@@ -7,15 +7,17 @@ import { AreaChartComponent } from "@/components/charts/area-chart";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { workflows, logs, exposedApis, users } from "@/lib/data";
+import { workflows as initialWorkflows, logs as initialLogs, exposedApis, users } from "@/lib/data";
 import { Activity, Workflow, AlertCircle, Users, CodeXml, Circle } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { format, formatDistanceToNow, parseISO } from "date-fns";
 import { cn } from '@/lib/utils';
+import type { Log, Workflow as WorkflowType } from '@/lib/types';
+
 
 const initialApiTrafficData = Array.from({ length: 15 }, (_, i) => {
     const d = new Date();
-    d.setSeconds(d.getSeconds() - (14 - i) * 3);
+    d.setSeconds(d.getSeconds() - (14 - i) * 5);
     return {
         date: d.toISOString(),
         'API Calls': 0,
@@ -24,18 +26,19 @@ const initialApiTrafficData = Array.from({ length: 15 }, (_, i) => {
 
 export default function DashboardPage() {
     const [apiTrafficData, setApiTrafficData] = useState(initialApiTrafficData);
+    const [recentLogs, setRecentLogs] = useState<Log[]>(initialLogs.slice(0, 10));
+    const [activeWorkflows, setActiveWorkflows] = useState<WorkflowType[]>(initialWorkflows.filter(w => w.status === 'active'));
     
-    const activeWorkflows = workflows.filter(w => w.status === 'active');
-    const recentLogs = logs.slice(0, 10);
     const topExposedApis = exposedApis.slice(0, 4);
 
     const [totalApiCalls, setTotalApiCalls] = useState(0);
     const [errorsToday, setErrorsToday] = useState(0);
 
     useEffect(() => {
-        setErrorsToday(logs.filter(l => l.level === 'error' && (new Date().getTime() - new Date(l.timestamp).getTime()) < 86400000).length);
+        setErrorsToday(initialLogs.filter(l => l.level === 'error' && (new Date().getTime() - new Date(l.timestamp).getTime()) < 86400000).length);
         
         const interval = setInterval(() => {
+            // Simulate API traffic
             setApiTrafficData(prevData => {
                 const now = new Date();
                 const newCallCount = Math.floor(Math.random() * 50) + 10;
@@ -50,7 +53,32 @@ export default function DashboardPage() {
 
                 return shiftedData;
             });
-        }, 3000);
+
+            // Simulate new logs
+            const newLog: Log = {
+              id: `log_${Date.now()}`,
+              timestamp: new Date().toISOString(),
+              level: ['info', 'warn', 'error'][Math.floor(Math.random() * 3)] as 'info' | 'warn' | 'error',
+              service: ['Function Connect', 'CRM Connector', 'Twilio', 'WhatsApp', 'API Exhibition'][Math.floor(Math.random() * 5)],
+              message: ['Operation successful.', 'Task failed.', 'Connection timed out.', 'Data processed.', 'User logged in.'][Math.floor(Math.random() * 5)],
+            };
+            setRecentLogs(prev => [newLog, ...prev].slice(0, 10));
+
+            if (newLog.level === 'error') {
+                setErrorsToday(prev => prev + 1);
+            }
+
+            // Simulate workflow runs
+             if (Math.random() > 0.8) { // 20% chance to "run" a workflow
+                setActiveWorkflows(prev => {
+                    const randomIndex = Math.floor(Math.random() * prev.length);
+                    const updatedWf = { ...prev[randomIndex], lastRun: new Date().toISOString() };
+                    return [...prev.slice(0, randomIndex), updatedWf, ...prev.slice(randomIndex + 1)];
+                })
+             }
+
+
+        }, 5000); // Update every 5 seconds
 
         return () => clearInterval(interval);
     }, []);
@@ -160,7 +188,7 @@ export default function DashboardPage() {
              <Card className="lg:col-span-3">
                 <CardHeader>
                     <CardTitle>Recent Activity</CardTitle>
-                    <CardDescription>Latest logs from all services.</CardDescription>
+                    <CardDescription>Live feed from all services.</CardDescription>
                 </CardHeader>
                 <CardContent>
                   <ScrollArea className="h-72">
@@ -200,7 +228,7 @@ export default function DashboardPage() {
                             </TableRow>
                         </TableHeader>
                         <TableBody>
-                            {activeWorkflows.map(wf => (
+                            {activeWorkflows.sort((a,b) => new Date(b.lastRun).getTime() - new Date(a.lastRun).getTime()).map(wf => (
                                 <TableRow key={wf.id}>
                                     <TableCell>
                                         <div className="font-medium">{wf.name}</div>
@@ -208,7 +236,7 @@ export default function DashboardPage() {
                                             Trigger: {wf.trigger.event}
                                         </div>
                                     </TableCell>
-                                    <TableCell className="text-right">{format(parseISO(wf.lastRun), 'PPpp')}</TableCell>
+                                    <TableCell className="text-right">{formatDistanceToNow(parseISO(wf.lastRun), { addSuffix: true })}</TableCell>
                                 </TableRow>
                             ))}
                         </TableBody>
