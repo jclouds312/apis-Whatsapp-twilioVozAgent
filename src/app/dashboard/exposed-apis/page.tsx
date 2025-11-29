@@ -16,11 +16,11 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Textarea } from "@/components/ui/textarea";
 import type { ExposedApi } from "@/lib/types";
 import { useUser, useFirestore, useCollection, useMemoFirebase, addDocumentNonBlocking } from '@/firebase';
-import { collection, serverTimestamp } from "firebase/firestore";
+import { collection } from "firebase/firestore";
 import { Skeleton } from "@/components/ui/skeleton";
 
 
-export default function ApiExhibitionPage() {
+export default function ExposedApisPage() {
     const [open, setOpen] = useState(false);
     const { user, isUserLoading } = useUser();
     const firestore = useFirestore();
@@ -70,13 +70,13 @@ export default function ApiExhibitionPage() {
 
     return (
         <>
-            <Header title="API Exhibition" />
+            <Header title="Exposed APIs" />
             <main className="flex-1 flex-col gap-4 p-4 lg:gap-6 lg:p-6">
                 <Card className="transition-all hover:shadow-lg">
                     <CardHeader className="flex flex-row items-center justify-between">
                         <div>
                             <CardTitle>Exposed API Console</CardTitle>
-                            <CardDescription>Document, secure, and expose your internal APIs to the world.</CardDescription>
+                            <CardDescription>Document, secure, and expose your internal APIs to other systems.</CardDescription>
                         </div>
                         <Dialog open={open} onOpenChange={setOpen}>
                             <DialogTrigger asChild>

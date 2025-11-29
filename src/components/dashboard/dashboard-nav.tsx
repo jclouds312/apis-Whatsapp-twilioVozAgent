@@ -45,8 +45,18 @@ const CrmIcon = (props: React.SVGProps<SVGSVGElement>) => (
 
 const navItems = [
   { href: '/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
-  { href: '/dashboard/api-exhibition', icon: CodeXml, label: 'API Exhibition' },
+  { href: '/dashboard/whatsapp', icon: WhatsAppIcon, label: 'WhatsApp', color: 'text-[#25D366]' },
+  { href: '/dashboard/twilio', icon: TwilioIcon, label: 'Twilio Voice', color: 'text-[#F22F46]' },
+  { href: '/dashboard/exposed-apis', icon: CodeXml, label: 'Exposed APIs' },
   { href: '/dashboard/function-connect', icon: Workflow, label: 'Function Connect' },
+  {
+    href: '/dashboard/integrations',
+    icon: PlusCircle,
+    label: 'Integrations',
+    subItems: [
+      { href: '/dashboard/crm', icon: CrmIcon, label: 'CRM', color: 'text-[#00A4BD]' },
+    ]
+  },
   {
     href: '/dashboard/ai-agents',
     icon: Bot,
@@ -54,16 +64,6 @@ const navItems = [
     subItems: [
       { href: '/dashboard/ai-agents/retell', label: 'Retell Agent' },
       { href: '/dashboard/ai-agents/workflow-suggester', label: 'Workflow Suggester' },
-    ]
-  },
-  {
-    href: '/dashboard/integrations',
-    icon: PlusCircle,
-    label: 'Integrations',
-    subItems: [
-      { href: '/dashboard/whatsapp', icon: WhatsAppIcon, label: 'WhatsApp', color: 'text-[#25D366]' },
-      { href: '/dashboard/twilio', icon: TwilioIcon, label: 'Twilio Voice', color: 'text-[#F22F46]' },
-      { href: '/dashboard/crm', icon: CrmIcon, label: 'CRM', color: 'text-[#00A4BD]' },
     ]
   },
   { href: '/dashboard/logs', icon: ScrollText, label: 'Logs & Audit' },
@@ -157,7 +157,7 @@ export function DashboardNav() {
                 pathname === item.href && "bg-sidebar-accent text-sidebar-accent-foreground"
               )}
             >
-              <item.icon className="h-6 w-6 mr-4" />
+              <item.icon className={cn("h-6 w-6 mr-4", item.color)} />
               {item.label}
             </Button>
           </Link>

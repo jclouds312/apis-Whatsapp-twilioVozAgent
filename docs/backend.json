@@ -31,7 +31,7 @@
         },
         "userId": {
           "type": "string",
-          "description": "The ID of the user who owns this key. (Relationship: User 1:N ApiKey)"
+          "description": "The ID of the user who owns this key."
         }
       },
       "required": [
@@ -41,6 +41,53 @@
         "createdAt",
         "userId",
         "description"
+      ]
+    },
+    "ExposedApi": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "ExposedApi",
+      "type": "object",
+      "description": "Represents an API endpoint exposed by this platform for consumption by external systems.",
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "The human-readable name of the exposed API."
+        },
+        "description": {
+          "type": "string",
+          "description": "A detailed description of what the API does."
+        },
+        "endpoint": {
+          "type": "string",
+          "description": "The relative path of the API endpoint (e.g., /api/v1/send-message)."
+        },
+        "method": {
+          "type": "string",
+          "description": "The HTTP method for the endpoint.",
+          "enum": ["GET", "POST", "PUT", "DELETE"]
+        },
+        "status": {
+          "type": "string",
+          "description": "The current status of the API.",
+          "enum": ["published", "draft", "deprecated"]
+        },
+        "version": {
+          "type": "string",
+          "description": "The version string for the API (e.g., '1.0.0')."
+        },
+        "userId": {
+          "type": "string",
+          "description": "The ID of the user who owns this exposed API."
+        }
+      },
+      "required": [
+        "name",
+        "description",
+        "endpoint",
+        "method",
+        "status",
+        "version",
+        "userId"
       ]
     },
     "WhatsappSetting": {
@@ -153,51 +200,6 @@
         "userId"
       ]
     },
-    "Connector": {
-      "$schema": "http://json-schema.org/draft-07/schema#",
-      "title": "Connector",
-      "type": "object",
-      "description": "Represents a Function Connect connector, defining the logic for data transformation and routing.",
-      "properties": {
-        "id": {
-          "type": "string",
-          "description": "Unique identifier for the connector."
-        },
-        "name": {
-          "type": "string",
-          "description": "Name of the connector."
-        },
-        "source": {
-          "type": "string",
-          "description": "Source of the data (e.g., WhatsApp, Twilio)."
-        },
-        "destination": {
-          "type": "string",
-          "description": "Destination of the data (e.g., CRM endpoint)."
-        },
-        "transformationLogic": {
-          "type": "string",
-          "description": "Code or script defining the data transformation logic."
-        },
-        "retryPolicy": {
-          "type": "string",
-          "description": "Configuration for retry attempts (e.g., backoff strategy)."
-        },
-        "crmEndpointId": {
-          "type": "string",
-          "description": "Reference to CrmEndpoint. (Relationship: CrmEndpoint 1:N Connector)"
-        }
-      },
-      "required": [
-        "id",
-        "name",
-        "source",
-        "destination",
-        "transformationLogic",
-        "retryPolicy",
-        "crmEndpointId"
-      ]
-    },
     "ApiLog": {
       "$schema": "http://json-schema.org/draft-07/schema#",
       "title": "ApiLog",
@@ -300,77 +302,6 @@
         "permissions"
       ]
     },
-    "RateLimit": {
-      "$schema": "http://json-schema.org/draft-07/schema#",
-      "title": "RateLimit",
-      "type": "object",
-      "description": "Defines rate limits for API usage.",
-      "properties": {
-        "id": {
-          "type": "string",
-          "description": "Unique identifier for the rate limit."
-        },
-        "endpoint": {
-          "type": "string",
-          "description": "API endpoint to which the rate limit applies."
-        },
-        "limit": {
-          "type": "number",
-          "description": "Maximum number of requests allowed."
-        },
-        "window": {
-          "type": "number",
-          "description": "Time window (in seconds) for the rate limit."
-        },
-        "apiKeyId": {
-          "type": "string",
-          "description": "Reference to ApiKey. (Relationship: ApiKey 1:N RateLimit)"
-        }
-      },
-      "required": [
-        "id",
-        "endpoint",
-        "limit",
-        "window",
-        "apiKeyId"
-      ]
-    },
-    "Event": {
-      "$schema": "http://json-schema.org/draft-07/schema#",
-      "title": "Event",
-      "type": "object",
-      "description": "Stores events that occur within the system (e.g., user login, API key creation).",
-      "properties": {
-        "id": {
-          "type": "string",
-          "description": "Unique identifier for the event."
-        },
-        "timestamp": {
-          "type": "string",
-          "description": "Timestamp of the event.",
-          "format": "date-time"
-        },
-        "type": {
-          "type": "string",
-          "description": "Type of event (e.g., LOGIN, API_KEY_CREATED)."
-        },
-        "data": {
-          "type": "string",
-          "description": "JSON string containing event-specific data."
-        },
-        "userId": {
-          "type": "string",
-          "description": "Reference to User. (Relationship: User 1:N Event)"
-        }
-      },
-      "required": [
-        "id",
-        "timestamp",
-        "type",
-        "data",
-        "userId"
-      ]
-    },
     "Workflow": {
       "$schema": "http://json-schema.org/draft-07/schema#",
       "title": "Workflow",
@@ -437,7 +368,7 @@
           "schema": {
             "$ref": "#/backend/entities/User"
           },
-          "description": "Collection to store user profiles. Maintained for future extensibility, even though current schema is minimal.",
+          "description": "Collection to store user profiles.",
           "params": [
             {
               "name": "userId",
@@ -453,15 +384,35 @@
           "schema": {
             "$ref": "#/backend/entities/ApiKey"
           },
-          "description": "Collection to store API keys for each user. Secured by path-based ownership.",
+          "description": "Stores API keys for integrated third-party services like WhatsApp, Twilio, etc.",
           "params": [
             {
               "name": "userId",
-              "description": "The unique identifier for the user."
+              "description": "The user owner."
             },
             {
               "name": "apiKeyId",
-              "description": "The unique identifier for the API key."
+              "description": "The unique ID for the API key."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/users/{userId}/exposedApis/{exposedApiId}",
+        "definition": {
+          "entityName": "ExposedApi",
+          "schema": {
+            "$ref": "#/backend/entities/ExposedApi"
+          },
+          "description": "Stores API endpoints exposed by this platform for consumption by external systems.",
+          "params": [
+            {
+              "name": "userId",
+              "description": "The user owner."
+            },
+            {
+              "name": "exposedApiId",
+              "description": "The unique ID for the exposed API."
             }
           ]
         }
@@ -527,30 +478,6 @@
         }
       },
       {
-        "path": "/users/{userId}/crmEndpoints/{crmEndpointId}/connectors/{connectorId}",
-        "definition": {
-          "entityName": "Connector",
-          "schema": {
-            "$ref": "#/backend/entities/Connector"
-          },
-          "description": "Collection to store connectors for each CRM endpoint. Secured by path-based ownership.",
-          "params": [
-            {
-              "name": "userId",
-              "description": "The unique identifier for the user."
-            },
-            {
-              "name": "crmEndpointId",
-              "description": "The unique identifier for the CRM endpoint."
-            },
-            {
-              "name": "connectorId",
-              "description": "The unique identifier for the connector."
-            }
-          ]
-        }
-      },
-      {
         "path": "/apiLogs/{apiLogId}",
         "definition": {
           "entityName": "ApiLog",
@@ -594,46 +521,6 @@
             {
               "name": "roleId",
               "description": "The unique identifier for the role."
-            }
-          ]
-        }
-      },
-      {
-        "path": "/apiKeys/{apiKeyId}/rateLimits/{rateLimitId}",
-        "definition": {
-          "entityName": "RateLimit",
-          "schema": {
-            "$ref": "#/backend/entities/RateLimit"
-          },
-          "description": "Collection to store rate limits for each API key. Secured by path-based ownership.",
-          "params": [
-            {
-              "name": "apiKeyId",
-              "description": "The unique identifier for the API key."
-            },
-            {
-              "name": "rateLimitId",
-              "description": "The unique identifier for the rate limit."
-            }
-          ]
-        }
-      },
-      {
-        "path": "/users/{userId}/events/{eventId}",
-        "definition": {
-          "entityName": "Event",
-          "schema": {
-            "$ref": "#/backend/entities/Event"
-          },
-          "description": "Collection to store events for each user. Secured by path-based ownership.",
-          "params": [
-            {
-              "name": "userId",
-              "description": "The unique identifier for the user."
-            },
-            {
-              "name": "eventId",
-              "description": "The unique identifier for the event."
             }
           ]
         }
