@@ -11,6 +11,14 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import Image from "next/image";
+import { Badge } from "@/components/ui/badge";
+
+const roleClasses: Record<string, string> = {
+    'Admin': 'bg-red-100 text-red-800 dark:bg-red-900/50 dark:text-red-300 border-red-200 dark:border-red-500/50',
+    'Manager': 'bg-orange-100 text-orange-800 dark:bg-orange-900/50 dark:text-orange-300 border-orange-200 dark:border-orange-500/50',
+    'Developer': 'bg-blue-100 text-blue-800 dark:bg-blue-900/50 dark:text-blue-300 border-blue-200 dark:border-blue-500/50',
+    'Agent': 'bg-green-100 text-green-800 dark:bg-green-900/50 dark:text-green-300 border-green-200 dark:border-green-500/50',
+}
 
 export default function UsersPage() {
     return (
@@ -44,6 +52,7 @@ export default function UsersPage() {
                                     </div>
                                     <div className="grid grid-cols-4 items-center gap-4">
                                         <Label htmlFor="email" className="text-right">Email</Label>
+
                                         <Input id="email" type="email" placeholder="john@example.com" className="col-span-3" />
                                     </div>
                                     <div className="grid grid-cols-4 items-center gap-4">
@@ -81,9 +90,9 @@ export default function UsersPage() {
                                     <TableRow key={user.id}>
                                         <TableCell>
                                             <div className="flex items-center gap-3">
-                                                <Avatar>
+                                                <Avatar className="w-8 h-8">
                                                     <AvatarImage asChild src={user.avatarUrl}>
-                                                        <Image src={user.avatarUrl} alt={user.name} width={40} height={40} data-ai-hint="person face"/>
+                                                        <Image src={user.avatarUrl} alt={user.name} width={32} height={32} data-ai-hint="person face"/>
                                                     </AvatarImage>
                                                     <AvatarFallback>{user.name.charAt(0)}</AvatarFallback>
                                                 </Avatar>
@@ -93,21 +102,62 @@ export default function UsersPage() {
                                                 </div>
                                             </div>
                                         </TableCell>
-                                        <TableCell>{user.role}</TableCell>
                                         <TableCell>
-                                            <DropdownMenu>
-                                                <DropdownMenuTrigger asChild>
-                                                    <Button aria-haspopup="true" size="icon" variant="ghost">
-                                                        <MoreHorizontal className="h-4 w-4" />
-                                                        <span className="sr-only">Toggle menu</span>
-                                                    </Button>
-                                                </DropdownMenuTrigger>
-                                                <DropdownMenuContent align="end">
-                                                    <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                                                    <DropdownMenuItem>Edit</DropdownMenuItem>
-                                                    <DropdownMenuItem className="text-destructive">Remove</DropdownMenuItem>
-                                                </DropdownMenuContent>
-                                            </DropdownMenu>
+                                             <Badge variant="outline" className={roleClasses[user.role]}>{user.role}</Badge>
+                                        </TableCell>
+                                        <TableCell>
+                                            <Dialog>
+                                                <DropdownMenu>
+                                                    <DropdownMenuTrigger asChild>
+                                                        <Button aria-haspopup="true" size="icon" variant="ghost">
+                                                            <MoreHorizontal className="h-4 w-4" />
+                                                            <span className="sr-only">Toggle menu</span>
+                                                        </Button>
+                                                    </DropdownMenuTrigger>
+                                                    <DropdownMenuContent align="end">
+                                                        <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                                                        <DialogTrigger asChild>
+                                                          <DropdownMenuItem onSelect={(e) => e.preventDefault()}>Edit</DropdownMenuItem>
+                                                        </DialogTrigger>
+                                                        <DropdownMenuItem className="text-destructive">Remove</DropdownMenuItem>
+                                                    </DropdownMenuContent>
+                                                </DropdownMenu>
+                                                 <DialogContent>
+                                                    <DialogHeader>
+                                                        <DialogTitle>Edit User: {user.name}</DialogTitle>
+                                                        <DialogDescription>
+                                                            Update the details for this user.
+                                                        </DialogDescription>
+                                                    </DialogHeader>
+                                                    <div className="grid gap-4 py-4">
+                                                        <div className="grid grid-cols-4 items-center gap-4">
+                                                            <Label htmlFor={`name-${user.id}`} className="text-right">Name</Label>
+                                                            <Input id={`name-${user.id}`} defaultValue={user.name} className="col-span-3" />
+                                                        </div>
+                                                        <div className="grid grid-cols-4 items-center gap-4">
+                                                            <Label htmlFor={`email-${user.id}`} className="text-right">Email</Label>
+                                                            <Input id={`email-${user.id}`} type="email" defaultValue={user.email} className="col-span-3" />
+                                                        </div>
+                                                        <div className="grid grid-cols-4 items-center gap-4">
+                                                            <Label htmlFor={`role-${user.id}`} className="text-right">Role</Label>
+                                                            <Select defaultValue={user.role}>
+                                                                <SelectTrigger className="col-span-3">
+                                                                    <SelectValue placeholder="Select a role" />
+                                                                </SelectTrigger>
+                                                                <SelectContent>
+                                                                    <SelectItem value="Admin">Admin</SelectItem>
+                                                                    <SelectItem value="Manager">Manager</SelectItem>
+                                                                    <SelectItem value="Developer">Developer</SelectItem>
+                                                                    <SelectItem value="Agent">Agent</SelectItem>
+                                                                </SelectContent>
+                                                            </Select>
+                                                        </div>
+                                                    </div>
+                                                    <DialogFooter>
+                                                        <Button type="submit">Save Changes</Button>
+                                                    </DialogFooter>
+                                                </DialogContent>
+                                            </Dialog>
                                         </TableCell>
                                     </TableRow>
                                 ))}

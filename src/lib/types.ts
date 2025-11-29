@@ -35,4 +35,14 @@ export type Workflow = {
     }[];
     status: 'active' | 'inactive';
     lastRun: string;
-}
+};
+
+export type ExposedApi = {
+  id: string;
+  name: string;
+  description: string;
+  status: 'published' | 'draft' | 'deprecated';
+  method: 'GET' | 'POST' | 'PUT' | 'DELETE';
+  endpoint: string;
+  version: string;
+};

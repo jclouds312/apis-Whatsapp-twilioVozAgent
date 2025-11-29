@@ -1,4 +1,4 @@
-import type { ApiKey, Log, User, Workflow } from '@/lib/types';
+import type { ApiKey, Log, User, Workflow, ExposedApi } from '@/lib/types';
 
 export const userAvatar = "https://picsum.photos/seed/user1/100/100";
 
@@ -81,4 +81,11 @@ export const apiTrafficData = [
     { date: '2024-07-19', 'API Calls': 4800 },
     { date: '2024-07-20', 'API Calls': 3800 },
     { date: '2024-07-21', 'API Calls': 4300 },
+];
+
+export const exposedApis: ExposedApi[] = [
+    { id: 'api_1', name: 'Get Products', description: 'Retrieves a list of all available products.', status: 'published', method: 'GET', endpoint: '/v1/products', version: '1.0.0' },
+    { id: 'api_2', name: 'Create Order', description: 'Creates a new customer order.', status: 'published', method: 'POST', endpoint: '/v1/orders', version: '1.0.0' },
+    { id: 'api_3', name: 'Get User Profile', description: 'Fetches profile for a given user ID.', status: 'draft', method: 'GET', endpoint: '/v2/users/{userId}', version: '2.0.0-beta' },
+    { id: 'api_4', name: 'Update Inventory', description: 'Updates stock levels for a product.', status: 'deprecated', method: 'PUT', endpoint: '/v1/inventory', version: '1.0.0' },
 ];
