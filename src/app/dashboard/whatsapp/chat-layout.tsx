@@ -10,8 +10,8 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
 import type { Conversation } from "@/lib/types";
 import { ChatList } from "@/components/dashboard/whatsapp/chat-list";
-import { ChatMessage } from "./chat-message";
-import { ContactPanel } from "./contact-panel";
+import { ChatMessage } from "@/components/dashboard/whatsapp/chat-message";
+import { ContactPanel } from "@/components/dashboard/whatsapp/contact-panel";
 
 interface ChatLayoutProps {
   defaultLayout: number[] | undefined
@@ -38,7 +38,7 @@ export function ChatLayout({
             <ResizablePanelGroup
                 direction="horizontal"
                 onLayout={onLayout}
-                className="h-full items-stretch"
+                className="h-full items-stretch border rounded-lg overflow-hidden"
             >
                 <ResizablePanel
                     defaultSize={defaultLayout[0]}

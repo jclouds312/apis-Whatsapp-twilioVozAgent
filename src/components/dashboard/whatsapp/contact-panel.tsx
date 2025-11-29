@@ -5,11 +5,11 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Separator } from "@/components/ui/separator";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Textarea } from "@/components/ui/textarea";
 import type { Conversation, Order } from "@/lib/types";
-import { Mail, Phone } from "lucide-react";
+import { Phone } from "lucide-react";
+import { Skeleton } from "@/components/ui/skeleton";
 
 interface ContactPanelProps {
     contact: Conversation | null;
@@ -18,10 +18,13 @@ interface ContactPanelProps {
 export function ContactPanel({ contact }: ContactPanelProps) {
     if (!contact) {
         return (
-            <div className="flex h-full items-center justify-center bg-muted/50">
-                <div className="text-center">
-                    <p className="text-sm text-muted-foreground">No contact selected</p>
-                </div>
+            <div className="flex h-full flex-col items-center justify-center bg-muted/50 border-l p-4 text-center">
+                <Avatar className="h-20 w-20 mb-4">
+                    <Skeleton className="h-full w-full rounded-full" />
+                </Avatar>
+                <Skeleton className="h-6 w-32 mb-2" />
+                <Skeleton className="h-4 w-40" />
+                <p className="text-sm text-muted-foreground mt-4">Select a conversation to see contact details.</p>
             </div>
         );
     }
@@ -88,7 +91,7 @@ export function ContactPanel({ contact }: ContactPanelProps) {
                                     </TableRow>
                                 </TableHeader>
                                 <TableBody>
-                                    {contact.orderHistory.map(order => (
+                                    {contact.orderHistory?.map((order: Order) => (
                                         <TableRow key={order.id}>
                                             <TableCell className="py-2 text-xs">{order.id}</TableCell>
                                             <TableCell className="py-2 text-xs">${order.total.toFixed(2)}</TableCell>
@@ -101,7 +104,12 @@ export function ContactPanel({ contact }: ContactPanelProps) {
                                             </TableCell>
                                         </TableRow>
                                     ))}
-                                    {contact.orderHistory.length === 0 && (
+                                    {!contact.orderHistory && (
+                                        <TableRow>
+                                            <TableCell colSpan={3} className="text-center text-xs text-muted-foreground py-4">No orders found.</TableCell>
+                                        </TableRow>
+                                    )}
+                                     {contact.orderHistory?.length === 0 && (
                                         <TableRow>
                                             <TableCell colSpan={3} className="text-center text-xs text-muted-foreground py-4">No orders found.</TableCell>
                                         </TableRow>

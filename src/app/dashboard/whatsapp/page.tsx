@@ -3,7 +3,7 @@
 
 import { useEffect, useState } from "react";
 import { Header } from "@/components/dashboard/header";
-import { ChatLayout } from "./chat-layout";
+import { ChatLayout } from "@/components/dashboard/whatsapp/chat-layout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { StatCard } from "@/components/dashboard/stat-card";
 import { CheckCircle, MessageSquare, Send, Workflow, XCircle } from "lucide-react";
