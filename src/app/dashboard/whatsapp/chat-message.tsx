@@ -2,7 +2,6 @@
 
 import { AnimatePresence, motion } from 'framer-motion';
 import { Bot, Paperclip, SendHorizonal, ThumbsUp } from 'lucide-react';
-import Image from 'next/image';
 import * as React from 'react';
 
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -14,8 +13,9 @@ import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip
 import type { Conversation, Message } from '@/lib/types';
 import { cn } from '@/lib/utils';
 import { sendWhatsAppMessage } from './actions';
-import { useLogs } from '@/context/LogContext';
 import { useToast } from '@/hooks/use-toast';
+import { useUser, useFirestore, addDocumentNonBlocking, useCollection, useMemoFirebase } from '@/firebase';
+import { collection, query, orderBy } from "firebase/firestore";
 
 
 interface ChatMessageProps {
@@ -24,67 +24,73 @@ interface ChatMessageProps {
 }
 
 export function ChatMessage({ conversation, currentUserAvatar }: ChatMessageProps) {
-  const [messages, setMessages] = React.useState<Message[]>(
-    conversation?.messages || []
-  );
   const [input, setInput] = React.useState('');
-  const { addLog } = useLogs();
   const { toast } = useToast();
+  const { user } = useUser();
+  const firestore = useFirestore();
+
+  const messagesQuery = useMemoFirebase(() => {
+    if (!firestore || !user?.uid || !conversation?.id) return null;
+    return query(collection(firestore, 'users', user.uid, 'conversations', conversation.id, 'messages'), orderBy('timestamp', 'asc'));
+  }, [firestore, user?.uid, conversation?.id]);
+
+  const { data: messages, isLoading: isLoadingMessages } = useCollection<Message>(messagesQuery);
+  const scrollAreaRef = React.useRef<HTMLDivElement>(null);
 
   React.useEffect(() => {
-    setMessages(conversation?.messages || []);
-  }, [conversation]);
+    // Scroll to bottom when messages change
+    if (scrollAreaRef.current) {
+        const viewport = scrollAreaRef.current.querySelector('div[data-radix-scroll-area-viewport]');
+        if (viewport) {
+            viewport.scrollTop = viewport.scrollHeight;
+        }
+    }
+  }, [messages]);
+
 
   const handleSend = async () => {
-    if (input.trim() && conversation) {
-      const newMessage: Message = {
-        id: `msg_${Date.now()}`,
-        contactId: 'usr_1', // This should be the current user's ID
+    if (input.trim() && conversation && user && firestore) {
+      const tempId = `msg_${Date.now()}`;
+      const newMessage: Omit<Message, 'id'> = {
+        contactId: user.uid,
         content: input,
-        timestamp: new Date().toISOString(),
+        timestamp: new Date(),
         isSender: true,
       };
-      setMessages((prev) => [...prev, newMessage]);
+      
       const tempInput = input;
       setInput('');
-      
-      try {
-        const result = await sendWhatsAppMessage(conversation.contactId, tempInput);
-        if (result.success) {
-            addLog({ service: 'WhatsApp', level: 'info', message: `Message sent to ${conversation.contactName}.` });
-            toast({
-                title: 'Message Sent',
-                description: `Your message to ${conversation.contactName} was sent successfully.`,
-            });
-        } else {
-            addLog({ service: 'WhatsApp', level: 'error', message: `Failed to send message: ${result.error}` });
-            toast({
-                variant: 'destructive',
-                title: 'Failed to send message',
-                description: result.error,
-            });
-            // Optional: remove the message from UI if it failed to send
-            setMessages(prev => prev.filter(m => m.id !== newMessage.id));
-        }
-      } catch (error) {
-           addLog({ service: 'WhatsApp', level: 'error', message: 'An unexpected error occurred.' });
-           toast({
-                variant: 'destructive',
-                title: 'Error',
-                description: 'An unexpected error occurred while sending the message.',
-           });
-           setMessages(prev => prev.filter(m => m.id !== newMessage.id));
-      }
 
+      // Directly add to Firestore without optimistic update in local state
+      const messagesCollection = collection(firestore, 'users', user.uid, 'conversations', conversation.id, 'messages');
+      addDocumentNonBlocking(messagesCollection, newMessage);
+
+      const result = await sendWhatsAppMessage(conversation.contactId, tempInput);
+      
+      if (result.success) {
+          toast({
+              title: 'Message Sent',
+              description: `Your message to ${conversation.contactName} was sent successfully.`,
+          });
+      } else {
+          toast({
+              variant: 'destructive',
+              title: 'Failed to send message',
+              description: result.error,
+          });
+          // Note: With real-time updates from Firestore, we don't need to manually revert the UI.
+          // If the write fails due to permissions, the message won't appear.
+          // If the WhatsApp API fails, the message is still in our DB, which might be desired behavior.
+      }
     }
   };
 
   if (!conversation) {
     return (
-      <div className="flex h-full flex-col items-center justify-center bg-muted/50 rounded-b-lg">
+      <div className="flex h-full flex-col items-center justify-center bg-muted/50 border-l">
         <Bot className="h-12 w-12 text-muted-foreground" />
         <h3 className="mt-4 text-lg font-semibold">No Conversation Selected</h3>
-        <p className="text-muted-foreground text-center">
+        <p className="text-sm text-muted-foreground text-center px-4">
             Select a conversation from the left panel to start chatting.
         </p>
       </div>
@@ -109,10 +115,10 @@ export function ChatMessage({ conversation, currentUserAvatar }: ChatMessageProp
           <p className="text-xs text-muted-foreground">Online</p>
         </div>
       </div>
-      <ScrollArea className="flex-1">
+      <ScrollArea className="flex-1" ref={scrollAreaRef}>
         <div className="p-4 space-y-4">
           <AnimatePresence>
-            {messages.map((message) => (
+            {messages?.map((message) => (
               <motion.div
                 key={message.id}
                 layout
@@ -170,7 +176,10 @@ export function ChatMessage({ conversation, currentUserAvatar }: ChatMessageProp
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={(e) => {
-              if (e.key === 'Enter') handleSend();
+              if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                handleSend();
+              }
             }}
             className="pr-28"
           />

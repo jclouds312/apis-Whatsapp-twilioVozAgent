@@ -9,12 +9,12 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge";
 import { Activity, Workflow, AlertCircle, Users, CodeXml, Circle } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { formatDistanceToNow, parseISO } from "date-fns";
+import { formatDistanceToNow, parseISO, subDays, isAfter } from "date-fns";
 import { cn } from '@/lib/utils';
-import type { Log, Workflow as WorkflowType } from '@/lib/types';
-import { useLogs } from '@/context/LogContext';
+import type { ApiLog, Workflow as WorkflowType, ExposedApi, DashboardUser } from '@/lib/types';
 import { useUser, useFirestore, useCollection, useMemoFirebase } from '@/firebase';
-import { collection } from "firebase/firestore";
+import { collection, query, limit, orderBy } from "firebase/firestore";
+import { Skeleton } from '@/components/ui/skeleton';
 
 
 const initialApiTrafficData = Array.from({ length: 15 }, (_, i) => {
@@ -27,73 +27,67 @@ const initialApiTrafficData = Array.from({ length: 15 }, (_, i) => {
 });
 
 export default function DashboardPage() {
-    const { logs } = useLogs();
     const [apiTrafficData, setApiTrafficData] = useState(initialApiTrafficData);
-    
-    const [totalApiCalls, setTotalApiCalls] = useState(0);
-    const [errorsToday, setErrorsToday] = useState(0);
     const [isClient, setIsClient] = useState(false);
 
-    const { user, isUserLoading } = useUser();
+    const { user } = useUser();
     const firestore = useFirestore();
 
+    // Queries for all data
     const exposedApisQuery = useMemoFirebase(() => {
         if (!firestore || !user?.uid) return null;
         return collection(firestore, 'users', user.uid, 'exposedApis');
     }, [firestore, user?.uid]);
-    const { data: exposedApis } = useCollection(exposedApisQuery);
+    const { data: exposedApis, isLoading: isLoadingApis } = useCollection<ExposedApi>(exposedApisQuery);
     
     const workflowsQuery = useMemoFirebase(() => {
         if (!firestore || !user?.uid) return null;
         return collection(firestore, 'users', user.uid, 'workflows');
     }, [firestore, user?.uid]);
-    const { data: workflows } = useCollection<WorkflowType>(workflowsQuery);
+    const { data: workflows, isLoading: isLoadingWorkflows } = useCollection<WorkflowType>(workflowsQuery);
 
     const usersQuery = useMemoFirebase(() => {
-        if (!firestore || !user?.uid) return null;
-        // This is a simplification. In a real app, you'd likely have a separate 'teams' or 'organizations' collection.
-        // For now, we'll just count the current user.
-        return collection(firestore, 'users');
-    }, [firestore, user?.uid]);
-    const { data: users } = useCollection(usersQuery);
+        if (!firestore) return null;
+        return collection(firestore, 'dashboardUsers');
+    }, [firestore]);
+    const { data: users, isLoading: isLoadingUsers } = useCollection<DashboardUser>(usersQuery);
 
+    const logsQuery = useMemoFirebase(() => {
+        if (!firestore) return null;
+        return query(collection(firestore, 'apiLogs'), orderBy('timestamp', 'desc'), limit(100));
+    }, [firestore]);
+    const { data: logs, isLoading: isLoadingLogs } = useCollection<ApiLog>(logsQuery);
+    
+    // Derived stats
     const activeWorkflows = workflows?.filter(w => w.status === 'active') || [];
     const publishedApis = exposedApis?.filter(api => api.status === 'published').length || 0;
-
+    const errorsToday = logs?.filter(l => l.level === 'error' && isAfter(parseISO(l.timestamp), subDays(new Date(), 1))).length || 0;
+    const totalApiCalls = logs?.length || 0;
+    const recentLogs = logs?.slice(0, 15) || [];
 
     useEffect(() => {
         setIsClient(true);
-        
-        const updateData = () => {
-            setErrorsToday(logs.filter(l => l.level === 'error' && (new Date().getTime() - new Date(l.timestamp).getTime()) < 86400000).length);
-        };
 
-        updateData();
+        if (logs && logs.length > 0) {
+            const now = new Date();
+            const newTrafficData = Array.from({ length: 15 }, (_, i) => {
+                const intervalEnd = new Date(now.getTime() - i * 5000);
+                const intervalStart = new Date(now.getTime() - (i + 1) * 5000);
 
-        const interval = setInterval(() => {
-            setApiTrafficData(prevData => {
-                const now = new Date();
-                const newCallCount = Math.floor(Math.random() * 50) + 10;
-                const newEntry = {
-                    date: now.toISOString(),
-                    'API Calls': newCallCount,
+                const callsInInterval = logs.filter(log => {
+                    const logDate = parseISO(log.timestamp);
+                    return logDate >= intervalStart && logDate < intervalEnd;
+                }).length;
+
+                return {
+                    date: intervalStart.toISOString(),
+                    'API Calls': callsInInterval,
                 };
-                
-                const shiftedData = [...prevData.slice(1), newEntry];
-                
-                setTotalApiCalls(currentTotal => currentTotal + newCallCount);
+            }).reverse();
+            setApiTrafficData(newTrafficData);
+        }
 
-                return shiftedData;
-            });
-        }, 5000); 
-
-        return () => clearInterval(interval);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, []);
-
-    useEffect(() => {
-       setErrorsToday(logs.filter(l => l.level === 'error' && (new Date().getTime() - new Date(l.timestamp).getTime()) < 86400000).length);
-    }, [logs])
+    }, [logs]);
 
     const getStatusClass = (status: 'published' | 'draft' | 'deprecated') => {
         switch (status) {
@@ -119,36 +113,36 @@ export default function DashboardPage() {
       <main className="flex flex-1 flex-col gap-4 p-4 lg:gap-6 lg:p-6 bg-background">
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
             <StatCard 
-                title="Total API Calls (Live)"
-                value={totalApiCalls.toLocaleString()}
-                description="Updating in real-time"
+                title="Total API Calls"
+                value={isLoadingLogs ? '...' : totalApiCalls.toLocaleString()}
+                description="From all integrated services"
                 Icon={Activity}
                 iconColor="text-primary"
             />
             <StatCard 
                 title="Active Workflows"
-                value={activeWorkflows.length.toString()}
+                value={isLoadingWorkflows ? '...' : activeWorkflows.length.toString()}
                 description="Automating your business"
                 Icon={Workflow}
                 iconColor="text-orange-500"
             />
             <StatCard 
                 title="Published APIs"
-                value={publishedApis.toString()}
-                description="Exposed to the world"
+                value={isLoadingApis ? '...' : publishedApis.toString()}
+                description="Exposed to other systems"
                 Icon={CodeXml}
                 iconColor="text-purple-500"
             />
             <StatCard 
                 title="Errors (24h)"
-                value={errorsToday.toString()}
+                value={isLoadingLogs ? '...' : errorsToday.toString()}
                 description={errorsToday === 0 ? "All systems operational" : "Needs attention"}
                 Icon={AlertCircle}
                 iconColor={errorsToday === 0 ? "text-green-500" : "text-destructive"}
             />
             <StatCard 
                 title="Active Users"
-                value={users?.length.toString() ?? '...'}
+                value={isLoadingUsers ? '...' : (users?.length.toString() ?? '0')}
                 description="Across all roles"
                 Icon={Users}
                 iconColor="text-green-500"
@@ -158,7 +152,7 @@ export default function DashboardPage() {
             <Card className="lg:col-span-3 transition-all hover:shadow-lg">
                 <CardHeader>
                     <CardTitle>API Traffic</CardTitle>
-                    <CardDescription>Live connection showing API call volume over time.</CardDescription>
+                    <CardDescription>Live call volume from the last minute.</CardDescription>
                 </CardHeader>
                 <CardContent>
                     <AreaChartComponent data={apiTrafficData} dataKey="API Calls" xAxisKey="date" />
@@ -178,6 +172,12 @@ export default function DashboardPage() {
                             </TableRow>
                         </TableHeader>
                         <TableBody>
+                            {isLoadingApis && Array.from({length: 3}).map((_, i) => (
+                                <TableRow key={i}>
+                                    <TableCell><Skeleton className="h-5 w-3/4" /></TableCell>
+                                    <TableCell className="text-right"><Skeleton className="h-6 w-20 rounded-full inline-block" /></TableCell>
+                                </TableRow>
+                            ))}
                             {exposedApis?.slice(0, 4).map(api => (
                                 <TableRow key={api.id}>
                                     <TableCell>
@@ -194,6 +194,13 @@ export default function DashboardPage() {
                                     </TableCell>
                                 </TableRow>
                             ))}
+                             {!isLoadingApis && exposedApis?.length === 0 && (
+                                <TableRow>
+                                    <TableCell colSpan={2} className="text-center text-muted-foreground p-8">
+                                        No exposed APIs yet.
+                                    </TableCell>
+                                </TableRow>
+                            )}
                         </TableBody>
                     </Table>
                 </CardContent>
@@ -203,12 +210,13 @@ export default function DashboardPage() {
              <Card className="lg:col-span-3 transition-all hover:shadow-lg">
                 <CardHeader>
                     <CardTitle>Recent Activity</CardTitle>
-                    <CardDescription>Live feed from all services.</CardDescription>
+                    <CardDescription>Live feed from Firestore logs.</CardDescription>
                 </CardHeader>
                 <CardContent>
                   <ScrollArea className="h-72">
                     <div className="space-y-4">
-                      {logs.slice(0, 15).map((log) => (
+                      {isLoadingLogs && Array.from({length: 5}).map((_, i) => <Skeleton key={i} className="h-10 w-full" />)}
+                      {recentLogs?.map((log) => (
                         <div key={log.id} className="flex items-start gap-4">
                           <div className="flex-shrink-0 pt-1">
                             {log.level === 'error' && <AlertCircle className="h-5 w-5 text-destructive" />}
@@ -217,7 +225,7 @@ export default function DashboardPage() {
                           </div>
                           <div className="flex-1">
                             <p className="text-sm font-medium leading-none">
-                              <span className="font-semibold text-primary">{log.service}:</span> {log.message}
+                              <span className="font-semibold text-primary">{log.endpoint}:</span> {`Returned status ${log.statusCode}`}
                             </p>
                             <p className="text-sm text-muted-foreground">
                                {isClient ? formatDistanceToNow(parseISO(log.timestamp), { addSuffix: true }) : ''}
@@ -225,6 +233,11 @@ export default function DashboardPage() {
                           </div>
                         </div>
                       ))}
+                       {!isLoadingLogs && recentLogs?.length === 0 && (
+                            <div className="text-center text-muted-foreground p-8">
+                                No recent activity.
+                            </div>
+                        )}
                     </div>
                   </ScrollArea>
                 </CardContent>
@@ -243,7 +256,13 @@ export default function DashboardPage() {
                             </TableRow>
                         </TableHeader>
                         <TableBody>
-                            {activeWorkflows.sort((a,b) => new Date(b.lastRun).getTime() - new Date(a.lastRun).getTime()).map(wf => (
+                            {isLoadingWorkflows && Array.from({length: 3}).map((_, i) => (
+                                 <TableRow key={i}>
+                                    <TableCell><Skeleton className="h-5 w-3/4" /></TableCell>
+                                    <TableCell className="text-right"><Skeleton className="h-5 w-1/4" /></TableCell>
+                                </TableRow>
+                            ))}
+                            {activeWorkflows.sort((a,b) => (b.lastRun?.seconds || 0) - (a.lastRun?.seconds || 0)).map(wf => (
                                 <TableRow key={wf.id}>
                                     <TableCell>
                                         <div className="font-medium">{wf.name}</div>
@@ -251,9 +270,16 @@ export default function DashboardPage() {
                                             Trigger: {wf.trigger.event}
                                         </div>
                                     </TableCell>
-                                    <TableCell className="text-right">{isClient ? formatDistanceToNow(parseISO(wf.lastRun), { addSuffix: true }) : ''}</TableCell>
+                                    <TableCell className="text-right">{isClient && wf.lastRun?.seconds ? formatDistanceToNow(new Date(wf.lastRun.seconds * 1000), { addSuffix: true }) : 'N/A'}</TableCell>
                                 </TableRow>
                             ))}
+                             {!isLoadingWorkflows && activeWorkflows?.length === 0 && (
+                                <TableRow>
+                                    <TableCell colSpan={2} className="text-center text-muted-foreground p-8">
+                                        No active workflows.
+                                    </TableCell>
+                                </TableRow>
+                            )}
                         </TableBody>
                     </Table>
                 </CardContent>

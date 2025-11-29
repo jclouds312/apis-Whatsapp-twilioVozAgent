@@ -1,4 +1,3 @@
-
 'use client';
 
 import { Header } from "@/components/dashboard/header";
@@ -9,22 +8,38 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { CheckCircle, XCircle, Phone } from "lucide-react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { logs } from "@/lib/data";
-import { format } from "date-fns";
-import { useState } from "react";
-import { useToast } from "@/hooks/use-toast";
+import { format, parseISO } from "date-fns";
+import { useUser, useFirestore, useCollection, useMemoFirebase } from '@/firebase';
+import type { ApiKey, ApiLog } from "@/lib/types";
+import { collection } from 'firebase/firestore';
+import { Skeleton } from "@/components/ui/skeleton";
+import { cn } from "@/lib/utils";
 
 export default function TwilioPage() {
-    const [isConnected, setIsConnected] = useState(false);
-    const { toast } = useToast();
-    const twilioLogs = logs.filter(log => log.service === 'Twilio');
+    const { user } = useUser();
+    const firestore = useFirestore();
 
-    const handleConnect = () => {
-        setIsConnected(true);
-        toast({
-            title: "Configuration Saved",
-            description: "Successfully connected to Twilio.",
-        })
+    const apiKeysQuery = useMemoFirebase(() => {
+        if (!firestore || !user?.uid) return null;
+        return collection(firestore, 'users', user.uid, 'apiKeys');
+    }, [firestore, user?.uid]);
+    const { data: apiKeys, isLoading: isLoadingKeys } = useCollection<ApiKey>(apiKeysQuery);
+
+    const logsQuery = useMemoFirebase(() => {
+        if (!firestore) return null;
+        return collection(firestore, 'apiLogs');
+    }, [firestore]);
+    const { data: logs, isLoading: isLoadingLogs } = useCollection<ApiLog>(logsQuery);
+
+    const isConnected = apiKeys?.some(key => key.service.toLowerCase() === 'twilio' && key.status === 'active');
+    const twilioLogs = logs?.filter(log => log.endpoint.toLowerCase().includes('twilio')).slice(0, 5) || [];
+
+    const getLogLevelClass = (level: 'info' | 'warn' | 'error') => {
+        switch (level) {
+            case 'info': return 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300';
+            case 'warn': return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300';
+            case 'error': return 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300';
+        }
     }
 
     return (
@@ -35,31 +50,27 @@ export default function TwilioPage() {
                     <Card className="lg:col-span-1 flex flex-col transition-all hover:shadow-lg">
                         <CardHeader>
                             <CardTitle>Twilio Connection</CardTitle>
-                            <CardDescription>Manage your Twilio API credentials for Voice.</CardDescription>
+                            <CardDescription>Manage your Twilio API credentials.</CardDescription>
                         </CardHeader>
                         <CardContent className="space-y-4 flex-grow">
-                            <div className="space-y-2">
-                                <Label htmlFor="twilio-sid">Account SID</Label>
-                                <Input id="twilio-sid" placeholder="AC..." defaultValue="AC1521875f599e92e8bdc38f75c97751cb" className="font-mono"/>
-                            </div>
-                            <div className="space-y-2">
-                                <Label htmlFor="twilio-token">Auth Token</Label>
-                                <Input id="twilio-token" type="password" placeholder="Your auth token" defaultValue="••••••••••••••••••••••••" className="font-mono"/>
-                            </div>
                              <div className="flex items-center space-x-2 pt-2">
-                                {isConnected ? (
-                                    <CheckCircle className="h-5 w-5 text-green-500" />
-                                ) : (
-                                    <XCircle className="h-5 w-5 text-red-500" />
+                                {isLoadingKeys ? <Skeleton className="h-6 w-6 rounded-full" /> : (
+                                    <>
+                                        {isConnected ? (
+                                            <CheckCircle className="h-5 w-5 text-green-500" />
+                                        ) : (
+                                            <XCircle className="h-5 w-5 text-red-500" />
+                                        )}
+                                        <span className={`text-sm font-medium ${isConnected ? "text-green-600" : "text-red-600"}`}>
+                                            {isConnected ? "Connected" : "Not Connected"}
+                                        </span>
+                                    </>
                                 )}
-                                <span className={`text-sm font-medium ${isConnected ? "text-green-600" : "text-red-600"}`}>
-                                    {isConnected ? "Connected" : "Not Connected"}
-                                </span>
                             </div>
+                            <p className="text-sm text-muted-foreground">
+                                API Keys for Twilio are managed in the <a href="/dashboard/settings" className="text-primary underline">Settings</a> page.
+                            </p>
                         </CardContent>
-                        <CardHeader>
-                             <Button onClick={handleConnect}>Save Configuration</Button>
-                        </CardHeader>
                     </Card>
 
                     <Card className="lg:col-span-2 transition-all hover:shadow-lg">
@@ -80,21 +91,29 @@ export default function TwilioPage() {
                                    </TableRow>
                                </TableHeader>
                                <TableBody>
+                                   {isLoadingLogs && Array.from({length: 3}).map((_, i) => (
+                                        <TableRow key={i}>
+                                            <TableCell><Skeleton className="h-4 w-24" /></TableCell>
+                                            <TableCell><Skeleton className="h-6 w-16 rounded-full" /></TableCell>
+                                            <TableCell><Skeleton className="h-4 w-full" /></TableCell>
+                                        </TableRow>
+                                   ))}
                                    {twilioLogs.map(log => (
                                        <TableRow key={log.id}>
-                                           <TableCell>{format(new Date(log.timestamp), "yyyy-MM-dd HH:mm:ss")}</TableCell>
+                                           <TableCell>{format(parseISO(log.timestamp), "yyyy-MM-dd HH:mm:ss")}</TableCell>
                                            <TableCell>
-                                                <Badge variant={log.level === 'error' ? 'destructive' : 'default'} className={
-                                                    log.level === 'error' ? 'bg-red-100 text-red-800' 
-                                                    : log.level === 'warn' ? 'bg-yellow-100 text-yellow-800' 
-                                                    : 'bg-blue-100 text-blue-800'
-                                                }>
+                                                <Badge variant='outline' className={cn("border", getLogLevelClass(log.level))}>
                                                     {log.level}
                                                 </Badge>
                                            </TableCell>
-                                           <TableCell>{log.message}</TableCell>
+                                           <TableCell>{`Status ${log.statusCode} on ${log.endpoint}`}</TableCell>
                                        </TableRow>
                                    ))}
+                                   {!isLoadingLogs && twilioLogs.length === 0 && (
+                                       <TableRow>
+                                           <TableCell colSpan={3} className="text-center text-muted-foreground">No Twilio logs found.</TableCell>
+                                       </TableRow>
+                                   )}
                                </TableBody>
                            </Table>
                         </CardContent>

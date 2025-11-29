@@ -3,7 +3,6 @@
 import { SidebarProvider, Sidebar, SidebarHeader, SidebarContent, SidebarFooter } from '@/components/ui/sidebar';
 import Link from 'next/link';
 import { DashboardNav } from '@/components/dashboard/dashboard-nav';
-import { LogProvider } from '@/context/LogContext';
 import { FirebaseClientProvider } from '@/firebase/client-provider';
 
 const Logo = () => (
@@ -61,26 +60,24 @@ export default function DashboardLayout({
 
   return (
     <FirebaseClientProvider>
-      <LogProvider>
-        <SidebarProvider>
-          <Sidebar>
-            <SidebarHeader>
-              <Link href="/dashboard" className="flex items-center gap-2 font-semibold text-lg text-sidebar-foreground">
-                <Logo />
-                <span className="text-base font-semibold">APIs Manager</span>
-              </Link>
-            </SidebarHeader>
-            <SidebarContent>
-              <DashboardNav />
-            </SidebarContent>
-            <SidebarFooter>
-            </SidebarFooter>
-          </Sidebar>
-          <main className="flex flex-1 flex-col bg-background">
-            {children}
-          </main>
-        </SidebarProvider>
-      </LogProvider>
+      <SidebarProvider>
+        <Sidebar>
+          <SidebarHeader>
+            <Link href="/dashboard" className="flex items-center gap-2 font-semibold text-lg text-sidebar-foreground">
+              <Logo />
+              <span className="text-base font-semibold">APIs Manager</span>
+            </Link>
+          </SidebarHeader>
+          <SidebarContent>
+            <DashboardNav />
+          </SidebarContent>
+          <SidebarFooter>
+          </SidebarFooter>
+        </Sidebar>
+        <main className="flex flex-1 flex-col bg-background">
+          {children}
+        </main>
+      </SidebarProvider>
     </FirebaseClientProvider>
   );
 }

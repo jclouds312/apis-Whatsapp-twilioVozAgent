@@ -1,4 +1,3 @@
-
 'use client';
 
 import { Header } from "@/components/dashboard/header";
@@ -7,34 +6,48 @@ import { StatCard } from "@/components/dashboard/stat-card";
 import { Badge } from "@/components/ui/badge";
 import { CheckCircle, XCircle, Users, TrendingUp, Workflow as WorkflowIcon } from "lucide-react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { format } from "date-fns";
+import { format, parseISO } from "date-fns";
 import { useUser, useFirestore, useCollection, useMemoFirebase } from '@/firebase';
 import { collection } from 'firebase/firestore';
-import type { ApiKey, Log, Workflow } from '@/lib/types';
-import { useLogs } from '@/context/LogContext';
+import type { ApiKey, ApiLog, Workflow } from '@/lib/types';
+import { Skeleton } from "@/components/ui/skeleton";
+import { cn } from "@/lib/utils";
 
 export default function CrmPage() {
     const { user } = useUser();
     const firestore = useFirestore();
-    const { logs } = useLogs();
 
     const apiKeysQuery = useMemoFirebase(() => {
         if (!firestore || !user?.uid) return null;
         return collection(firestore, 'users', user.uid, 'apiKeys');
     }, [firestore, user?.uid]);
-    const { data: apiKeys } = useCollection<ApiKey>(apiKeysQuery);
+    const { data: apiKeys, isLoading: isLoadingKeys } = useCollection<ApiKey>(apiKeysQuery);
 
     const workflowsQuery = useMemoFirebase(() => {
         if (!firestore || !user?.uid) return null;
         return collection(firestore, 'users', user.uid, 'workflows');
     }, [firestore, user?.uid]);
-    const { data: workflows } = useCollection<Workflow>(workflowsQuery);
+    const { data: workflows, isLoading: isLoadingWorkflows } = useCollection<Workflow>(workflowsQuery);
+    
+    const logsQuery = useMemoFirebase(() => {
+        if (!firestore) return null;
+        return collection(firestore, 'apiLogs');
+    }, [firestore]);
+    const { data: logs, isLoading: isLoadingLogs } = useCollection<ApiLog>(logsQuery);
 
     const isCrmConnected = apiKeys?.some(key => key.service.toLowerCase().includes('crm') && key.status === 'active');
-    const crmLogs = logs.filter(log => log.service === 'CRM Connector');
+    const crmLogs = logs?.filter(log => log.endpoint.toLowerCase().includes('crm')).slice(0, 5) || [];
     const crmWorkflows = workflows?.filter(wf => 
         wf.trigger.service === 'CRM' || wf.steps.some(step => step.description.toLowerCase().includes('crm'))
     ) || [];
+
+    const getLogLevelClass = (level: 'info' | 'warn' | 'error') => {
+        switch (level) {
+            case 'info': return 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300';
+            case 'warn': return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300';
+            case 'error': return 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300';
+        }
+    }
 
     return (
         <>
@@ -47,33 +60,37 @@ export default function CrmPage() {
                             <CardDescription>CRM API Key status.</CardDescription>
                         </CardHeader>
                         <CardContent className="flex items-center space-x-2 pt-2">
-                             {isCrmConnected ? (
-                                <CheckCircle className="h-6 w-6 text-green-500" />
-                            ) : (
-                                <XCircle className="h-6 w-6 text-red-500" />
-                            )}
-                            <span className={`text-lg font-medium ${isCrmConnected ? "text-green-600" : "text-red-600"}`}>
-                                {isCrmConnected ? "Connected" : "Not Connected"}
-                            </span>
+                             {isLoadingKeys ? <Skeleton className="h-6 w-6 rounded-full" /> : (
+                                <>
+                                    {isCrmConnected ? (
+                                        <CheckCircle className="h-6 w-6 text-green-500" />
+                                    ) : (
+                                        <XCircle className="h-6 w-6 text-red-500" />
+                                    )}
+                                    <span className={`text-lg font-medium ${isCrmConnected ? "text-green-600" : "text-red-600"}`}>
+                                        {isCrmConnected ? "Connected" : "Not Connected"}
+                                    </span>
+                                </>
+                             )}
                         </CardContent>
                     </Card>
                      <StatCard 
                         title="New Leads (24h)"
                         value="18"
-                        description="From all connected channels"
+                        description="Placeholder from all channels"
                         Icon={TrendingUp}
                         iconColor="text-blue-500"
                     />
                      <StatCard 
                         title="Contacts Synced"
                         value="1,204"
-                        description="Total contacts in CRM"
+                        description="Placeholder total in CRM"
                         Icon={Users}
                         iconColor="text-purple-500"
                     />
                      <StatCard 
                         title="Active CRM Workflows"
-                        value={crmWorkflows.filter(wf => wf.status === 'active').length.toString()}
+                        value={isLoadingWorkflows ? '...' : crmWorkflows.filter(wf => wf.status === 'active').length.toString()}
                         description="Automations involving CRM"
                         Icon={WorkflowIcon}
                         iconColor="text-orange-500"
@@ -83,7 +100,7 @@ export default function CrmPage() {
                      <Card className="transition-all hover:shadow-lg">
                          <CardHeader>
                             <CardTitle>Recent CRM Activity</CardTitle>
-                            <CardDescription>Live feed of CRM-related events.</CardDescription>
+                            <CardDescription>Live feed of CRM-related events from Firestore.</CardDescription>
                         </CardHeader>
                         <CardContent>
                            <Table>
@@ -95,21 +112,22 @@ export default function CrmPage() {
                                    </TableRow>
                                </TableHeader>
                                <TableBody>
+                                   {isLoadingLogs && Array.from({length: 3}).map((_, i) => (
+                                        <TableRow key={i}>
+                                            <TableCell><Skeleton className="h-4 w-24" /></TableCell>
+                                            <TableCell><Skeleton className="h-6 w-16 rounded-full" /></TableCell>
+                                            <TableCell><Skeleton className="h-4 w-full" /></TableCell>
+                                        </TableRow>
+                                   ))}
                                    {crmLogs.map(log => (
                                        <TableRow key={log.id}>
-                                           <TableCell className="text-muted-foreground">{format(new Date(log.timestamp), "HH:mm:ss")}</TableCell>
+                                           <TableCell className="text-muted-foreground">{format(parseISO(log.timestamp), "HH:mm:ss")}</TableCell>
                                            <TableCell>
-                                                <Badge variant={log.level === 'error' ? 'destructive' : log.level === 'warn' ? 'default' : 'secondary'} 
-                                                    className={
-                                                        log.level === 'error' ? 'bg-red-100 text-red-800' 
-                                                        : log.level === 'warn' ? 'bg-yellow-100 text-yellow-800' 
-                                                        : 'bg-blue-100 text-blue-800'
-                                                    }
-                                                >
+                                                <Badge variant="outline" className={cn("border", getLogLevelClass(log.level))}>
                                                     {log.level}
                                                 </Badge>
                                            </TableCell>
-                                           <TableCell>{log.message}</TableCell>
+                                           <TableCell>{`Status ${log.statusCode} on ${log.endpoint}`}</TableCell>
                                        </TableRow>
                                    ))}
                                </TableBody>
@@ -131,6 +149,13 @@ export default function CrmPage() {
                                    </TableRow>
                                </TableHeader>
                                <TableBody>
+                                   {isLoadingWorkflows && Array.from({length: 2}).map((_, i) => (
+                                        <TableRow key={i}>
+                                            <TableCell><Skeleton className="h-4 w-32" /></TableCell>
+                                            <TableCell><Skeleton className="h-4 w-24" /></TableCell>
+                                            <TableCell><Skeleton className="h-6 w-20 rounded-full" /></TableCell>
+                                        </TableRow>
+                                   ))}
                                    {crmWorkflows.map(wf => (
                                        <TableRow key={wf.id}>
                                            <TableCell className="font-medium">{wf.name}</TableCell>

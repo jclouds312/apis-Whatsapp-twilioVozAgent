@@ -8,36 +8,41 @@ export type ApiKey = {
   userId: string;
 };
 
-export type Log = {
+export type ApiLog = {
   id: string;
-  timestamp: string;
+  timestamp: string; // ISO 8601 format
   level: 'info' | 'warn' | 'error';
-  service: string;
-  message: string;
+  endpoint: string;
+  requestBody: string;
+  responseBody: string;
+  statusCode: number;
+  apiKeyId: string;
 };
 
-export type User = {
+export type DashboardUser = {
   id: string;
-  name: string;
+  username: string;
   email: string;
-  role: 'Admin' | 'Agent' | 'Developer' | 'Manager';
+  roleId: string;
+  name: string;
   avatarUrl: string;
+  role: 'Admin' | 'Agent' | 'Developer' | 'Manager';
 };
 
 export type Workflow = {
-    id: string;
+  id: string;
+  name: string;
+  trigger: {
+    service: 'WhatsApp' | 'Twilio' | 'CRM';
+    event: string;
+  };
+  steps: {
     name: string;
-    trigger: {
-        service: 'WhatsApp' | 'Twilio' | 'CRM';
-        event: string;
-    };
-    steps: {
-        name: string;
-        description: string;
-    }[];
-    status: 'active' | 'inactive';
-    lastRun: any; // Allow any for Firestore Timestamp
-    userId: string;
+    description: string;
+  }[];
+  status: 'active' | 'inactive';
+  lastRun: any; // Allow any for Firestore Timestamp
+  userId: string;
 };
 
 export type ExposedApi = {
@@ -55,7 +60,7 @@ export type Message = {
   id: string;
   contactId: string; // The ID of the other person in the conversation
   content: string;
-  timestamp: string;
+  timestamp: any;
   isSender: boolean; // True if the current user sent the message
 };
 
@@ -64,7 +69,7 @@ export type Order = {
   date: string;
   total: number;
   status: 'Completed' | 'Pending' | 'Cancelled';
-}
+};
 
 export type Conversation = {
   id: string;
@@ -80,3 +85,6 @@ export type Conversation = {
   messages: Message[];
   userId: string;
 };
+
+// This type was previously User, changing to DashboardUser for clarity
+export type User = DashboardUser;

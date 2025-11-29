@@ -15,7 +15,6 @@ import { Badge } from "@/components/ui/badge";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import type { ApiKey } from "@/lib/types";
 import { useToast } from "@/hooks/use-toast";
-import { useLogs } from "@/context/LogContext";
 import { useUser, useFirestore, useCollection, useMemoFirebase, addDocumentNonBlocking, deleteDocumentNonBlocking, updateDocumentNonBlocking } from '@/firebase';
 import { collection, doc, serverTimestamp } from "firebase/firestore";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -25,7 +24,6 @@ import { cn } from "@/lib/utils";
 
 function ApiKeysTabContent() {
     const { toast } = useToast();
-    const { addLog } = useLogs();
     const [isClient, setIsClient] = useState(false);
     const [addKeyOpen, setAddKeyOpen] = useState(false);
     const [editKeyOpen, setEditKeyOpen] = useState(false);
@@ -63,14 +61,13 @@ function ApiKeysTabContent() {
             service: serviceMap[service] || 'Other',
             description: formData.get('description') as string,
             key: formData.get('key') as string,
-            status: 'active',
+            status: 'active' as const,
             createdAt: serverTimestamp(),
             userId: user.uid,
         };
         
         addDocumentNonBlocking(apiKeysQuery, newKeyData);
 
-        addLog({ service: 'Settings', level: 'info', message: `New API Key added for ${newKeyData.service}.` });
         toast({ title: 'API Key Added', description: `A new key for ${newKeyData.service} has been saved.` });
         setAddKeyOpen(false);
         setService('');
@@ -80,7 +77,6 @@ function ApiKeysTabContent() {
         if (!firestore || !user?.uid) return;
         const keyDocRef = doc(firestore, 'users', user.uid, 'apiKeys', key.id);
         deleteDocumentNonBlocking(keyDocRef);
-        addLog({ service: 'Settings', level: 'warn', message: `API Key for ${key.service} has been revoked.` });
         toast({ variant: 'destructive', title: 'API Key Revoked', description: `The key for ${key.service} has been permanently deleted.` });
     }
 
@@ -96,7 +92,6 @@ function ApiKeysTabContent() {
         const keyDocRef = doc(firestore, 'users', user.uid, 'apiKeys', selectedKey.id);
         updateDocumentNonBlocking(keyDocRef, updatedData);
 
-        addLog({ service: 'Settings', level: 'info', message: `API Key for ${selectedKey.service} was updated.` });
         toast({ title: 'API Key Updated' });
         setEditKeyOpen(false);
         setSelectedKey(null);
@@ -217,7 +212,7 @@ function ApiKeysTabContent() {
                                         {key.status}
                                     </Badge>
                                 </TableCell>
-                                <TableCell>{isClient && key.createdAt ? new Date((key.createdAt as any).seconds * 1000).toLocaleDateString() : '...'}</TableCell>
+                                <TableCell>{isClient && key.createdAt?.seconds ? new Date(key.createdAt.seconds * 1000).toLocaleDateString() : '...'}</TableCell>
                                 <TableCell>
                                     <Dialog open={editKeyOpen && selectedKey?.id === key.id} onOpenChange={(open) => { if (!open) setSelectedKey(null); setEditKeyOpen(open)}}>
                                         <DropdownMenu>
@@ -252,9 +247,7 @@ function ApiKeysTabContent() {
                                                     </div>
                                                 </div>
                                                 <DialogFooter>
-                                                    <DialogClose asChild>
-                                                        <Button type="submit">Save Changes</Button>
-                                                    </DialogClose>
+                                                  <Button type="submit">Save Changes</Button>
                                                 </DialogFooter>
                                             </form>
                                         </DialogContent>

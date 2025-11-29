@@ -1,30 +1,41 @@
-# APIs Manager: Plataforma Unificada de Gestión y Orquestación de APIs
+# APIs Manager: Unified API Management and Orchestration Platform
 
-APIs Manager es un panel de administración integral diseñado para centralizar, gestionar y automatizar las interacciones entre diversos servicios y APIs. La plataforma proporciona una consola unificada para administrar claves de API, exponer y documentar APIs internas, conectar flujos de trabajo entre servicios (como CRM, WhatsApp y Twilio) y gestionar usuarios con roles específicos.
+APIs Manager is a comprehensive administration panel designed to centralize, manage, and automate interactions between various services and APIs. The platform provides a unified console to manage API keys, expose internal APIs, and connect workflows between services, with a primary focus on integrating and orchestrating WhatsApp Business and Twilio Voice APIs. Built with Next.js, Firebase, and Tailwind CSS.
 
-## Concepto del Proyecto
+## Project Concept
 
-En el ecosistema digital actual, las empresas dependen de una multitud de servicios SaaS y APIs internas para operar. La gestión de estas integraciones puede volverse compleja, fragmentada y difícil de escalar. APIs Manager nace como la solución a este problema, ofreciendo un "centro de comando" unificado que permite a los equipos técnicos y de negocio:
+In today's digital ecosystem, businesses rely on a multitude of SaaS services and internal APIs to operate. Managing these integrations can become complex and difficult to scale. APIs Manager was born as a solution to this problem, offering a unified "command center" that allows technical and business teams to:
 
--   **Centralizar la Seguridad**: Gestionar todas las credenciales de API de servicios externos en un único lugar seguro.
--   **Exponer y Monetizar APIs**: Convertir funcionalidades internas en APIs seguras, documentadas y listas para ser consumidas por clientes o socios.
--   **Automatizar Procesos de Negocio**: Crear flujos de trabajo lógicos (sin necesidad de código complejo) que conectan diferentes sistemas, como por ejemplo, registrar un lead en el CRM cuando llega un mensaje de WhatsApp.
--   **Visibilidad y Control**: Monitorear la actividad del sistema, auditar logs y administrar los permisos de acceso de los usuarios a través de un sistema de roles.
+-   **Centralize Security**: Manage all API credentials for external services like WhatsApp Business and Twilio in a single secure location powered by Firebase.
+-   **Expose and Orchestrate APIs**: Turn internal functionalities into secure, documented APIs ready for consumption by other CRMs, websites, or mobile apps. These exposed APIs can then orchestrate calls to the integrated services.
+-   **Automate Business Processes**: Create logical workflows that connect different systems (e.g., a new CRM lead triggers a WhatsApp message).
+-   **Gain Visibility and Control**: Monitor system activity through a real-time logging system and manage user access permissions.
 
-## Características Principales
+## Main Features
 
--   **Dashboard Principal**: Ofrece una vista de pájaro de las métricas más importantes, como el tráfico de API, los flujos de trabajo activos y los errores recientes del sistema.
--   **Gestión de API Keys**: Un repositorio centralizado y seguro para almacenar y gestionar las claves de API de servicios integrados como WhatsApp Business, Twilio y sistemas CRM.
--   **API Exhibition Console**: Una herramienta para documentar, proteger y exponer APIs internas, controlando su estado (publicada, borrador, obsoleta) y visibilidad.
--   **Function Connect**: Un potente motor de orquestación que permite crear, gestionar y monitorear flujos de trabajo automatizados entre diferentes servicios. Incluye un asistente de IA para sugerir flujos óptimos.
--   **Logs y Auditoría**: Un registro detallado de todos los eventos del sistema para facilitar la depuración de errores y la auditoría de seguridad.
--   **Gestión de Usuarios y Roles**: Administración de los miembros del equipo, asignando roles (Admin, Manager, Developer, Agent) para controlar el acceso a las diferentes funcionalidades de la plataforma.
+-   **Dashboard**: Offers a bird's-eye view of the most important metrics, such as API traffic, active workflows, and recent system errors, all powered by live data from Firestore.
+-   **WhatsApp & Twilio Dashboards**: Dedicated sections for managing conversations and monitoring activity for WhatsApp Business and Twilio Voice.
+-   **API Key Management**: A centralized and secure repository to store, view, manage, and revoke API keys for integrated services.
+-   **Exposed API Console**: A tool to document, secure, and expose internal APIs, controlling their status (published, draft, obsolete) and visibility.
+-   **User and Role Management**: Administer team members and assign roles to control access to different platform functionalities.
+-   **System Logs**: A detailed, real-time record of all system events to facilitate error debugging and security auditing, stored in Firestore.
 
-## Despliegue en Vercel
+## Tech Stack
 
-Este proyecto está configurado para un despliegue sencillo y rápido en [Vercel](https://vercel.com/).
+-   **Framework**: [Next.js](https://nextjs.org/) (App Router)
+-   **Backend & Database**: [Firebase](https://firebase.google.com/) (Firestore, Authentication)
+-   **UI**: [React](https://react.dev/), [shadcn/ui](https://ui.shadcn.com/), [Tailwind CSS](https://tailwindcss.com/)
+-   **Generative AI**: [Google AI & Genkit](https://firebase.google.com/docs/genkit) for intelligent suggestions.
 
-1.  **Crea un repositorio en Git**: Sube el código de este proyecto a un repositorio de GitHub, GitLab o Bitbucket.
-2.  **Importa el proyecto en Vercel**: Desde tu dashboard de Vercel, importa el repositorio que acabas de crear.
-3.  **Configuración**: Vercel detectará automáticamente que es un proyecto Next.js y aplicará la configuración de build correcta. No necesitas configurar nada adicional.
-4.  **Desplegar**: Haz clic en "Deploy". Vercel se encargará del resto y te proporcionará una URL para tu aplicación en producción.
+## Deploying on Vercel
+
+This project is configured for a quick and easy deployment on [Vercel](https://vercel.com/).
+
+1.  **Set up Firebase**: Before deploying, ensure you have a Firebase project with Firestore and Authentication enabled. You will need to populate the Firebase configuration in `src/firebase/config.ts` and your environment variables.
+2.  **Configure Environment Variables**: In your Vercel project settings, you must add the following environment variables for the WhatsApp integration:
+    - `WHATSAPP_VERIFY_TOKEN`: A secret token of your choice for webhook verification.
+    - `WHATSAPP_ACCESS_TOKEN`: The permanent access token for the WhatsApp Business API from your Meta App.
+    - `WHATSAPP_PHONE_NUMBER_ID`: The Phone Number ID from your Meta App.
+3.  **Create a Git Repository**: Push the project code to a GitHub, GitLab, or Bitbucket repository.
+4.  **Import the Project in Vercel**: From your Vercel dashboard, import the repository you just created. Vercel will automatically detect that it's a Next.js project.
+5.  **Deploy**: Click "Deploy". Vercel will handle the rest and provide you with a URL for your live application. After deployment, use the provided URL to set up your webhook in the Meta Developer portal.

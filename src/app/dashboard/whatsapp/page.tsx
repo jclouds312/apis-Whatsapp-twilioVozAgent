@@ -5,16 +5,16 @@ import { Header } from "@/components/dashboard/header";
 import { ChatLayout } from "./chat-layout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { StatCard } from "@/components/dashboard/stat-card";
-import { CheckCircle, Circle, MessageSquare, Send, Workflow, XCircle } from "lucide-react";
+import { CheckCircle, MessageSquare, Send, Workflow, XCircle } from "lucide-react";
 import { AreaChartComponent } from "@/components/charts/area-chart";
-import { useLogs } from "@/context/LogContext";
+import { useUser, useFirestore, useCollection, useMemoFirebase } from '@/firebase';
+import { collection, query, where, orderBy } from 'firebase/firestore';
+import type { Conversation, ApiKey, ApiLog } from "@/lib/types";
+import { Skeleton } from "@/components/ui/skeleton";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { format, parseISO } from "date-fns";
 import { cn } from "@/lib/utils";
-import { useUser, useFirestore, useCollection, useMemoFirebase } from '@/firebase';
-import { collection } from 'firebase/firestore';
-import type { Conversation, ApiKey } from "@/lib/types";
 
 const initialMessageTraffic = Array.from({ length: 15 }, (_, i) => {
     const d = new Date();
@@ -27,7 +27,6 @@ const initialMessageTraffic = Array.from({ length: 15 }, (_, i) => {
 });
 
 export default function WhatsAppPage() {
-    const { logs } = useLogs();
     const [messageTraffic, setMessageTraffic] = useState(initialMessageTraffic);
     const { user } = useUser();
     const firestore = useFirestore();
@@ -36,36 +35,62 @@ export default function WhatsAppPage() {
         if (!firestore || !user?.uid) return null;
         return collection(firestore, 'users', user.uid, 'apiKeys');
     }, [firestore, user?.uid]);
-    const { data: apiKeys } = useCollection<ApiKey>(apiKeysQuery);
+    const { data: apiKeys, isLoading: isLoadingKeys } = useCollection<ApiKey>(apiKeysQuery);
 
     const conversationsQuery = useMemoFirebase(() => {
         if (!firestore || !user?.uid) return null;
-        return collection(firestore, 'users', user.uid, 'conversations');
+        return query(collection(firestore, 'users', user.uid, 'conversations'), orderBy('lastMessageTime', 'desc'));
     }, [firestore, user?.uid]);
-    const { data: conversations } = useCollection<Conversation>(conversationsQuery);
+    const { data: conversations, isLoading: isLoadingConversations } = useCollection<Conversation>(conversationsQuery);
     
+    const logsQuery = useMemoFirebase(() => {
+        if (!firestore) return null;
+        const q = query(collection(firestore, "apiLogs"), where("endpoint", "in", ["/api/whatsapp", "WhatsApp"]), orderBy('timestamp', 'desc'));
+        return q;
+    }, [firestore]);
+    const { data: logs, isLoading: isLoadingLogs } = useCollection<ApiLog>(logsQuery);
+
+    const workflowsQuery = useMemoFirebase(() => {
+        if (!firestore || !user?.uid) return null;
+        return query(collection(firestore, 'users', user.uid, 'workflows'), where('trigger.service', '==', 'WhatsApp'));
+    }, [firestore, user?.uid]);
+    const { data: workflows, isLoading: isLoadingWorkflows } = useCollection(workflowsQuery);
+
+
     const isWhatsAppConnected = apiKeys?.some(key => key.service === 'WhatsApp Business' && key.status === 'active');
-    const whatsappLogs = logs.filter(log => log.service === 'WhatsApp').slice(0, 5);
+    const whatsappLogs = logs?.slice(0, 5) || [];
+    const totalMessages = logs?.length || 0;
+
 
     useEffect(() => {
-        const interval = setInterval(() => {
-            setMessageTraffic(prevData => {
-                const now = new Date();
-                const newSent = Math.floor(Math.random() * 15);
-                const newReceived = Math.floor(Math.random() * 10);
-                const newEntry = {
-                    date: now.toISOString(),
-                    'Sent': newSent,
-                    'Received': newReceived,
+         if (logs && logs.length > 0) {
+            const now = new Date();
+            const newTrafficData = Array.from({ length: 15 }, (_, i) => {
+                const intervalEnd = new Date(now.getTime() - i * 60000); // 1 minute intervals
+                const intervalStart = new Date(now.getTime() - (i + 1) * 60000);
+
+                const sentInInterval = logs.filter(log => {
+                    const logDate = parseISO(log.timestamp);
+                    const reqBody = JSON.parse(log.requestBody);
+                    return log.level === 'info' && reqBody.type === 'text' && logDate >= intervalStart && logDate < intervalEnd;
+                }).length;
+
+                const receivedInInterval = logs.filter(log => {
+                     const logDate = parseISO(log.timestamp);
+                     const reqBody = JSON.parse(log.requestBody);
+                     return log.level === 'info' && reqBody.object === 'whatsapp_business_account' && logDate >= intervalStart && logDate < intervalEnd;
+                }).length;
+
+                return {
+                    date: intervalStart.toISOString(),
+                    'Sent': sentInInterval,
+                    'Received': receivedInInterval,
                 };
-                
-                return [...prevData.slice(1), newEntry];
-            });
-        }, 5000); 
-
-        return () => clearInterval(interval);
-    }, []);
-
+            }).reverse();
+            setMessageTraffic(newTrafficData);
+        }
+    }, [logs]);
+    
     const getLogLevelClass = (level: 'info' | 'warn' | 'error') => {
         switch (level) {
             case 'info': return 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300';
@@ -82,36 +107,42 @@ export default function WhatsAppPage() {
                      <Card className="transition-all hover:shadow-md">
                         <CardHeader className="flex flex-row items-center justify-between pb-2">
                             <CardTitle className="text-sm font-medium">Connection Status</CardTitle>
-                             {isWhatsAppConnected ? (
-                                <CheckCircle className="h-5 w-5 text-green-500" />
-                            ) : (
-                                <XCircle className="h-5 w-5 text-red-500" />
-                            )}
+                             {isLoadingKeys ? <Skeleton className="h-5 w-5" /> : (
+                                <>
+                                {isWhatsAppConnected ? (
+                                    <CheckCircle className="h-5 w-5 text-green-500" />
+                                ) : (
+                                    <XCircle className="h-5 w-5 text-red-500" />
+                                )}
+                                </>
+                             )}
                         </CardHeader>
                         <CardContent>
-                            <div className={`text-2xl font-bold ${isWhatsAppConnected ? "text-green-600" : "text-red-600"}`}>
+                           {isLoadingKeys ? <Skeleton className="h-8 w-3/4" /> : (
+                             <div className={`text-2xl font-bold ${isWhatsAppConnected ? "text-green-600" : "text-red-600"}`}>
                                 {isWhatsAppConnected ? "Connected" : "Not Connected"}
                             </div>
+                           )}
                             <p className="text-xs text-muted-foreground">WhatsApp Business API status</p>
                         </CardContent>
                     </Card>
                      <StatCard 
-                        title="Messages (24h)"
-                        value="3,204"
-                        description="Sent & Received"
+                        title="Messages (All Time)"
+                        value={isLoadingLogs ? '...' : totalMessages.toString()}
+                        description="Sent & Received via API"
                         Icon={MessageSquare}
                         iconColor="text-green-500"
                     />
                      <StatCard 
                         title="Active Conversations"
-                        value={conversations?.length.toString() ?? '0'}
-                        description="Live chats with contacts"
+                        value={isLoadingConversations ? '...' : conversations?.length.toString() ?? '0'}
+                        description="From Firestore database"
                         Icon={Send}
                         iconColor="text-blue-500"
                     />
                      <StatCard 
                         title="Related Workflows"
-                        value="2"
+                        value={isLoadingWorkflows ? '...' : workflows?.length.toString() ?? '0'}
                         description="Automations using WhatsApp"
                         Icon={Workflow}
                         iconColor="text-purple-500"
@@ -122,7 +153,7 @@ export default function WhatsAppPage() {
                     <Card className="lg:col-span-3 transition-all hover:shadow-lg">
                         <CardHeader>
                             <CardTitle>Message Traffic</CardTitle>
-                            <CardDescription>Live volume of sent vs. received messages.</CardDescription>
+                            <CardDescription>Live volume of sent vs. received messages from logs.</CardDescription>
                         </CardHeader>
                         <CardContent>
                             <AreaChartComponent 
@@ -136,7 +167,7 @@ export default function WhatsAppPage() {
                      <Card className="lg:col-span-2 transition-all hover:shadow-lg">
                         <CardHeader>
                             <CardTitle>Recent WhatsApp Activity</CardTitle>
-                            <CardDescription>Live feed of API events.</CardDescription>
+                            <CardDescription>Live feed of API events from Firestore.</CardDescription>
                         </CardHeader>
                         <CardContent>
                             <Table>
@@ -148,6 +179,13 @@ export default function WhatsAppPage() {
                                     </TableRow>
                                 </TableHeader>
                                 <TableBody>
+                                    {isLoadingLogs && Array.from({length: 3}).map((_, i) => (
+                                        <TableRow key={i}>
+                                            <TableCell><Skeleton className="h-4 w-16" /></TableCell>
+                                            <TableCell><Skeleton className="h-6 w-16 rounded-full" /></TableCell>
+                                            <TableCell><Skeleton className="h-4 w-full" /></TableCell>
+                                        </TableRow>
+                                    ))}
                                     {whatsappLogs.map(log => (
                                         <TableRow key={log.id}>
                                             <TableCell className="text-muted-foreground text-xs whitespace-nowrap">{format(parseISO(log.timestamp), 'HH:mm:ss')}</TableCell>
@@ -156,9 +194,14 @@ export default function WhatsAppPage() {
                                                     {log.level}
                                                 </Badge>
                                             </TableCell>
-                                            <TableCell className="text-xs">{log.message}</TableCell>
+                                            <TableCell className="text-xs">{`Status ${log.statusCode}`}</TableCell>
                                         </TableRow>
                                     ))}
+                                    {!isLoadingLogs && whatsappLogs.length === 0 && (
+                                        <TableRow>
+                                            <TableCell colSpan={3} className="text-center text-muted-foreground p-4">No WhatsApp logs found.</TableCell>
+                                        </TableRow>
+                                    )}
                                 </TableBody>
                             </Table>
                         </CardContent>
@@ -166,12 +209,20 @@ export default function WhatsAppPage() {
                 </div>
 
                 <div className="flex-1 px-4 lg:px-6 pb-6 h-[700px]">
-                     <ChatLayout
-                        defaultLayout={[25, 45, 30]}
-                        navCollapsedSize={8}
-                        conversations={conversations || []}
-                        currentUserAvatar={user?.photoURL || "https://picsum.photos/seed/user1/100/100"}
-                    />
+                     {isLoadingConversations && <Skeleton className="h-full w-full rounded-lg" />}
+                     {!isLoadingConversations && (
+                         <ChatLayout
+                            defaultLayout={[25, 45, 30]}
+                            navCollapsedSize={8}
+                            conversations={conversations || []}
+                            currentUserAvatar={user?.photoURL || `https://picsum.photos/seed/${user?.uid || 'user'}/100/100`}
+                        />
+                     )}
+                     {!isLoadingConversations && !conversations && (
+                         <div className="h-full w-full rounded-lg border flex items-center justify-center bg-muted">
+                            <p className="text-muted-foreground">No conversations found.</p>
+                        </div>
+                     )}
                 </div>
             </main>
         </>

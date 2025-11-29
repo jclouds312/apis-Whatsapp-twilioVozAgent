@@ -1,13 +1,26 @@
+'use client';
+
 import { Header } from "@/components/dashboard/header";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { logs } from "@/lib/data";
 import { format, parseISO } from "date-fns";
 import { cn } from "@/lib/utils";
+import { useFirestore, useCollection, useMemoFirebase } from '@/firebase';
+import type { ApiLog } from "@/lib/types";
+import { collection } from "firebase/firestore";
+import { Skeleton } from "@/components/ui/skeleton";
 
 
 export default function LogsPage() {
+    const firestore = useFirestore();
+    const logsQuery = useMemoFirebase(() => {
+        if (!firestore) return null;
+        return collection(firestore, 'apiLogs');
+    }, [firestore]);
+
+    const { data: logs, isLoading } = useCollection<ApiLog>(logsQuery);
+
     const getLogLevelClass = (level: 'info' | 'warn' | 'error') => {
         switch (level) {
             case 'info': return 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300';
@@ -22,7 +35,7 @@ export default function LogsPage() {
                 <Card>
                     <CardHeader>
                         <CardTitle>System Logs</CardTitle>
-                        <CardDescription>A comprehensive trail of all events and activities.</CardDescription>
+                        <CardDescription>A comprehensive trail of all events and activities from Firestore.</CardDescription>
                     </CardHeader>
                     <CardContent>
                         <Table>
@@ -35,7 +48,15 @@ export default function LogsPage() {
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
-                                {logs.map((log) => (
+                                {isLoading && Array.from({length: 5}).map((_, i) => (
+                                    <TableRow key={i}>
+                                        <TableCell><Skeleton className="h-5 w-36" /></TableCell>
+                                        <TableCell><Skeleton className="h-6 w-16 rounded-full" /></TableCell>
+                                        <TableCell><Skeleton className="h-5 w-24" /></TableCell>
+                                        <TableCell><Skeleton className="h-5 w-full" /></TableCell>
+                                    </TableRow>
+                                ))}
+                                {logs?.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()).map((log) => (
                                     <TableRow key={log.id}>
                                         <TableCell className="text-muted-foreground whitespace-nowrap">
                                             {format(parseISO(log.timestamp), "yyyy-MM-dd HH:mm:ss")}
@@ -45,8 +66,8 @@ export default function LogsPage() {
                                                 {log.level}
                                             </Badge>
                                         </TableCell>
-                                        <TableCell className="font-medium">{log.service}</TableCell>
-                                        <TableCell>{log.message}</TableCell>
+                                        <TableCell className="font-medium">{log.endpoint}</TableCell>
+                                        <TableCell>{`Status: ${log.statusCode}, Request: ${log.requestBody.substring(0,50)}... Response: ${log.responseBody.substring(0,50)}...`}</TableCell>
                                     </TableRow>
                                 ))}
                             </TableBody>
