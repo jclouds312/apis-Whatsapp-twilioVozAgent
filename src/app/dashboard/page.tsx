@@ -10,7 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { workflows as initialWorkflows, logs as initialLogs, exposedApis, users } from "@/lib/data";
 import { Activity, Workflow, AlertCircle, Users, CodeXml, Circle } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { format, formatDistanceToNow, parseISO } from "date-fns";
+import { formatDistanceToNow, parseISO } from "date-fns";
 import { cn } from '@/lib/utils';
 import type { Log, Workflow as WorkflowType } from '@/lib/types';
 
@@ -33,12 +33,14 @@ export default function DashboardPage() {
 
     const [totalApiCalls, setTotalApiCalls] = useState(0);
     const [errorsToday, setErrorsToday] = useState(0);
+    const [isClient, setIsClient] = useState(false);
+
 
     useEffect(() => {
+        setIsClient(true);
         setErrorsToday(initialLogs.filter(l => l.level === 'error' && (new Date().getTime() - new Date(l.timestamp).getTime()) < 86400000).length);
         
         const interval = setInterval(() => {
-            // Simulate API traffic
             setApiTrafficData(prevData => {
                 const now = new Date();
                 const newCallCount = Math.floor(Math.random() * 50) + 10;
@@ -54,7 +56,6 @@ export default function DashboardPage() {
                 return shiftedData;
             });
 
-            // Simulate new logs
             const newLog: Log = {
               id: `log_${Date.now()}`,
               timestamp: new Date().toISOString(),
@@ -68,8 +69,7 @@ export default function DashboardPage() {
                 setErrorsToday(prev => prev + 1);
             }
 
-            // Simulate workflow runs
-             if (Math.random() > 0.8) { // 20% chance to "run" a workflow
+             if (Math.random() > 0.8) { 
                 setActiveWorkflows(prev => {
                     const randomIndex = Math.floor(Math.random() * prev.length);
                     const updatedWf = { ...prev[randomIndex], lastRun: new Date().toISOString() };
@@ -78,7 +78,7 @@ export default function DashboardPage() {
              }
 
 
-        }, 5000); // Update every 5 seconds
+        }, 5000); 
 
         return () => clearInterval(interval);
     }, []);
@@ -210,7 +210,7 @@ export default function DashboardPage() {
                               <span className="font-semibold text-primary">{log.service}:</span> {log.message}
                             </p>
                             <p className="text-sm text-muted-foreground">
-                              {formatDistanceToNow(parseISO(log.timestamp), { addSuffix: true })}
+                               {isClient ? formatDistanceToNow(parseISO(log.timestamp), { addSuffix: true }) : ''}
                             </p>
                           </div>
                         </div>
@@ -241,7 +241,7 @@ export default function DashboardPage() {
                                             Trigger: {wf.trigger.event}
                                         </div>
                                     </TableCell>
-                                    <TableCell className="text-right">{formatDistanceToNow(parseISO(wf.lastRun), { addSuffix: true })}</TableCell>
+                                    <TableCell className="text-right">{isClient ? formatDistanceToNow(parseISO(wf.lastRun), { addSuffix: true }) : ''}</TableCell>
                                 </TableRow>
                             ))}
                         </TableBody>

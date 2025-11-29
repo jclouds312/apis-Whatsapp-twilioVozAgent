@@ -1,3 +1,5 @@
+'use client';
+
 import { Header } from "@/components/dashboard/header";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -10,8 +12,15 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useState, useEffect } from "react";
 
 export default function ApiKeysPage() {
+    const [isClient, setIsClient] = useState(false);
+
+    useEffect(() => {
+        setIsClient(true);
+    }, []);
+
     return (
         <>
             <Header title="API Keys" />
@@ -87,7 +96,7 @@ export default function ApiKeysPage() {
                                                 {key.status}
                                             </Badge>
                                         </TableCell>
-                                        <TableCell>{new Date(key.createdAt).toLocaleDateString()}</TableCell>
+                                        <TableCell>{isClient ? new Date(key.createdAt).toLocaleDateString() : ''}</TableCell>
                                         <TableCell>
                                             <DropdownMenu>
                                                 <DropdownMenuTrigger asChild>

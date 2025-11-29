@@ -1,3 +1,5 @@
+'use client';
+
 import { Header } from "@/components/dashboard/header";
 import { WorkflowSuggester } from "@/components/dashboard/workflow-suggester";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -5,10 +7,16 @@ import { workflows } from "@/lib/data";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Circle, MessageSquare, Phone, Workflow as WorkflowIcon } from "lucide-react";
-import { Separator } from "@/components/ui/separator";
 import { RetellAgent } from "@/components/dashboard/retell-agent";
+import { useEffect, useState } from "react";
 
 export default function FunctionConnectPage() {
+    const [isClient, setIsClient] = useState(false);
+
+    useEffect(() => {
+        setIsClient(true);
+    }, []);
+
     const getIcon = (service: 'WhatsApp' | 'Twilio' | 'CRM') => {
         switch (service) {
             case 'WhatsApp': return <MessageSquare className="h-5 w-5 text-green-500" />;
@@ -60,7 +68,7 @@ export default function FunctionConnectPage() {
                                         </ol>
                                     </CardContent>
                                     <CardFooter className="bg-muted/50 p-4 flex justify-between items-center">
-                                        <p className="text-xs text-muted-foreground">Last run: {new Date(wf.lastRun).toLocaleString()}</p>
+                                        <p className="text-xs text-muted-foreground">Last run: {isClient ? new Date(wf.lastRun).toLocaleString() : ''}</p>
                                         <div>
                                             <Button variant="outline" size="sm">Edit</Button>
                                         </div>
