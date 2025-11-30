@@ -146,16 +146,16 @@ export function QuickSendWidget() {
       </CardHeader>
       <CardContent>
         <Tabs defaultValue="template" className="w-full">
-          <TabsList className="grid w-full grid-cols-3 mb-4">
-            <TabsTrigger value="template" className="gap-2">
+          <TabsList className="grid w-full grid-cols-3 mb-4 bg-muted/50">
+            <TabsTrigger value="template" className="gap-2 data-[state=active]:bg-green-500 data-[state=active]:text-white">
               <FileText className="h-4 w-4" />
               Template
             </TabsTrigger>
-            <TabsTrigger value="text" className="gap-2">
+            <TabsTrigger value="text" className="gap-2 data-[state=active]:bg-blue-500 data-[state=active]:text-white">
               <MessageSquare className="h-4 w-4" />
               Text
             </TabsTrigger>
-            <TabsTrigger value="image" className="gap-2">
+            <TabsTrigger value="image" className="gap-2 data-[state=active]:bg-purple-500 data-[state=active]:text-white">
               <Send className="h-4 w-4" />
               Image
             </TabsTrigger>

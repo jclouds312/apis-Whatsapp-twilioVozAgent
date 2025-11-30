@@ -125,19 +125,19 @@ export function ApiConfigWidget() {
             </div>
           ))}
           
-          <div className="flex items-center justify-between p-2 rounded-lg bg-blue-50 dark:bg-blue-950/30">
+          <div className="flex items-center justify-between p-3 rounded-lg bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-950/30 dark:to-indigo-950/30 border border-blue-200 dark:border-blue-800">
             <div className="flex items-center gap-2">
               <Globe className="h-4 w-4 text-blue-500" />
               <div>
                 <span className="text-sm font-medium">API Version</span>
-                <p className="text-xs text-muted-foreground">Graph API version</p>
+                <p className="text-xs text-muted-foreground">Meta Graph API version</p>
               </div>
             </div>
-            <Badge variant="outline" className="font-mono">{config?.apiVersion}</Badge>
+            <Badge variant="outline" className="font-mono bg-white dark:bg-slate-900">{config?.apiVersion}</Badge>
           </div>
 
           {config?.defaultRecipient && (
-            <div className="flex items-center justify-between p-2 rounded-lg bg-green-50 dark:bg-green-950/30">
+            <div className="flex items-center justify-between p-3 rounded-lg bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-950/30 dark:to-emerald-950/30 border border-green-200 dark:border-green-800">
               <div className="flex items-center gap-2">
                 <Phone className="h-4 w-4 text-green-500" />
                 <div>
@@ -145,7 +145,7 @@ export function ApiConfigWidget() {
                   <p className="text-xs text-muted-foreground">Pre-configured test number</p>
                 </div>
               </div>
-              <Badge variant="outline" className="font-mono">+{config.defaultRecipient}</Badge>
+              <Badge variant="outline" className="font-mono bg-white dark:bg-slate-900">+{config.defaultRecipient}</Badge>
             </div>
           )}
         </div>

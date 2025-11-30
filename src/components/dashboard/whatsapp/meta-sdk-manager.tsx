@@ -392,19 +392,36 @@ export function MetaSDKManager() {
 
   return (
     <Tabs defaultValue="messages" className="w-full">
-      <TabsList className="grid w-full grid-cols-5">
-        <TabsTrigger value="messages">Mensajes</TabsTrigger>
-        <TabsTrigger value="commerce">Comercio</TabsTrigger>
-        <TabsTrigger value="templates">Templates</TabsTrigger>
-        <TabsTrigger value="analytics">Analytics</TabsTrigger>
-        <TabsTrigger value="settings">Configuración</TabsTrigger>
+      <TabsList className="grid w-full grid-cols-5 bg-muted/50">
+        <TabsTrigger value="messages" className="data-[state=active]:bg-green-500 data-[state=active]:text-white">
+          <MapPin className="h-4 w-4 mr-2" />
+          Mensajes
+        </TabsTrigger>
+        <TabsTrigger value="commerce" className="data-[state=active]:bg-blue-500 data-[state=active]:text-white">
+          <Package className="h-4 w-4 mr-2" />
+          Comercio
+        </TabsTrigger>
+        <TabsTrigger value="templates" className="data-[state=active]:bg-purple-500 data-[state=active]:text-white">
+          <FileText className="h-4 w-4 mr-2" />
+          Templates
+        </TabsTrigger>
+        <TabsTrigger value="analytics" className="data-[state=active]:bg-orange-500 data-[state=active]:text-white">
+          <BarChart3 className="h-4 w-4 mr-2" />
+          Analytics
+        </TabsTrigger>
+        <TabsTrigger value="settings" className="data-[state=active]:bg-slate-500 data-[state=active]:text-white">
+          <Settings className="h-4 w-4 mr-2" />
+          Config
+        </TabsTrigger>
       </TabsList>
 
       <TabsContent value="messages" className="space-y-4">
-        <Card>
-          <CardHeader>
+        <Card className="border-l-4 border-l-green-500 hover:shadow-lg transition-shadow">
+          <CardHeader className="bg-gradient-to-r from-green-50/50 to-transparent dark:from-green-950/20">
             <CardTitle className="flex items-center gap-2">
-              <MapPin className="h-5 w-5" />
+              <div className="h-8 w-8 rounded-lg bg-green-500 flex items-center justify-center">
+                <MapPin className="h-5 w-5 text-white" />
+              </div>
               Enviar Ubicación
             </CardTitle>
             <CardDescription>Comparte una ubicación con coordenadas GPS</CardDescription>
@@ -455,10 +472,12 @@ export function MetaSDKManager() {
           </CardContent>
         </Card>
 
-        <Card>
-          <CardHeader>
+        <Card className="border-l-4 border-l-blue-500 hover:shadow-lg transition-shadow">
+          <CardHeader className="bg-gradient-to-r from-blue-50/50 to-transparent dark:from-blue-950/20">
             <CardTitle className="flex items-center gap-2">
-              <User className="h-5 w-5" />
+              <div className="h-8 w-8 rounded-lg bg-blue-500 flex items-center justify-center">
+                <User className="h-5 w-5 text-white" />
+              </div>
               Enviar Contacto
             </CardTitle>
             <CardDescription>Comparte una tarjeta de contacto</CardDescription>
@@ -507,10 +526,12 @@ export function MetaSDKManager() {
       </TabsContent>
 
       <TabsContent value="commerce" className="space-y-4">
-        <Card>
-          <CardHeader>
+        <Card className="border-l-4 border-l-blue-500 hover:shadow-lg transition-shadow">
+          <CardHeader className="bg-gradient-to-r from-blue-50/50 to-transparent dark:from-blue-950/20">
             <CardTitle className="flex items-center gap-2">
-              <Package className="h-5 w-5" />
+              <div className="h-8 w-8 rounded-lg bg-blue-500 flex items-center justify-center">
+                <Package className="h-5 w-5 text-white" />
+              </div>
               Gestión de Productos
             </CardTitle>
             <CardDescription>Administra tu catálogo y envía productos</CardDescription>
@@ -578,13 +599,15 @@ export function MetaSDKManager() {
       </TabsContent>
 
       <TabsContent value="templates" className="space-y-4">
-        <Card>
-          <CardHeader>
+        <Card className="border-l-4 border-l-purple-500 hover:shadow-lg transition-shadow">
+          <CardHeader className="bg-gradient-to-r from-purple-50/50 to-transparent dark:from-purple-950/20">
             <CardTitle className="flex items-center gap-2">
-              <FileText className="h-5 w-5" />
+              <div className="h-8 w-8 rounded-lg bg-purple-500 flex items-center justify-center">
+                <FileText className="h-5 w-5 text-white" />
+              </div>
               Crear Template
             </CardTitle>
-            <CardDescription>Crea templates de mensaje reutilizables</CardDescription>
+            <CardDescription>Crea templates de mensaje reutilizables y aprobados por Meta</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="grid grid-cols-2 gap-4">
@@ -635,13 +658,15 @@ export function MetaSDKManager() {
       </TabsContent>
 
       <TabsContent value="analytics" className="space-y-4">
-        <Card>
-          <CardHeader>
+        <Card className="border-l-4 border-l-orange-500 hover:shadow-lg transition-shadow">
+          <CardHeader className="bg-gradient-to-r from-orange-50/50 to-transparent dark:from-orange-950/20">
             <CardTitle className="flex items-center gap-2">
-              <BarChart3 className="h-5 w-5" />
+              <div className="h-8 w-8 rounded-lg bg-orange-500 flex items-center justify-center">
+                <BarChart3 className="h-5 w-5 text-white" />
+              </div>
               Analytics y Métricas
             </CardTitle>
-            <CardDescription>Estadísticas de uso y rendimiento</CardDescription>
+            <CardDescription>Estadísticas de uso y rendimiento de WhatsApp Business</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="grid grid-cols-2 gap-4">
@@ -690,13 +715,15 @@ export function MetaSDKManager() {
       </TabsContent>
 
       <TabsContent value="settings" className="space-y-4">
-        <Card>
-          <CardHeader>
+        <Card className="border-l-4 border-l-slate-500 hover:shadow-lg transition-shadow">
+          <CardHeader className="bg-gradient-to-r from-slate-50/50 to-transparent dark:from-slate-950/20">
             <CardTitle className="flex items-center gap-2">
-              <Settings className="h-5 w-5" />
+              <div className="h-8 w-8 rounded-lg bg-slate-500 flex items-center justify-center">
+                <Settings className="h-5 w-5 text-white" />
+              </div>
               Perfil de Negocio
             </CardTitle>
-            <CardDescription>Actualiza la información de tu negocio</CardDescription>
+            <CardDescription>Actualiza la información pública de tu negocio</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div>
@@ -732,13 +759,15 @@ export function MetaSDKManager() {
           </CardContent>
         </Card>
 
-        <Card>
-          <CardHeader>
+        <Card className="border-l-4 border-l-indigo-500 hover:shadow-lg transition-shadow">
+          <CardHeader className="bg-gradient-to-r from-indigo-50/50 to-transparent dark:from-indigo-950/20">
             <CardTitle className="flex items-center gap-2">
-              <Globe className="h-5 w-5" />
+              <div className="h-8 w-8 rounded-lg bg-indigo-500 flex items-center justify-center">
+                <Globe className="h-5 w-5 text-white" />
+              </div>
               Webhooks
             </CardTitle>
-            <CardDescription>Configurar suscripciones de eventos</CardDescription>
+            <CardDescription>Configurar suscripciones de eventos en tiempo real</CardDescription>
           </CardHeader>
           <CardContent>
             <Button onClick={handleSubscribeWebhook} disabled={loading}>

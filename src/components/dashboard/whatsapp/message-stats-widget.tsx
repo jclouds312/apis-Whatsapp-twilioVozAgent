@@ -120,9 +120,11 @@ export function MessageStatsWidget() {
       <CardContent className="space-y-4">
         <div className="grid grid-cols-3 gap-4">
           {statItems.map((item) => (
-            <div key={item.label} className={`p-4 rounded-lg ${item.bgColor}`}>
+            <div key={item.label} className={`p-4 rounded-lg ${item.bgColor} border-2 border-transparent hover:border-current transition-all cursor-pointer`}>
               <div className="flex items-center gap-2 mb-2">
-                <item.icon className={`h-4 w-4 ${item.color}`} />
+                <div className={`p-1.5 rounded-md bg-white dark:bg-slate-900`}>
+                  <item.icon className={`h-4 w-4 ${item.color}`} />
+                </div>
                 <span className="text-sm font-medium">{item.label}</span>
               </div>
               <div className="text-2xl font-bold">{item.value.toLocaleString()}</div>
