@@ -4,7 +4,7 @@ import { SidebarProvider, Sidebar, SidebarHeader, SidebarContent, SidebarFooter 
 import Link from 'next/link';
 import { DashboardNav } from '@/components/dashboard/dashboard-nav';
 import { FirebaseClientProvider, useUser, useAuth } from '@/firebase';
-import { onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword } from 'firebase/auth';
+import { signInWithEmailAndPassword, createUserWithEmailAndPassword } from 'firebase/auth';
 import { redirect } from 'next/navigation';
 import { useEffect, useState } from 'react';
 
