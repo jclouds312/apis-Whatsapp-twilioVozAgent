@@ -3,8 +3,8 @@
 import { SidebarProvider, Sidebar, SidebarHeader, SidebarContent, SidebarFooter } from '@/components/ui/sidebar';
 import Link from 'next/link';
 import { DashboardNav } from '@/components/dashboard/dashboard-nav';
-import { FirebaseClientProvider, useUser, useAuth, initiateEmailSignIn, initiateEmailSignUp } from '@/firebase';
-import { onAuthStateChanged } from 'firebase/auth';
+import { FirebaseClientProvider, useUser, useAuth } from '@/firebase';
+import { onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword } from 'firebase/auth';
 import { redirect } from 'next/navigation';
 import { useEffect, useState } from 'react';
 
@@ -73,14 +73,14 @@ function ProtectedDashboardLayout({ children }: { children: React.ReactNode }) {
         try {
           // Firebase sign-in returns a promise that rejects on failure
           // We can't use the non-blocking version here as we need to react to the failure.
-          await auth.signInWithEmailAndPassword('admin@example.com', 'password');
+          await signInWithEmailAndPassword(auth, 'admin@example.com', 'password');
           // onAuthStateChanged will handle the rest.
         } catch (error: any) {
           // If sign-in fails because the user doesn't exist, create it.
           if (error.code === 'auth/user-not-found' || error.code === 'auth/invalid-credential') {
             console.log("User not found, attempting to create a new user...");
             try {
-              await auth.createUserWithEmailAndPassword('admin@example.com', 'password');
+              await createUserWithEmailAndPassword(auth, 'admin@example.com', 'password');
               // onAuthStateChanged will now pick up the new user.
             } catch (signUpError) {
               console.error("Failed to create user after login failed:", signUpError);
