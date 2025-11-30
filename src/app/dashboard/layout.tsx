@@ -60,7 +60,7 @@ function ProtectedDashboardLayout({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     if (!isUserLoading && !user) {
-      redirect('/login');
+      redirect('/');
     }
   }, [user, isUserLoading]);
 
