@@ -7,10 +7,11 @@ import { initializeApp, getApps, getApp } from 'firebase/app';
 import { firebaseConfig } from '@/firebase/config';
 
 const WHATSAPP_ACCESS_TOKEN = process.env.WHATSAPP_ACCESS_TOKEN;
-const WHATSAPP_PHONE_NUMBER_ID = process.env.WHATSAPP_PHONE_NUMBER_ID;
+const WHATSAPP_PHONE_NUMBER_ID = process.env.WHATSAPP_PHONE_NUMBER_ID || '882779844920111';
 const META_APP_ID = process.env.META_APP_ID;
 const META_APP_SECRET = process.env.META_APP_SECRET;
-const API_VERSION = 'v21.0';
+const API_VERSION = 'v22.0';
+const DEFAULT_RECIPIENT = '573205434546';
 
 async function getDb() {
   if (!getApps().length) {
@@ -431,6 +432,8 @@ export async function getWhatsAppConfigStatus(): Promise<{
   hasMetaAppId: boolean;
   hasMetaAppSecret: boolean;
   apiVersion: string;
+  phoneNumberId: string;
+  defaultRecipient: string;
 }> {
   return {
     isConfigured: !!(WHATSAPP_ACCESS_TOKEN && WHATSAPP_PHONE_NUMBER_ID),
@@ -439,5 +442,195 @@ export async function getWhatsAppConfigStatus(): Promise<{
     hasMetaAppId: !!META_APP_ID,
     hasMetaAppSecret: !!META_APP_SECRET,
     apiVersion: API_VERSION,
+    phoneNumberId: WHATSAPP_PHONE_NUMBER_ID,
+    defaultRecipient: DEFAULT_RECIPIENT,
   };
+}
+
+/**
+ * Gets the phone number information from WhatsApp Business API.
+ * @returns Phone number details or an error.
+ */
+export async function getPhoneNumberInfo(): Promise<{
+  success: boolean;
+  error?: string;
+  phoneNumber?: {
+    verified_name?: string;
+    display_phone_number?: string;
+    quality_rating?: string;
+    platform_type?: string;
+    throughput?: { level: string };
+    id?: string;
+  };
+}> {
+  if (!WHATSAPP_ACCESS_TOKEN || !WHATSAPP_PHONE_NUMBER_ID) {
+    return { success: false, error: 'Server is not configured for WhatsApp API.' };
+  }
+
+  const url = `https://graph.facebook.com/${API_VERSION}/${WHATSAPP_PHONE_NUMBER_ID}?fields=verified_name,display_phone_number,quality_rating,platform_type,throughput`;
+
+  const headers = {
+    Authorization: `Bearer ${WHATSAPP_ACCESS_TOKEN}`,
+  };
+
+  try {
+    const response = await axios.get(url, { headers });
+    console.log('Phone number info fetched:', response.data);
+    return { success: true, phoneNumber: response.data };
+  } catch (error: any) {
+    const errorMessage =
+      error.response?.data?.error?.message ||
+      error.message ||
+      'An unknown error occurred.';
+    console.error('Failed to get phone number info:', errorMessage);
+    return { success: false, error: errorMessage };
+  }
+}
+
+/**
+ * Gets available message templates from WhatsApp Business API.
+ * @returns List of templates or an error.
+ */
+export async function getMessageTemplates(): Promise<{
+  success: boolean;
+  error?: string;
+  templates?: Array<{
+    name: string;
+    status: string;
+    category: string;
+    language: string;
+    id: string;
+  }>;
+}> {
+  if (!WHATSAPP_ACCESS_TOKEN || !META_APP_ID) {
+    return { success: false, error: 'Server is not configured for WhatsApp API. Need META_APP_ID.' };
+  }
+
+  const url = `https://graph.facebook.com/${API_VERSION}/${META_APP_ID}/message_templates?fields=name,status,category,language`;
+
+  const headers = {
+    Authorization: `Bearer ${WHATSAPP_ACCESS_TOKEN}`,
+  };
+
+  try {
+    const response = await axios.get(url, { headers });
+    console.log('Templates fetched:', response.data);
+    return { 
+      success: true, 
+      templates: response.data.data?.map((t: any) => ({
+        name: t.name,
+        status: t.status,
+        category: t.category,
+        language: t.language,
+        id: t.id
+      })) || []
+    };
+  } catch (error: any) {
+    const errorMessage =
+      error.response?.data?.error?.message ||
+      error.message ||
+      'An unknown error occurred.';
+    console.error('Failed to get templates:', errorMessage);
+    return { success: false, error: errorMessage };
+  }
+}
+
+/**
+ * Quick send a hello_world template message.
+ * Uses the default configuration from environment.
+ * @param to Optional recipient phone number, defaults to configured recipient.
+ * @returns An object indicating success or failure.
+ */
+export async function sendQuickHelloWorld(
+  to?: string
+): Promise<{ success: boolean; error?: string; messageId?: string; curlCommand?: string }> {
+  const recipient = to || DEFAULT_RECIPIENT;
+  
+  const curlCommand = `curl -i -X POST \\
+  https://graph.facebook.com/${API_VERSION}/${WHATSAPP_PHONE_NUMBER_ID}/messages \\
+  -H 'Authorization: Bearer <access_token>' \\
+  -H 'Content-Type: application/json' \\
+  -d '{ "messaging_product": "whatsapp", "to": "${recipient}", "type": "template", "template": { "name": "hello_world", "language": { "code": "en_US" } } }'`;
+
+  const result = await sendWhatsAppTemplate(recipient, 'hello_world', 'en_US');
+  
+  return {
+    ...result,
+    curlCommand
+  };
+}
+
+/**
+ * Gets message statistics from the API logs in Firestore.
+ * @returns Message statistics or an error.
+ */
+export async function getMessageStats(): Promise<{
+  success: boolean;
+  error?: string;
+  stats?: {
+    totalSent: number;
+    totalReceived: number;
+    totalErrors: number;
+    last24Hours: {
+      sent: number;
+      received: number;
+      errors: number;
+    };
+  };
+}> {
+  try {
+    const db = await getDb();
+    const logsCollection = collection(db, 'apiLogs');
+    
+    const { getDocs, query, where } = await import('firebase/firestore');
+    
+    const allLogsQuery = query(logsCollection, where('endpoint', 'in', ['/api/whatsapp', 'WhatsApp Webhook']));
+    const snapshot = await getDocs(allLogsQuery);
+    
+    const now = new Date();
+    const last24Hours = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+    
+    let totalSent = 0;
+    let totalReceived = 0;
+    let totalErrors = 0;
+    let sent24h = 0;
+    let received24h = 0;
+    let errors24h = 0;
+    
+    snapshot.forEach((doc) => {
+      const data = doc.data();
+      const logDate = new Date(data.timestamp);
+      const isRecent = logDate >= last24Hours;
+      
+      if (data.endpoint === '/api/whatsapp') {
+        totalSent++;
+        if (isRecent) sent24h++;
+      } else if (data.endpoint === 'WhatsApp Webhook') {
+        totalReceived++;
+        if (isRecent) received24h++;
+      }
+      
+      if (data.level === 'error') {
+        totalErrors++;
+        if (isRecent) errors24h++;
+      }
+    });
+    
+    return {
+      success: true,
+      stats: {
+        totalSent,
+        totalReceived,
+        totalErrors,
+        last24Hours: {
+          sent: sent24h,
+          received: received24h,
+          errors: errors24h
+        }
+      }
+    };
+  } catch (error: any) {
+    console.error('Failed to get message stats:', error);
+    return { success: false, error: error.message };
+  }
 }

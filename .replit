@@ -1,4 +1,4 @@
-modules = ["nodejs-20", "web", "nix"]
+modules = ["nodejs-20", "web", "nix", "python-3.9", "php-8.4", "nodejs-24", "java-graalvm22.3", "go-1.24", "angular-node-24"]
 [agent]
 expertMode = true
 
@@ -34,7 +34,7 @@ localPort = 5000
 externalPort = 80
 
 [[ports]]
-localPort = 37093
+localPort = 36711
 externalPort = 3000
 
 [deployment]

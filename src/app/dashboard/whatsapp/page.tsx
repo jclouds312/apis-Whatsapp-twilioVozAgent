@@ -4,6 +4,10 @@
 import { useEffect, useState } from "react";
 import { Header } from "@/components/dashboard/header";
 import { ChatLayout } from "@/components/dashboard/whatsapp/chat-layout";
+import { ApiConfigWidget } from "@/components/dashboard/whatsapp/api-config-widget";
+import { QuickSendWidget } from "@/components/dashboard/whatsapp/quick-send-widget";
+import { MessageStatsWidget } from "@/components/dashboard/whatsapp/message-stats-widget";
+import { BusinessProfileWidget } from "@/components/dashboard/whatsapp/business-profile-widget";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { StatCard } from "@/components/dashboard/stat-card";
 import { CheckCircle, MessageSquare, Send, Workflow, XCircle } from "lucide-react";
@@ -16,6 +20,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge";
 import { format, parseISO } from "date-fns";
 import { cn } from "@/lib/utils";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 const initialMessageTraffic = Array.from({ length: 15 }, (_, i) => {
     const d = new Date();
@@ -148,85 +153,178 @@ export default function WhatsAppPage() {
                     />
                 </div>
 
-                <div className="p-4 lg:p-6 pt-0 grid gap-6 lg:grid-cols-5">
-                    <Card className="lg:col-span-3 transition-all hover:shadow-lg">
-                        <CardHeader>
-                            <CardTitle>Message Traffic</CardTitle>
-                            <CardDescription>Live volume of sent vs. received messages from logs.</CardDescription>
-                        </CardHeader>
-                        <CardContent>
-                            <AreaChartComponent 
-                                data={messageTraffic} 
-                                dataKey="Sent"
-                                dataKey2="Received"
-                                xAxisKey="date" 
-                            />
-                        </CardContent>
-                    </Card>
-                     <Card className="lg:col-span-2 transition-all hover:shadow-lg">
-                        <CardHeader>
-                            <CardTitle>Recent WhatsApp Activity</CardTitle>
-                            <CardDescription>Live feed of API events from Firestore.</CardDescription>
-                        </CardHeader>
-                        <CardContent>
-                            <Table>
-                                <TableHeader>
-                                    <TableRow>
-                                        <TableHead>Time</TableHead>
-                                        <TableHead>Level</TableHead>
-                                        <TableHead>Message</TableHead>
-                                    </TableRow>
-                                </TableHeader>
-                                <TableBody>
-                                    {isLoadingLogs && Array.from({length: 3}).map((_, i) => (
-                                        <TableRow key={i}>
-                                            <TableCell><Skeleton className="h-4 w-16" /></TableCell>
-                                            <TableCell><Skeleton className="h-6 w-16 rounded-full" /></TableCell>
-                                            <TableCell><Skeleton className="h-4 w-full" /></TableCell>
-                                        </TableRow>
-                                    ))}
-                                    {whatsappLogs.map(log => (
-                                        <TableRow key={log.id}>
-                                            <TableCell className="text-muted-foreground text-xs whitespace-nowrap">{format(parseISO(log.timestamp), 'HH:mm:ss')}</TableCell>
-                                            <TableCell>
-                                                <Badge variant="outline" className={cn("text-xs", getLogLevelClass(log.level))}>
-                                                    {log.level}
-                                                </Badge>
-                                            </TableCell>
-                                            <TableCell className="text-xs">{`Status ${log.statusCode}`}</TableCell>
-                                        </TableRow>
-                                    ))}
-                                    {!isLoadingLogs && whatsappLogs.length === 0 && (
-                                        <TableRow>
-                                            <TableCell colSpan={3} className="text-center text-muted-foreground p-4">No WhatsApp logs found.</TableCell>
-                                        </TableRow>
-                                    )}
-                                </TableBody>
-                            </Table>
-                        </CardContent>
-                    </Card>
-                </div>
+                <Tabs defaultValue="dashboard" className="p-4 lg:p-6 pt-0">
+                    <TabsList className="mb-4">
+                        <TabsTrigger value="dashboard">Dashboard</TabsTrigger>
+                        <TabsTrigger value="send">Send Messages</TabsTrigger>
+                        <TabsTrigger value="conversations">Conversations</TabsTrigger>
+                        <TabsTrigger value="settings">API Settings</TabsTrigger>
+                    </TabsList>
 
-                <div className="flex-1 px-4 lg:px-6 pb-6 h-[700px]">
-                     {isLoadingConversations && <Skeleton className="h-full w-full rounded-lg" />}
-                     {!isLoadingConversations && (
-                         <ChatLayout
-                            defaultLayout={[25, 45, 30]}
-                            navCollapsedSize={8}
-                            conversations={conversations || []}
-                            currentUserAvatar={user?.photoURL || `https://picsum.photos/seed/${user?.uid || 'user'}/100/100`}
-                        />
-                     )}
-                     {!isLoadingConversations && !conversations?.length && (
-                         <div className="h-full w-full rounded-lg border flex items-center justify-center bg-muted">
-                            <div className="text-center">
-                                <MessageSquare className="mx-auto h-12 w-12 text-gray-400" />
-                                <h3 className="mt-2 text-sm font-medium text-gray-900 dark:text-gray-200">No conversations</h3>
-                                <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">Conversations from WhatsApp will appear here automatically.</p>
+                    <TabsContent value="dashboard" className="space-y-6">
+                        <div className="grid gap-6 lg:grid-cols-5">
+                            <Card className="lg:col-span-3 transition-all hover:shadow-lg">
+                                <CardHeader>
+                                    <CardTitle>Message Traffic</CardTitle>
+                                    <CardDescription>Live volume of sent vs. received messages from logs.</CardDescription>
+                                </CardHeader>
+                                <CardContent>
+                                    <AreaChartComponent 
+                                        data={messageTraffic} 
+                                        dataKey="Sent"
+                                        dataKey2="Received"
+                                        xAxisKey="date" 
+                                    />
+                                </CardContent>
+                            </Card>
+                            <Card className="lg:col-span-2 transition-all hover:shadow-lg">
+                                <CardHeader>
+                                    <CardTitle>Recent WhatsApp Activity</CardTitle>
+                                    <CardDescription>Live feed of API events from Firestore.</CardDescription>
+                                </CardHeader>
+                                <CardContent>
+                                    <Table>
+                                        <TableHeader>
+                                            <TableRow>
+                                                <TableHead>Time</TableHead>
+                                                <TableHead>Level</TableHead>
+                                                <TableHead>Message</TableHead>
+                                            </TableRow>
+                                        </TableHeader>
+                                        <TableBody>
+                                            {isLoadingLogs && Array.from({length: 3}).map((_, i) => (
+                                                <TableRow key={i}>
+                                                    <TableCell><Skeleton className="h-4 w-16" /></TableCell>
+                                                    <TableCell><Skeleton className="h-6 w-16 rounded-full" /></TableCell>
+                                                    <TableCell><Skeleton className="h-4 w-full" /></TableCell>
+                                                </TableRow>
+                                            ))}
+                                            {whatsappLogs.map(log => (
+                                                <TableRow key={log.id}>
+                                                    <TableCell className="text-muted-foreground text-xs whitespace-nowrap">{format(parseISO(log.timestamp), 'HH:mm:ss')}</TableCell>
+                                                    <TableCell>
+                                                        <Badge variant="outline" className={cn("text-xs", getLogLevelClass(log.level))}>
+                                                            {log.level}
+                                                        </Badge>
+                                                    </TableCell>
+                                                    <TableCell className="text-xs">{`Status ${log.statusCode}`}</TableCell>
+                                                </TableRow>
+                                            ))}
+                                            {!isLoadingLogs && whatsappLogs.length === 0 && (
+                                                <TableRow>
+                                                    <TableCell colSpan={3} className="text-center text-muted-foreground p-4">No WhatsApp logs found.</TableCell>
+                                                </TableRow>
+                                            )}
+                                        </TableBody>
+                                    </Table>
+                                </CardContent>
+                            </Card>
+                        </div>
+                        
+                        <div className="grid gap-6 lg:grid-cols-2">
+                            <MessageStatsWidget />
+                            <BusinessProfileWidget />
+                        </div>
+                    </TabsContent>
+
+                    <TabsContent value="send" className="space-y-6">
+                        <div className="grid gap-6 lg:grid-cols-2">
+                            <QuickSendWidget />
+                            <div className="space-y-6">
+                                <ApiConfigWidget />
+                                <Card className="transition-all hover:shadow-lg">
+                                    <CardHeader>
+                                        <CardTitle className="text-lg">API Endpoint Reference</CardTitle>
+                                        <CardDescription>Meta WhatsApp Cloud API v22.0</CardDescription>
+                                    </CardHeader>
+                                    <CardContent className="space-y-4">
+                                        <div className="p-3 rounded-lg bg-slate-100 dark:bg-slate-900">
+                                            <p className="text-xs text-muted-foreground mb-1">Messages Endpoint</p>
+                                            <code className="text-sm font-mono break-all">
+                                                POST https://graph.facebook.com/v22.0/882779844920111/messages
+                                            </code>
+                                        </div>
+                                        <div className="p-3 rounded-lg bg-slate-100 dark:bg-slate-900">
+                                            <p className="text-xs text-muted-foreground mb-1">Required Headers</p>
+                                            <code className="text-sm font-mono block">Authorization: Bearer &lt;access_token&gt;</code>
+                                            <code className="text-sm font-mono block">Content-Type: application/json</code>
+                                        </div>
+                                        <div className="text-xs text-muted-foreground">
+                                            <p className="font-medium mb-1">Supported Message Types:</p>
+                                            <ul className="list-disc list-inside space-y-1">
+                                                <li>Text messages</li>
+                                                <li>Template messages (hello_world, etc.)</li>
+                                                <li>Image messages with captions</li>
+                                                <li>Interactive button messages</li>
+                                            </ul>
+                                        </div>
+                                    </CardContent>
+                                </Card>
                             </div>
                         </div>
-                     )}
-                </div>
+                    </TabsContent>
+
+                    <TabsContent value="conversations">
+                        <div className="h-[700px]">
+                            {isLoadingConversations && <Skeleton className="h-full w-full rounded-lg" />}
+                            {!isLoadingConversations && conversations && conversations.length > 0 && (
+                                <ChatLayout
+                                    defaultLayout={[25, 45, 30]}
+                                    navCollapsedSize={8}
+                                    conversations={conversations || []}
+                                    currentUserAvatar={user?.photoURL || `https://picsum.photos/seed/${user?.uid || 'user'}/100/100`}
+                                />
+                            )}
+                            {!isLoadingConversations && !conversations?.length && (
+                                <div className="h-full w-full rounded-lg border flex items-center justify-center bg-muted">
+                                    <div className="text-center">
+                                        <MessageSquare className="mx-auto h-12 w-12 text-gray-400" />
+                                        <h3 className="mt-2 text-sm font-medium text-gray-900 dark:text-gray-200">No conversations</h3>
+                                        <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">Conversations from WhatsApp will appear here automatically.</p>
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+                    </TabsContent>
+
+                    <TabsContent value="settings" className="space-y-6">
+                        <div className="grid gap-6 lg:grid-cols-2">
+                            <ApiConfigWidget />
+                            <BusinessProfileWidget />
+                        </div>
+                        <Card>
+                            <CardHeader>
+                                <CardTitle>Webhook Configuration</CardTitle>
+                                <CardDescription>Configure your Meta App webhook to receive WhatsApp messages</CardDescription>
+                            </CardHeader>
+                            <CardContent className="space-y-4">
+                                <div className="grid gap-4 md:grid-cols-2">
+                                    <div className="p-4 rounded-lg bg-muted/50">
+                                        <p className="text-sm font-medium mb-2">Webhook URL</p>
+                                        <code className="text-xs font-mono break-all p-2 rounded bg-slate-100 dark:bg-slate-900 block">
+                                            {typeof window !== 'undefined' ? `${window.location.origin}/api/whatsapp` : '/api/whatsapp'}
+                                        </code>
+                                    </div>
+                                    <div className="p-4 rounded-lg bg-muted/50">
+                                        <p className="text-sm font-medium mb-2">Verify Token</p>
+                                        <code className="text-xs font-mono p-2 rounded bg-slate-100 dark:bg-slate-900 block">
+                                            Set in WHATSAPP_VERIFY_TOKEN env var
+                                        </code>
+                                    </div>
+                                </div>
+                                <div className="p-4 rounded-lg bg-blue-50 dark:bg-blue-950/30">
+                                    <p className="text-sm font-medium text-blue-700 dark:text-blue-300 mb-2">Webhook Fields to Subscribe</p>
+                                    <ul className="text-xs text-blue-600 dark:text-blue-400 list-disc list-inside space-y-1">
+                                        <li>messages - Incoming messages from users</li>
+                                        <li>message_deliveries - Delivery status updates</li>
+                                        <li>message_reads - Read receipts</li>
+                                        <li>messaging_postbacks - Button click callbacks</li>
+                                    </ul>
+                                </div>
+                            </CardContent>
+                        </Card>
+                    </TabsContent>
+                </Tabs>
             </main>
         </>
     )
