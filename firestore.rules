@@ -21,10 +21,21 @@ service cloud.firestore {
       allow read, write: if isOwner(userId);
     }
     
-    // Global Collections
-    // apiLogs collection is publicly readable for listing, but not writable from the client.
+    // --- Global Collections ---
+
+    // Rule for the entire apiLogs collection
+    match /apiLogs {
+      // Allow anyone to list the collection
+      allow list: if true;
+      // Deny writing to the collection directly
+      allow write: if false; 
+    }
+
+    // Rule for individual documents within apiLogs
     match /apiLogs/{apiLogId} {
-        allow list, get: if true;
+        // Allow anyone to get a single document
+        allow get: if true;
+        // Deny writing from the client
         allow write: if false;
     }
 
