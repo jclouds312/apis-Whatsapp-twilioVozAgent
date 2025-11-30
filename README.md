@@ -48,3 +48,155 @@ This project is configured for a quick and easy deployment on [Vercel](https://v
 3.  **Create a Git Repository**: Push the project code to a GitHub, GitLab, or Bitbucket repository.
 4.  **Import the Project in Vercel**: From your Vercel dashboard, import the repository you just created. Vercel will automatically detect that it's a Next.js project.
 5.  **Deploy**: Click "Deploy". Vercel will handle the rest and provide you with a URL for your live application. After deployment, use the provided URL to set up your webhook in the Meta Developer portal.
+# WhatsApp Business Integration Platform v1.0.0
+
+## 🎉 Nuevas Características
+
+### WhatsApp Integration v1.0
+- ✅ **Envío de mensajes de texto** via WhatsApp Business API
+- ✅ **Envío de imágenes** con caption opcional
+- ✅ **Plantillas de mensajes** (templates) con soporte multiidioma
+- ✅ **Estados de mensajes** (enviado, entregado, leído)
+- ✅ **Chat en tiempo real** con Firebase Firestore
+- ✅ **Gestión de conversaciones** con panel de contacto
+- ✅ **Estadísticas en vivo** de mensajes
+- ✅ **Perfil de negocio** integrado
+- ✅ **Webhooks** para recepción de mensajes
+- ✅ **Logs de API** detallados
+
+## 🚀 Mejoras de Interfaz
+
+### Chat Mejorado
+- Indicadores de estado de mensaje (reloj, check, doble check)
+- Timestamps en cada mensaje
+- Soporte para envío de imágenes
+- Mejores animaciones y transiciones
+- Avatar personalizado por usuario
+
+### Widget de Envío Rápido
+- 3 modos de envío: Templates, Texto, Imágenes
+- Selector de idioma para templates
+- Generador de comandos cURL
+- Validación mejorada de inputs
+- Estados de carga y error
+
+### Panel de Estadísticas
+- Tasa de éxito de mensajes
+- Estadísticas de últimas 24 horas
+- Gráficos en tiempo real
+- Logs de actividad reciente
+
+## 📋 Requisitos de Configuración
+
+### Variables de Entorno Necesarias
+
+```env
+# WhatsApp Business API
+WHATSAPP_ACCESS_TOKEN=your_access_token
+WHATSAPP_PHONE_NUMBER_ID=882779844920111
+META_APP_ID=your_meta_app_id
+META_APP_SECRET=your_meta_app_secret
+WHATSAPP_VERIFY_TOKEN=your_verify_token
+
+# Firebase
+NEXT_PUBLIC_FIREBASE_API_KEY=your_api_key
+NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=your_domain
+NEXT_PUBLIC_FIREBASE_PROJECT_ID=your_project_id
+```
+
+## 🔧 Configuración del Webhook
+
+1. **URL del Webhook**: `https://your-repl-url.replit.app/api/whatsapp`
+2. **Token de Verificación**: Usar `WHATSAPP_VERIFY_TOKEN`
+3. **Campos a Suscribir**:
+   - messages
+   - message_deliveries
+   - message_reads
+   - messaging_postbacks
+
+## 📊 Funcionalidades de API
+
+### Endpoints Disponibles
+
+- `POST /api/whatsapp` - Webhook para recibir mensajes
+- `GET /api/whatsapp` - Verificación del webhook
+
+### Actions del Servidor
+
+- `sendWhatsAppMessage()` - Enviar mensaje de texto
+- `sendWhatsAppImage()` - Enviar imagen con caption
+- `sendWhatsAppTemplate()` - Enviar template
+- `sendWhatsAppInteractiveButtons()` - Enviar botones interactivos
+- `getBusinessProfile()` - Obtener perfil de negocio
+- `getPhoneNumberInfo()` - Info del número de teléfono
+- `getMessageTemplates()` - Listar templates disponibles
+- `getMessageStats()` - Estadísticas de mensajes
+- `markMessageAsRead()` - Marcar mensaje como leído
+
+## 🎨 Tecnologías Utilizadas
+
+- **Next.js 15.3.3** - Framework React con Turbopack
+- **Firebase** - Base de datos en tiempo real
+- **WhatsApp Business API v22.0** - Mensajería
+- **Tailwind CSS** - Estilos
+- **shadcn/ui** - Componentes UI
+- **Framer Motion** - Animaciones
+- **Recharts** - Gráficos
+
+## 🔐 Seguridad
+
+- Autenticación con Firebase Auth
+- Validación de webhooks con tokens
+- Firestore Security Rules configuradas
+- Rate limiting en API calls
+- Logs detallados de todas las operaciones
+
+## 📱 Uso
+
+1. Configura las variables de entorno
+2. Ejecuta `npm install`
+3. Inicia el servidor: `npm run dev`
+4. Accede a `/dashboard/whatsapp`
+5. Configura el webhook en Meta Developer Console
+6. ¡Comienza a enviar mensajes!
+
+## 🐛 Troubleshooting
+
+### El webhook no recibe mensajes
+- Verifica que el `WHATSAPP_VERIFY_TOKEN` sea correcto
+- Asegúrate de que la URL del webhook esté accesible públicamente
+- Revisa los logs en `/dashboard/logs`
+
+### Los mensajes no se envían
+- Verifica el `WHATSAPP_ACCESS_TOKEN`
+- Confirma que el número de teléfono esté verificado
+- Revisa el formato del número del destinatario (sin + ni espacios)
+
+### Errores de conexión con Firebase
+- Verifica todas las variables `NEXT_PUBLIC_FIREBASE_*`
+- Confirma que las reglas de Firestore permitan lectura/escritura
+- Revisa la consola de Firebase para errores
+
+## 📝 Notas de la Versión 1.0.0
+
+- Primera versión estable de la integración WhatsApp
+- Interfaz completamente funcional
+- Soporte completo para mensajes multimedia
+- Sistema de estadísticas en tiempo real
+- Documentación completa
+- Mejoras de rendimiento y UX
+
+## 🚀 Próximas Características
+
+- [ ] Soporte para audio y video
+- [ ] Mensajes programados
+- [ ] Respuestas automáticas con IA
+- [ ] Exportación de conversaciones
+- [ ] Multi-agente support
+- [ ] Analytics avanzados
+
+---
+
+**Version**: 1.0.0  
+**Last Updated**: 2025  
+**License**: MIT

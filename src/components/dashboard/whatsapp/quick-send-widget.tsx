@@ -19,6 +19,8 @@ export function QuickSendWidget() {
   const [message, setMessage] = useState('');
   const [templateName, setTemplateName] = useState('hello_world');
   const [languageCode, setLanguageCode] = useState('en_US');
+  const [imageUrl, setImageUrl] = useState('');
+  const [imageCaption, setImageCaption] = useState('');
   const [lastResult, setLastResult] = useState<{ success: boolean; error?: string; messageId?: string } | null>(null);
   const [showCurl, setShowCurl] = useState(false);
   const { toast } = useToast();
@@ -85,6 +87,32 @@ export function QuickSendWidget() {
     }
   };
 
+  const handleSendImage = async () => {
+    if (!imageUrl.trim()) {
+      toast({ title: 'Error', description: 'Please enter an image URL', variant: 'destructive' });
+      return;
+    }
+    setLoading(true);
+    setLastResult(null);
+    try {
+      const { sendWhatsAppImage } = await import('@/app/dashboard/whatsapp/actions');
+      const result = await sendWhatsAppImage(recipient, imageUrl, imageCaption || undefined);
+      setLastResult(result);
+      if (result.success) {
+        toast({ title: 'Image sent!', description: `Image delivered to +${recipient}` });
+        setImageUrl('');
+        setImageCaption('');
+      } else {
+        toast({ title: 'Failed to send', description: result.error, variant: 'destructive' });
+      }
+    } catch (error: any) {
+      setLastResult({ success: false, error: error.message });
+      toast({ title: 'Error', description: error.message, variant: 'destructive' });
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const curlExample = `curl -i -X POST \\
   https://graph.facebook.com/v22.0/882779844920111/messages \\
   -H 'Authorization: Bearer <access_token>' \\
@@ -118,7 +146,7 @@ export function QuickSendWidget() {
       </CardHeader>
       <CardContent>
         <Tabs defaultValue="template" className="w-full">
-          <TabsList className="grid w-full grid-cols-2 mb-4">
+          <TabsList className="grid w-full grid-cols-3 mb-4">
             <TabsTrigger value="template" className="gap-2">
               <FileText className="h-4 w-4" />
               Template
@@ -126,6 +154,10 @@ export function QuickSendWidget() {
             <TabsTrigger value="text" className="gap-2">
               <MessageSquare className="h-4 w-4" />
               Text
+            </TabsTrigger>
+            <TabsTrigger value="image" className="gap-2">
+              <Send className="h-4 w-4" />
+              Image
             </TabsTrigger>
           </TabsList>
 
@@ -212,6 +244,40 @@ export function QuickSendWidget() {
             >
               {loading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Send className="h-4 w-4 mr-2" />}
               Send Message
+            </Button>
+          </TabsContent>
+
+          <TabsContent value="image" className="space-y-4">
+            <div>
+              <Label htmlFor="imageUrl">Image URL</Label>
+              <Input
+                id="imageUrl"
+                placeholder="https://example.com/image.jpg"
+                value={imageUrl}
+                onChange={(e) => setImageUrl(e.target.value)}
+                className="mt-1"
+              />
+              <p className="text-xs text-muted-foreground mt-1">Enter a publicly accessible image URL</p>
+            </div>
+
+            <div>
+              <Label htmlFor="imageCaption">Caption (Optional)</Label>
+              <Textarea
+                id="imageCaption"
+                placeholder="Add a caption for your image..."
+                value={imageCaption}
+                onChange={(e) => setImageCaption(e.target.value)}
+                className="mt-1 min-h-[80px]"
+              />
+            </div>
+
+            <Button 
+              onClick={handleSendImage} 
+              disabled={loading || !imageUrl.trim()}
+              className="w-full bg-green-600 hover:bg-green-700"
+            >
+              {loading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Send className="h-4 w-4 mr-2" />}
+              Send Image
             </Button>
           </TabsContent>
         </Tabs>

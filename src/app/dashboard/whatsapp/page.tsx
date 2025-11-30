@@ -162,10 +162,13 @@ export default function WhatsAppPage() {
 
                     <TabsContent value="dashboard" className="space-y-6">
                         <div className="grid gap-6 lg:grid-cols-5">
-                            <Card className="lg:col-span-3 transition-all hover:shadow-lg">
-                                <CardHeader>
-                                    <CardTitle>Message Traffic</CardTitle>
-                                    <CardDescription>Live volume of sent vs. received messages from logs.</CardDescription>
+                            <Card className="lg:col-span-3 transition-all hover:shadow-lg border-2">
+                                <CardHeader className="pb-3">
+                                    <CardTitle className="flex items-center gap-2">
+                                        <div className="h-2 w-2 rounded-full bg-green-500 animate-pulse" />
+                                        Message Traffic
+                                    </CardTitle>
+                                    <CardDescription>Real-time volume of sent vs. received messages from API logs.</CardDescription>
                                 </CardHeader>
                                 <CardContent>
                                     <AreaChartComponent 
