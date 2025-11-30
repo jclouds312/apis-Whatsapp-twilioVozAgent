@@ -16,26 +16,17 @@ service cloud.firestore {
       return request.resource.data.userId == userId;
     }
     
-    // User-specific data
+    // User-specific data should only be readable/writable by the owner.
     match /users/{userId}/{document=**} {
       allow read, write: if isOwner(userId);
     }
     
     // --- Global Collections ---
 
-    // Rule for the entire apiLogs collection
-    match /apiLogs {
-      // Allow anyone to list the collection
-      allow list: if true;
-      // Deny writing to the collection directly
-      allow write: if false; 
-    }
-
-    // Rule for individual documents within apiLogs
+    // Allow authenticated users to read logs.
+    // Disallow any client-side writes to prevent tampering.
     match /apiLogs/{apiLogId} {
-        // Allow anyone to get a single document
-        allow get: if true;
-        // Deny writing from the client
+        allow read: if isSignedIn();
         allow write: if false;
     }
 

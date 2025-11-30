@@ -7,7 +7,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge";
 import { format, parseISO } from "date-fns";
 import { cn } from "@/lib/utils";
-import { useFirestore, useCollection, useMemoFirebase } from '@/firebase';
+import { useFirestore, useCollection, useMemoFirebase, useUser } from '@/firebase';
 import type { ApiLog } from "@/lib/types";
 import { collection } from "firebase/firestore";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -15,11 +15,15 @@ import { Skeleton } from "@/components/ui/skeleton";
 
 export default function LogsPage() {
     const firestore = useFirestore();
+    const { user } = useUser();
     
     const logsQuery = useMemoFirebase(() => {
-        if (!firestore) return null;
+        // Ensure the query only runs when we have a firestore instance AND a user.
+        // This prevents the query from running before the user is authenticated,
+        // which was causing the permission denied errors.
+        if (!firestore || !user) return null;
         return collection(firestore, 'apiLogs');
-    }, [firestore]);
+    }, [firestore, user]);
 
     const { data: logs, isLoading } = useCollection<ApiLog>(logsQuery);
 
@@ -72,6 +76,13 @@ export default function LogsPage() {
                                         <TableCell>{`Status: ${log.statusCode}, Request: ${log.requestBody.substring(0,50)}... Response: ${log.responseBody.substring(0,50)}...`}</TableCell>
                                     </TableRow>
                                 ))}
+                                {!isLoading && !logs && user && (
+                                     <TableRow>
+                                        <TableCell colSpan={4} className="text-center text-muted-foreground p-8">
+                                            No logs found.
+                                        </TableCell>
+                                    </TableRow>
+                                )}
                             </TableBody>
                         </Table>
                     </CardContent>
