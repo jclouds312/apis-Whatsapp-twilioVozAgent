@@ -3,9 +3,10 @@
 import { SidebarProvider, Sidebar, SidebarHeader, SidebarContent, SidebarFooter } from '@/components/ui/sidebar';
 import Link from 'next/link';
 import { DashboardNav } from '@/components/dashboard/dashboard-nav';
-import { FirebaseClientProvider, useUser } from '@/firebase';
+import { FirebaseClientProvider, useUser, useAuth, initiateEmailSignIn, initiateEmailSignUp } from '@/firebase';
+import { onAuthStateChanged } from 'firebase/auth';
 import { redirect } from 'next/navigation';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 
 const Logo = () => (
   <svg
@@ -57,12 +58,44 @@ const Logo = () => (
 
 function ProtectedDashboardLayout({ children }: { children: React.ReactNode }) {
   const { user, isUserLoading } = useUser();
+  const auth = useAuth();
+  const [authAttempted, setAuthAttempted] = useState(false);
 
   useEffect(() => {
-    if (!isUserLoading && !user) {
-      redirect('/');
+    if (isUserLoading || !auth) {
+      return; // Wait for Firebase to initialize
     }
-  }, [user, isUserLoading]);
+
+    if (!user && !authAttempted) {
+      setAuthAttempted(true);
+      
+      const unsubscribe = onAuthStateChanged(auth, 
+        (user) => {
+          // If user exists after check, do nothing, the main hook will handle it.
+        },
+        (error) => {
+          console.error("Auth state change error:", error);
+        }
+      );
+      
+      // Attempt to sign in
+      initiateEmailSignIn(auth, 'admin@example.com', 'password');
+
+      // This is a failsafe to handle user creation if sign-in fails
+      const timer = setTimeout(() => {
+        if (!auth.currentUser) {
+            initiateEmailSignUp(auth, 'admin@example.com', 'password');
+        }
+      }, 2000); // Wait 2s before trying to sign up
+
+      return () => {
+        unsubscribe();
+        clearTimeout(timer);
+      };
+    }
+
+  }, [user, isUserLoading, auth, authAttempted]);
+
 
   if (isUserLoading || !user) {
     return (
