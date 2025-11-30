@@ -6,7 +6,8 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { useUser, FirebaseClientProvider, useAuth, initiateEmailSignIn } from '@/firebase';
+import { useUser, FirebaseClientProvider, useAuth, initiateEmailSignIn, initiateEmailSignUp } from '@/firebase';
+import { onAuthStateChanged } from 'firebase/auth';
 
 function LoginButton({isSubmitting}: {isSubmitting: boolean}) {
   return (
@@ -45,33 +46,49 @@ function AutoLoginForm() {
       return;
     }
     
-    try {
-      // initiateEmailSignIn is a non-blocking client-side function
-      initiateEmailSignIn(auth, email, password);
-      // The onAuthStateChanged listener in the provider will handle the redirect.
-      // We don't need to do anything else here. The `isUserLoading` state will change,
-      // and the useEffect above will trigger the navigation.
-    } catch (e: any) {
-      // This might catch synchronous errors if any, but Firebase auth errors
-      // are typically asynchronous and handled by the listener.
-      setErrorMessage(e.message || 'An unexpected error occurred.');
-      setIsSubmitting(false);
-    }
+    initiateEmailSignIn(auth, email, password);
   };
   
   useEffect(() => {
-    // Automatically submit the form once on mount
-    const timer = setTimeout(() => {
-      if (formRef.current && !user) {
-        // We can't directly call form.submit() as it won't trigger the React onSubmit handler.
-        // Instead, we can create a synthetic submit event.
-        const fakeSubmitEvent = new Event('submit', { bubbles: true, cancelable: true });
-        formRef.current.dispatchEvent(fakeSubmitEvent);
-      }
-    }, 100); // Small delay to ensure form is ready
+    // This effect now handles both auto-login and error handling, including user creation
+    if (auth && !user && !isUserLoading) {
+        const unsubscribe = onAuthStateChanged(auth, 
+            (user) => {
+                if (user) {
+                    setIsSubmitting(false);
+                    router.push('/dashboard');
+                }
+            },
+            (error) => {
+                if (error.code === 'auth/invalid-credential' || error.code === 'auth/user-not-found') {
+                    // User doesn't exist, so let's create them.
+                    const email = formRef.current?.email.value;
+                    const password = formRef.current?.password.value;
+                    if(email && password) {
+                       initiateEmailSignUp(auth, email, password);
+                    }
+                } else {
+                    setErrorMessage(error.message);
+                    setIsSubmitting(false);
+                }
+            }
+        );
 
-    return () => clearTimeout(timer);
-  }, [user]);
+        // Auto-submit the form once on mount
+        const timer = setTimeout(() => {
+            if (formRef.current) {
+                const fakeSubmitEvent = new Event('submit', { bubbles: true, cancelable: true });
+                formRef.current.dispatchEvent(fakeSubmitEvent);
+            }
+        }, 100);
+
+        return () => {
+            unsubscribe();
+            clearTimeout(timer);
+        };
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [auth, user, isUserLoading]);
 
 
   return (
