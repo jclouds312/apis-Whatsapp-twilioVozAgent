@@ -21,7 +21,7 @@ interface ChatLayoutProps {
 }
 
 export function ChatLayout({ 
-    defaultLayout = [320, 480, 600],
+    defaultLayout = [20, 50, 30],
     navCollapsedSize,
     conversations,
     currentUserAvatar,

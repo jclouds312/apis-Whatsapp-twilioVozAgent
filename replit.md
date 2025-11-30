@@ -63,10 +63,12 @@ src/
 ### Firebase Configuration
 Already configured in `src/firebase/config.ts` with project credentials.
 
-### WhatsApp Business API
-- `WHATSAPP_VERIFY_TOKEN` - Webhook verification token
-- `WHATSAPP_ACCESS_TOKEN` - WhatsApp Business API access token
-- `WHATSAPP_PHONE_NUMBER_ID` - Phone number ID from Meta App
+### Meta / WhatsApp Business API
+- `META_APP_ID` - Meta App ID from developers.facebook.com
+- `META_APP_SECRET` - Meta App Secret
+- `WHATSAPP_VERIFY_TOKEN` - Webhook verification token (custom token you create)
+- `WHATSAPP_ACCESS_TOKEN` - WhatsApp Business API access token (permanent token)
+- `WHATSAPP_PHONE_NUMBER_ID` - Phone number ID from Meta App WhatsApp settings
 
 ### Twilio
 - `TWILIO_ACCOUNT_SID` - Twilio Account SID
@@ -84,6 +86,19 @@ Already configured in `src/firebase/config.ts` with project credentials.
 - TypeScript and ESLint errors are currently ignored during builds (configured in next.config.ts)
 
 ## Recent Changes
+- **Nov 30, 2025:** WhatsApp API Integration Complete
+  - Installed official Meta WhatsApp SDK (`whatsapp` package)
+  - Fixed WhatsApp message schema to include contacts field
+  - Added new WhatsApp API functions:
+    - `sendWhatsAppTemplate()` - Send template messages
+    - `sendWhatsAppImage()` - Send image messages
+    - `markMessageAsRead()` - Mark messages as read
+    - `getBusinessProfile()` - Get WhatsApp Business profile
+    - `sendWhatsAppInteractiveButtons()` - Send interactive button messages
+    - `getWhatsAppConfigStatus()` - Check API configuration status
+  - Fixed Panel hydration error (defaultLayout values corrected)
+  - Updated API version to v21.0
+
 - **Nov 30, 2025:** Initial Replit import and configuration
   - Updated dev server to run on port 5000 with 0.0.0.0 binding
   - Configured Next.js workflow for Replit environment
