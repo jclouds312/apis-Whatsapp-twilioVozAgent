@@ -18,8 +18,8 @@ export function StatCard({ title, value, description, Icon, iconColor }: StatCar
         <Icon className={cn("h-5 w-5 text-muted-foreground", iconColor)} />
       </CardHeader>
       <CardContent>
-        <div className="text-2xl font-bold">{value}</div>
-        <p className="text-xs text-muted-foreground">{description}</p>
+        <div className="text-2xl font-bold" suppressHydrationWarning>{value}</div>
+        <p className="text-xs text-muted-foreground" suppressHydrationWarning>{description}</p>
       </CardContent>
     </Card>
   );
