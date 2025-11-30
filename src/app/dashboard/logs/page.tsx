@@ -9,7 +9,7 @@ import { format, parseISO } from "date-fns";
 import { cn } from "@/lib/utils";
 import { useFirestore, useCollection, useMemoFirebase, useUser } from '@/firebase';
 import type { ApiLog } from "@/lib/types";
-import { collection } from "firebase/firestore";
+import { collection, query, orderBy } from "firebase/firestore";
 import { Skeleton } from "@/components/ui/skeleton";
 
 
@@ -22,7 +22,7 @@ export default function LogsPage() {
         // This prevents the query from running before the user is authenticated,
         // which was causing the permission denied errors.
         if (!firestore || !user) return null;
-        return collection(firestore, 'apiLogs');
+        return query(collection(firestore, 'apiLogs'), orderBy('timestamp', 'desc'));
     }, [firestore, user]);
 
     const { data: logs, isLoading } = useCollection<ApiLog>(logsQuery);
