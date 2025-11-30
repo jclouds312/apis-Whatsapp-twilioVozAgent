@@ -59,7 +59,7 @@ service cloud.firestore {
     // apiLogs can be read publicly.
     // Writes should happen from a trusted backend server, not the client.
     match /apiLogs/{apiLogId} {
-      allow read: if true;
+      allow get, list: if true;
       allow write: if false;
     }
 
