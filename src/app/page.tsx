@@ -1,27 +1,28 @@
 'use client';
 
-import { useActionState, useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { login } from './login/actions';
-import { useUser, FirebaseClientProvider } from '@/firebase';
+import { useUser, FirebaseClientProvider, useAuth, initiateEmailSignIn } from '@/firebase';
 
-function LoginButton() {
+function LoginButton({isSubmitting}: {isSubmitting: boolean}) {
   return (
-    <Button className="w-full" type="submit">
-      Logging in...
+    <Button className="w-full" type="submit" disabled={isSubmitting}>
+      {isSubmitting ? 'Logging in...' : 'Login'}
     </Button>
   );
 }
 
 function AutoLoginForm() {
-  const [state, formAction] = useActionState(login, { message: null });
   const router = useRouter();
   const { user, isUserLoading } = useUser();
+  const auth = useAuth();
   const formRef = useRef<HTMLFormElement>(null);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(true);
 
   useEffect(() => {
     if (!isUserLoading && user) {
@@ -29,16 +30,49 @@ function AutoLoginForm() {
     }
   }, [user, isUserLoading, router]);
 
+  const handleLogin = (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    setErrorMessage(null);
+    setIsSubmitting(true);
+    
+    const formData = new FormData(event.currentTarget);
+    const email = formData.get('email') as string;
+    const password = formData.get('password') as string;
+
+    if (!email || !password) {
+      setErrorMessage('Please enter both email and password.');
+      setIsSubmitting(false);
+      return;
+    }
+    
+    try {
+      // initiateEmailSignIn is a non-blocking client-side function
+      initiateEmailSignIn(auth, email, password);
+      // The onAuthStateChanged listener in the provider will handle the redirect.
+      // We don't need to do anything else here. The `isUserLoading` state will change,
+      // and the useEffect above will trigger the navigation.
+    } catch (e: any) {
+      // This might catch synchronous errors if any, but Firebase auth errors
+      // are typically asynchronous and handled by the listener.
+      setErrorMessage(e.message || 'An unexpected error occurred.');
+      setIsSubmitting(false);
+    }
+  };
+  
   useEffect(() => {
     // Automatically submit the form once on mount
     const timer = setTimeout(() => {
-      if (formRef.current) {
-        formRef.current.requestSubmit();
+      if (formRef.current && !user) {
+        // We can't directly call form.submit() as it won't trigger the React onSubmit handler.
+        // Instead, we can create a synthetic submit event.
+        const fakeSubmitEvent = new Event('submit', { bubbles: true, cancelable: true });
+        formRef.current.dispatchEvent(fakeSubmitEvent);
       }
     }, 100); // Small delay to ensure form is ready
 
     return () => clearTimeout(timer);
-  }, []);
+  }, [user]);
+
 
   return (
     <div className="flex min-h-screen flex-col items-center justify-center bg-background">
@@ -50,7 +84,7 @@ function AutoLoginForm() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <form ref={formRef} action={formAction} className="grid gap-4">
+          <form ref={formRef} onSubmit={handleLogin} className="grid gap-4">
             <div className="grid gap-2">
               <Label htmlFor="email">Email</Label>
               <Input
@@ -74,9 +108,9 @@ function AutoLoginForm() {
                 readOnly
               />
             </div>
-            <LoginButton />
-            {state?.message && (
-              <p className="text-sm font-medium text-destructive text-center">{state.message}</p>
+            <LoginButton isSubmitting={isSubmitting} />
+            {errorMessage && (
+              <p className="text-sm font-medium text-destructive text-center">{errorMessage}</p>
             )}
           </form>
         </CardContent>
