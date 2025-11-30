@@ -1,72 +1,42 @@
 
 rules_version = '2';
+
 service cloud.firestore {
   match /databases/{database}/documents {
-
-    // Helper functions for auth and ownership checks
-    function isSignedIn() {
-      return request.auth != null;
+    // Allow authenticated users to read/write their own data
+    match /users/{userId}/{document=**} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
     }
-
-    function isOwner(userId) {
-      return isSignedIn() && request.auth.uid == userId;
+    
+    // Allow dashboard users to be read by authenticated users
+    match /dashboardUsers/{userId} {
+      allow read: if request.auth != null;
+      allow write: if request.auth != null && request.auth.uid == userId;
     }
-
-    function newDocHasCorrectOwner(userId) {
-      return request.resource.data.userId == userId;
+    
+    // Allow authenticated users to read API logs
+    match /apiLogs/{logId} {
+      allow read: if request.auth != null;
+      allow create: if true; // Allow server-side creation
     }
-
-    function ownerIsImmutable() {
-      return request.resource.data.userId == resource.data.userId;
-    }
-
-    // User-specific data is nested under the user's UID
-    match /users/{userId} {
-      allow read, write: if false; // Disallow direct access to user document
-
-      // API Keys: Only the owner can manage their keys.
-      match /apiKeys/{apiKeyId} {
-        allow read, write: if isOwner(userId);
-      }
+    
+    // Allow authenticated users to manage their conversations
+    match /users/{userId}/conversations/{conversationId} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
       
-      // Exposed APIs: Only the owner can manage their exposed APIs.
-      match /exposedApis/{exposedApiId} {
-        allow read, write: if isOwner(userId);
-      }
-
-      // Workflows: Only the owner can manage their workflows.
-      match /workflows/{workflowId} {
-        allow read, write: if isOwner(userId);
-      }
-
-      // Conversations: Only the owner can manage their conversations.
-      match /conversations/{conversationId} {
-        allow read, create, update, delete: if isOwner(userId) && (
-          (request.method == 'create' && newDocHasCorrectOwner(userId)) ||
-          (request.method != 'create')
-        );
-        
-        // Messages: Only the owner of the parent conversation can manage messages.
-        match /messages/{messageId} {
-          allow read, create: if isOwner(userId);
-          // To maintain chat integrity, disallow client-side updates/deletes of messages.
-          allow update, delete: if false; 
-        }
+      match /messages/{messageId} {
+        allow read, write: if request.auth != null && request.auth.uid == userId;
       }
     }
-
-    // Global Collections
-    // apiLogs can be read by any authenticated user for dashboard visibility.
-    // Writes should happen from a trusted backend server, not the client.
-    match /apiLogs/{apiLogId} {
-      allow get, list: if isSignedIn();
-      allow write: if false;
+    
+    // Allow authenticated users to manage their workflows
+    match /users/{userId}/workflows/{workflowId} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
     }
-
-    // dashboardUsers can be read and written to by any authenticated user.
-    // In a production app with roles, you would restrict write access to 'Admins'.
-    match /dashboardUsers/{dashboardUserId} {
-      allow read, write: if isSignedIn();
+    
+    // Allow authenticated users to manage their API keys
+    match /users/{userId}/apiKeys/{keyId} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
     }
   }
 }

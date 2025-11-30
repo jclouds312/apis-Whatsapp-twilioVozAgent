@@ -1,18 +1,18 @@
+
 'use client';
 
-import { useActionState } from 'react';
+import { useActionState, useEffect } from 'react';
 import { useFormStatus } from 'react-dom';
-import { textToSpeech } from '@/app/dashboard/function-connect/actions';
-import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { Bot, Volume2 } from 'lucide-react';
-import { useEffect } from 'react';
+import { Volume2, Download } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { textToSpeech } from '@/app/dashboard/ai-agents/text-to-speech/actions';
 
 const initialState = {
-  audioData: null,
+  audioUrl: null,
   errors: null,
 };
 
@@ -38,8 +38,13 @@ export function TextToSpeechAgent() {
         description: state.errors._form.join(", "),
       });
     }
+    if (state.audioUrl) {
+      toast({
+        title: "Audio Generated Successfully",
+        description: "Your audio is ready to play or download.",
+      });
+    }
   }, [state, toast]);
-
 
   return (
     <Card>
@@ -59,23 +64,36 @@ export function TextToSpeechAgent() {
               placeholder="e.g., Hello, welcome to APIs Manager. How can I help you today?"
               className="min-h-24"
             />
-            {state.errors?.textToConvert &&
-              <p className="text-sm font-medium text-destructive">{state.errors.textToConvert}</p>
-            }
+            {state.errors?.textToConvert && (
+              <p className="text-sm font-medium text-destructive">
+                {state.errors.textToConvert}
+              </p>
+            )}
           </div>
           <SubmitButton />
         </form>
 
-        {state.audioData && (
-          <div className="mt-6 rounded-lg border bg-secondary/50 p-4">
-             <div className="flex items-center gap-2 mb-4">
-                <Bot className="h-6 w-6 text-primary"/>
-                <h3 className="text-lg font-semibold">Generated Audio</h3>
-             </div>
-            <audio controls className="w-full">
-              <source src={state.audioData} type="audio/wav" />
-              Your browser does not support the audio element.
-            </audio>
+        {state.audioUrl && (
+          <div className="mt-6 space-y-4">
+            <div className="p-4 rounded-lg bg-muted">
+              <Label className="text-sm font-medium mb-2 block">Generated Audio</Label>
+              <audio controls className="w-full" src={state.audioUrl}>
+                Your browser does not support the audio element.
+              </audio>
+            </div>
+            <Button
+              variant="outline"
+              className="w-full"
+              onClick={() => {
+                const link = document.createElement('a');
+                link.href = state.audioUrl!;
+                link.download = 'generated-speech.wav';
+                link.click();
+              }}
+            >
+              <Download className="mr-2 h-4 w-4" />
+              Download Audio
+            </Button>
           </div>
         )}
       </CardContent>

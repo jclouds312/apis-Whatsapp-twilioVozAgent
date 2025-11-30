@@ -1,18 +1,19 @@
+
 'use client';
 
-import { useActionState } from 'react';
+import { useActionState, useEffect } from 'react';
 import { useFormStatus } from 'react-dom';
-import { getRetellSuggestion } from '@/app/dashboard/function-connect/actions';
-import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { Sparkles, Bot } from 'lucide-react';
-import { useEffect } from 'react';
+import { Sparkles, Copy, Check } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { retellText } from '@/app/dashboard/ai-agents/retell/actions';
+import { useState } from 'react';
 
 const initialState = {
-  suggestion: null,
+  retoldText: null,
   errors: null,
 };
 
@@ -20,61 +21,97 @@ function SubmitButton() {
   const { pending } = useFormStatus();
   return (
     <Button type="submit" disabled={pending} className="w-full">
-      {pending ? 'Generating...' : 'Retell Text'}
+      {pending ? 'Processing...' : 'Retell Text'}
       <Sparkles className="ml-2 h-4 w-4" />
     </Button>
   );
 }
 
 export function RetellAgent() {
-  const [state, formAction] = useActionState(getRetellSuggestion, initialState);
+  const [state, formAction] = useActionState(retellText, initialState);
+  const [copied, setCopied] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {
     if (state.errors?._form) {
       toast({
         variant: "destructive",
-        title: "Error Generating Suggestion",
+        title: "Error Processing Text",
         description: state.errors._form.join(", "),
+      });
+    }
+    if (state.retoldText) {
+      toast({
+        title: "Text Retold Successfully",
+        description: "Your retold version is ready.",
       });
     }
   }, [state, toast]);
 
+  const handleCopy = () => {
+    if (state.retoldText) {
+      navigator.clipboard.writeText(state.retoldText);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+      toast({
+        title: "Copied to clipboard",
+        description: "The retold text has been copied.",
+      });
+    }
+  };
 
   return (
     <Card>
       <CardHeader>
         <CardTitle>AI Retell Agent</CardTitle>
         <CardDescription>
-          Use AI to rephrase, summarize, or transform any text.
+          Rephrase, summarize, or transform your text into a clearer version using AI.
         </CardDescription>
       </CardHeader>
       <CardContent>
         <form action={formAction} className="space-y-4">
           <div className="grid gap-2">
-            <Label htmlFor="textToRetell">Text to Retell</Label>
+            <Label htmlFor="textToRetell">Original Text</Label>
             <Textarea
               id="textToRetell"
               name="textToRetell"
-              placeholder="e.g., Enter a customer email, a document paragraph, or any text you want to process..."
-              className="min-h-24"
+              placeholder="Enter the text you want to retell or rephrase..."
+              className="min-h-32"
             />
-            {state.errors?.textToRetell &&
-              <p className="text-sm font-medium text-destructive">{state.errors.textToRetell}</p>
-            }
+            {state.errors?.textToRetell && (
+              <p className="text-sm font-medium text-destructive">
+                {state.errors.textToRetell}
+              </p>
+            )}
           </div>
           <SubmitButton />
         </form>
 
-        {state.suggestion && (
-          <div className="mt-6 rounded-lg border bg-secondary/50 p-4">
-             <div className="flex items-center gap-2 mb-4">
-                <Bot className="h-6 w-6 text-primary"/>
-                <h3 className="text-lg font-semibold">Retold Text</h3>
-             </div>
-            <pre className="whitespace-pre-wrap text-sm text-foreground font-mono bg-card p-4 rounded-md">
-              <code>{state.suggestion}</code>
-            </pre>
+        {state.retoldText && (
+          <div className="mt-6 space-y-2">
+            <div className="flex items-center justify-between">
+              <Label className="text-sm font-medium">Retold Version</Label>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={handleCopy}
+              >
+                {copied ? (
+                  <>
+                    <Check className="mr-2 h-4 w-4" />
+                    Copied
+                  </>
+                ) : (
+                  <>
+                    <Copy className="mr-2 h-4 w-4" />
+                    Copy
+                  </>
+                )}
+              </Button>
+            </div>
+            <div className="p-4 rounded-lg bg-muted">
+              <p className="text-sm whitespace-pre-wrap">{state.retoldText}</p>
+            </div>
           </div>
         )}
       </CardContent>

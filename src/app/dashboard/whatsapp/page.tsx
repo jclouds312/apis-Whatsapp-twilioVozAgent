@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useEffect, useState } from "react";
@@ -48,7 +47,7 @@ export default function WhatsAppPage() {
         return query(collection(firestore, 'users', user.uid, 'conversations'), orderBy('lastMessageTime', 'desc'));
     }, [firestore, user?.uid]);
     const { data: conversations, isLoading: isLoadingConversations } = useCollection<Conversation>(conversationsQuery);
-    
+
     const logsQuery = useMemoFirebase(() => {
         if (!firestore || !user?.uid) return null;
         const q = query(collection(firestore, "apiLogs"), where("endpoint", "in", ["WhatsApp Webhook", "/api/whatsapp"]), orderBy('timestamp', 'desc'));
@@ -94,7 +93,7 @@ export default function WhatsAppPage() {
             setMessageTraffic(newTrafficData);
         }
     }, [logs]);
-    
+
     const getLogLevelClass = (level: 'info' | 'warn' | 'error') => {
         switch (level) {
             case 'info': return 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300';
@@ -220,7 +219,7 @@ export default function WhatsAppPage() {
                                 </CardContent>
                             </Card>
                         </div>
-                        
+
                         <div className="grid gap-6 lg:grid-cols-2">
                             <MessageStatsWidget />
                             <BusinessProfileWidget />
@@ -302,8 +301,11 @@ export default function WhatsAppPage() {
                                     <div className="p-4 rounded-lg bg-muted/50">
                                         <p className="text-sm font-medium mb-2">Webhook URL</p>
                                         <code className="text-xs font-mono break-all p-2 rounded bg-slate-100 dark:bg-slate-900 block">
-                                            {typeof window !== 'undefined' ? `${window.location.origin}/api/whatsapp` : '/api/whatsapp'}
+                                            https://your-repl-url.replit.app/api/whatsapp
                                         </code>
+                                        <p className="text-xs text-muted-foreground mt-1">
+                                            Replace with your actual Replit deployment URL
+                                        </p>
                                     </div>
                                     <div className="p-4 rounded-lg bg-muted/50">
                                         <p className="text-sm font-medium mb-2">Verify Token</p>
