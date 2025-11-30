@@ -52,9 +52,9 @@ This project is configured for a quick and easy deployment on [Vercel](https://v
 
 ## 🎉 Nuevas Características
 
-### WhatsApp Integration v1.0
+### WhatsApp Integration v2.0 - Meta SDK Completo
 - ✅ **Envío de mensajes de texto** via WhatsApp Business API
-- ✅ **Envío de imágenes** con caption opcional
+- ✅ **Envío de imágenes, videos, documentos** con caption opcional
 - ✅ **Plantillas de mensajes** (templates) con soporte multiidioma
 - ✅ **Estados de mensajes** (enviado, entregado, leído)
 - ✅ **Chat en tiempo real** con Firebase Firestore
@@ -63,6 +63,20 @@ This project is configured for a quick and easy deployment on [Vercel](https://v
 - ✅ **Perfil de negocio** integrado
 - ✅ **Webhooks** para recepción de mensajes
 - ✅ **Logs de API** detallados
+
+### 🆕 Funciones Avanzadas Meta SDK
+- ✅ **Envío de ubicaciones GPS** con coordenadas y nombre
+- ✅ **Envío de contactos** (tarjetas vCard)
+- ✅ **Mensajes interactivos** con botones y listas
+- ✅ **Commerce/Catálogos** - Gestión de productos
+- ✅ **Envío de productos** desde catálogo
+- ✅ **Analytics conversacionales** con métricas detalladas
+- ✅ **Calidad y límites** - Monitoreo de rating y throughput
+- ✅ **Gestión de templates** - Crear y eliminar templates
+- ✅ **Media upload/download** - Gestión completa de archivos
+- ✅ **Actualización de perfil** de negocio
+- ✅ **Gestión de webhooks** - Suscripciones automáticas
+- ✅ **CRM distribuible** - Sistema completo para publicar como servicio
 
 ## 🚀 Mejoras de Interfaz
 

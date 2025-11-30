@@ -7,6 +7,7 @@ import { ApiConfigWidget } from "@/components/dashboard/whatsapp/api-config-widg
 import { QuickSendWidget } from "@/components/dashboard/whatsapp/quick-send-widget";
 import { MessageStatsWidget } from "@/components/dashboard/whatsapp/message-stats-widget";
 import { BusinessProfileWidget } from "@/components/dashboard/whatsapp/business-profile-widget";
+import { MetaSDKManager } from "@/components/dashboard/whatsapp/meta-sdk-manager";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { StatCard } from "@/components/dashboard/stat-card";
 import { CheckCircle, MessageSquare, Send, Workflow, XCircle } from "lucide-react";
@@ -294,6 +295,16 @@ export default function WhatsAppPage() {
                             <ApiConfigWidget />
                             <BusinessProfileWidget />
                         </div>
+                        
+                        <Card>
+                            <CardHeader>
+                                <CardTitle>Meta SDK Manager</CardTitle>
+                                <CardDescription>Gestión completa de funciones avanzadas de Meta WhatsApp</CardDescription>
+                            </CardHeader>
+                            <CardContent>
+                                <MetaSDKManager />
+                            </CardContent>
+                        </Card>
                         <Card>
                             <CardHeader>
                                 <CardTitle>Webhook Configuration</CardTitle>

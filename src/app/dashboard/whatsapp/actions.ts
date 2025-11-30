@@ -5,13 +5,42 @@ import axios from 'axios';
 import { getFirestore } from 'firebase/firestore';
 import { initializeApp, getApps, getApp } from 'firebase/app';
 import { firebaseConfig } from '@/firebase/config';
+import MetaWhatsAppSDK, { 
+  SendTextMessageParams,
+  SendTemplateMessageParams,
+  SendMediaMessageParams,
+  SendInteractiveMessageParams,
+  SendLocationMessageParams,
+  SendContactMessageParams
+} from '@/lib/meta-whatsapp-sdk';
 
 const WHATSAPP_ACCESS_TOKEN = process.env.WHATSAPP_ACCESS_TOKEN;
 const WHATSAPP_PHONE_NUMBER_ID = process.env.WHATSAPP_PHONE_NUMBER_ID || '882779844920111';
 const META_APP_ID = process.env.META_APP_ID;
 const META_APP_SECRET = process.env.META_APP_SECRET;
+const BUSINESS_ACCOUNT_ID = process.env.WHATSAPP_BUSINESS_ACCOUNT_ID;
 const API_VERSION = 'v22.0';
 const DEFAULT_RECIPIENT = '573205434546';
+
+// Initialize SDK
+let sdk: MetaWhatsAppSDK | null = null;
+
+function getSDK(): MetaWhatsAppSDK {
+  if (!WHATSAPP_ACCESS_TOKEN || !WHATSAPP_PHONE_NUMBER_ID) {
+    throw new Error('WhatsApp credentials not configured');
+  }
+  
+  if (!sdk) {
+    sdk = new MetaWhatsAppSDK({
+      accessToken: WHATSAPP_ACCESS_TOKEN,
+      phoneNumberId: WHATSAPP_PHONE_NUMBER_ID,
+      businessAccountId: BUSINESS_ACCOUNT_ID,
+      apiVersion: API_VERSION,
+    });
+  }
+  
+  return sdk;
+}
 
 async function getDb() {
   if (!getApps().length) {
@@ -49,67 +78,27 @@ async function logApiCall(
 export async function sendWhatsAppMessage(
   to: string,
   text: string
-): Promise<{ success: boolean; error?: string }> {
-  if (!WHATSAPP_ACCESS_TOKEN || !WHATSAPP_PHONE_NUMBER_ID) {
-    const errorMessage =
-      'Server is not configured for sending WhatsApp messages. Please set environment variables.';
-    console.error(errorMessage);
-    await logApiCall(
-      'error',
-      500,
-      JSON.stringify({ to, text }),
-      JSON.stringify({ error: errorMessage })
-    );
-    return { success: false, error: errorMessage };
-  }
-
-  const url = `https://graph.facebook.com/${API_VERSION}/${WHATSAPP_PHONE_NUMBER_ID}/messages`;
-
-  const payload = {
-    messaging_product: 'whatsapp',
-    to: to,
-    type: 'text',
-    text: {
-      preview_url: false,
-      body: text,
-    },
-  };
-
-  const headers = {
-    Authorization: `Bearer ${WHATSAPP_ACCESS_TOKEN}`,
-    'Content-Type': 'application/json',
-  };
-
+): Promise<{ success: boolean; error?: string; messageId?: string }> {
   try {
-    const response = await axios.post(url, payload, { headers });
-    console.log('WhatsApp message sent successfully:', response.data);
+    const sdk = getSDK();
+    const result = await sdk.sendTextMessage({ to, text });
+    
     await logApiCall(
       'info',
-      response.status,
-      JSON.stringify(payload),
-      JSON.stringify(response.data)
+      200,
+      JSON.stringify({ to, text }),
+      JSON.stringify(result)
     );
-    return { success: true };
+    
+    return { success: true, messageId: result.messages?.[0]?.id };
   } catch (error: any) {
-    const errorMessage =
-      error.response?.data?.error?.message ||
-      error.message ||
-      'An unknown error occurred.';
-    const statusCode = error.response?.status || 500;
-    console.error('Failed to send WhatsApp message:', errorMessage);
+    const errorMessage = error.response?.data?.error?.message || error.message;
     await logApiCall(
       'error',
-      statusCode,
-      JSON.stringify(payload),
+      error.response?.status || 500,
+      JSON.stringify({ to, text }),
       JSON.stringify(error.response?.data || {})
     );
-
-    if (statusCode === 401 || statusCode === 403) {
-      return {
-        success: false,
-        error: `Authentication failed. Check your WhatsApp Access Token. (Details: ${errorMessage})`,
-      };
-    }
     return { success: false, error: errorMessage };
   }
 }
@@ -608,6 +597,279 @@ export async function getMessageStats(): Promise<{
       } else if (data.endpoint === 'WhatsApp Webhook') {
         totalReceived++;
         if (isRecent) received24h++;
+
+
+/**
+ * Sends a location message
+ */
+export async function sendWhatsAppLocation(
+  to: string,
+  latitude: number,
+  longitude: number,
+  name?: string,
+  address?: string
+): Promise<{ success: boolean; error?: string; messageId?: string }> {
+  try {
+    const sdk = getSDK();
+    const result = await sdk.sendLocationMessage({ to, latitude, longitude, name, address });
+    
+    await logApiCall('info', 200, JSON.stringify({ to, latitude, longitude }), JSON.stringify(result));
+    return { success: true, messageId: result.messages?.[0]?.id };
+  } catch (error: any) {
+    const errorMessage = error.response?.data?.error?.message || error.message;
+    await logApiCall('error', error.response?.status || 500, JSON.stringify({ to }), JSON.stringify(error.response?.data || {}));
+    return { success: false, error: errorMessage };
+  }
+}
+
+/**
+ * Sends a contact card
+ */
+export async function sendWhatsAppContact(
+  to: string,
+  contacts: Array<{
+    name: { formatted_name: string; first_name?: string };
+    phones?: Array<{ phone: string }>;
+    emails?: Array<{ email: string }>;
+  }>
+): Promise<{ success: boolean; error?: string; messageId?: string }> {
+  try {
+    const sdk = getSDK();
+    const result = await sdk.sendContactMessage({ to, contacts });
+    
+    await logApiCall('info', 200, JSON.stringify({ to, contacts }), JSON.stringify(result));
+    return { success: true, messageId: result.messages?.[0]?.id };
+  } catch (error: any) {
+    const errorMessage = error.response?.data?.error?.message || error.message;
+    await logApiCall('error', error.response?.status || 500, JSON.stringify({ to }), JSON.stringify(error.response?.data || {}));
+    return { success: false, error: errorMessage };
+  }
+}
+
+/**
+ * Uploads media to WhatsApp
+ */
+export async function uploadWhatsAppMedia(
+  fileBuffer: Buffer,
+  mimeType: string
+): Promise<{ success: boolean; error?: string; mediaId?: string }> {
+  try {
+    const sdk = getSDK();
+    const result = await sdk.uploadMedia(fileBuffer, mimeType);
+    
+    return { success: true, mediaId: result.id };
+  } catch (error: any) {
+    const errorMessage = error.response?.data?.error?.message || error.message;
+    return { success: false, error: errorMessage };
+  }
+}
+
+/**
+ * Gets media URL from media ID
+ */
+export async function getWhatsAppMediaUrl(
+  mediaId: string
+): Promise<{ success: boolean; error?: string; url?: string; mimeType?: string }> {
+  try {
+    const sdk = getSDK();
+    const result = await sdk.getMediaUrl(mediaId);
+    
+    return { success: true, url: result.url, mimeType: result.mime_type };
+  } catch (error: any) {
+    const errorMessage = error.response?.data?.error?.message || error.message;
+    return { success: false, error: errorMessage };
+  }
+}
+
+/**
+ * Gets all available products from catalog
+ */
+export async function getWhatsAppCatalogs(): Promise<{
+  success: boolean;
+  error?: string;
+  catalogs?: Array<{ id: string; name: string }>;
+}> {
+  try {
+    const sdk = getSDK();
+    const result = await sdk.getCatalogs();
+    
+    return { success: true, catalogs: result.data };
+  } catch (error: any) {
+    const errorMessage = error.response?.data?.error?.message || error.message;
+    return { success: false, error: errorMessage };
+  }
+}
+
+/**
+ * Gets products from a catalog
+ */
+export async function getWhatsAppProducts(
+  catalogId: string
+): Promise<{
+  success: boolean;
+  error?: string;
+  products?: any[];
+}> {
+  try {
+    const sdk = getSDK();
+    const result = await sdk.getProducts(catalogId);
+    
+    return { success: true, products: result.data };
+  } catch (error: any) {
+    const errorMessage = error.response?.data?.error?.message || error.message;
+    return { success: false, error: errorMessage };
+  }
+}
+
+/**
+ * Sends a product message
+ */
+export async function sendWhatsAppProduct(
+  to: string,
+  catalogId: string,
+  productRetailerId: string,
+  body?: string
+): Promise<{ success: boolean; error?: string; messageId?: string }> {
+  try {
+    const sdk = getSDK();
+    const result = await sdk.sendProductMessage({ to, catalogId, productRetailerId, body });
+    
+    await logApiCall('info', 200, JSON.stringify({ to, catalogId, productRetailerId }), JSON.stringify(result));
+    return { success: true, messageId: result.messages?.[0]?.id };
+  } catch (error: any) {
+    const errorMessage = error.response?.data?.error?.message || error.message;
+    await logApiCall('error', error.response?.status || 500, JSON.stringify({ to }), JSON.stringify(error.response?.data || {}));
+    return { success: false, error: errorMessage };
+  }
+}
+
+/**
+ * Gets conversation analytics
+ */
+export async function getWhatsAppAnalytics(
+  startTimestamp: number,
+  endTimestamp: number
+): Promise<{
+  success: boolean;
+  error?: string;
+  analytics?: any;
+}> {
+  try {
+    const sdk = getSDK();
+    const result = await sdk.getConversationAnalytics({
+      start: startTimestamp,
+      end: endTimestamp,
+      granularity: 'DAILY',
+    });
+    
+    return { success: true, analytics: result };
+  } catch (error: any) {
+    const errorMessage = error.response?.data?.error?.message || error.message;
+    return { success: false, error: errorMessage };
+  }
+}
+
+/**
+ * Gets quality rating and limits
+ */
+export async function getWhatsAppQualityInfo(): Promise<{
+  success: boolean;
+  error?: string;
+  quality?: any;
+  limit?: any;
+}> {
+  try {
+    const sdk = getSDK();
+    const [quality, limit] = await Promise.all([
+      sdk.getQualityRating(),
+      sdk.getCurrentLimit(),
+    ]);
+    
+    return { success: true, quality, limit };
+  } catch (error: any) {
+    const errorMessage = error.response?.data?.error?.message || error.message;
+    return { success: false, error: errorMessage };
+  }
+}
+
+/**
+ * Updates business profile
+ */
+export async function updateWhatsAppBusinessProfile(
+  profile: {
+    about?: string;
+    address?: string;
+    description?: string;
+    email?: string;
+    websites?: string[];
+    vertical?: string;
+  }
+): Promise<{ success: boolean; error?: string }> {
+  try {
+    const sdk = getSDK();
+    await sdk.updateBusinessProfile(profile as any);
+    
+    return { success: true };
+  } catch (error: any) {
+    const errorMessage = error.response?.data?.error?.message || error.message;
+    return { success: false, error: errorMessage };
+  }
+}
+
+/**
+ * Creates a new message template
+ */
+export async function createWhatsAppTemplate(
+  name: string,
+  category: string,
+  language: string,
+  components: any[]
+): Promise<{ success: boolean; error?: string; templateId?: string }> {
+  try {
+    const sdk = getSDK();
+    const result = await sdk.createMessageTemplate({ name, category, language, components });
+    
+    return { success: true, templateId: result.id };
+  } catch (error: any) {
+    const errorMessage = error.response?.data?.error?.message || error.message;
+    return { success: false, error: errorMessage };
+  }
+}
+
+/**
+ * Deletes a message template
+ */
+export async function deleteWhatsAppTemplate(
+  templateName: string
+): Promise<{ success: boolean; error?: string }> {
+  try {
+    const sdk = getSDK();
+    await sdk.deleteMessageTemplate(templateName);
+    
+    return { success: true };
+  } catch (error: any) {
+    const errorMessage = error.response?.data?.error?.message || error.message;
+    return { success: false, error: errorMessage };
+  }
+}
+
+/**
+ * Subscribe to webhook events
+ */
+export async function subscribeToWebhookEvents(
+  fields: string[] = ['messages', 'message_deliveries', 'message_reads', 'messaging_postbacks']
+): Promise<{ success: boolean; error?: string }> {
+  try {
+    const sdk = getSDK();
+    await sdk.subscribeToWebhook(fields);
+    
+    return { success: true };
+  } catch (error: any) {
+    const errorMessage = error.response?.data?.error?.message || error.message;
+    return { success: false, error: errorMessage };
+  }
+}
+
       }
       
       if (data.level === 'error') {
