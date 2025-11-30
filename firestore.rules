@@ -56,10 +56,10 @@ service cloud.firestore {
     }
 
     // Global Collections
-    // apiLogs can be read by any signed in user for dashboard visibility.
+    // apiLogs can be read publicly.
     // Writes should happen from a trusted backend server, not the client.
     match /apiLogs/{apiLogId} {
-      allow get, list: if isSignedIn();
+      allow read: if true;
       allow write: if false;
     }
 
