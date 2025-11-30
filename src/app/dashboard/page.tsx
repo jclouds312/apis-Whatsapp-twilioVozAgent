@@ -1,11 +1,10 @@
-
 'use client';
 
 import { useState, useEffect } from 'react';
 import { Header } from "@/components/dashboard/header";
 import { StatCard } from "@/components/dashboard/stat-card";
 import { AreaChartComponent } from "@/components/charts/area-chart";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Activity, Workflow, AlertCircle, Users, CodeXml, Circle, ArrowRight } from "lucide-react";
