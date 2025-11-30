@@ -18,9 +18,6 @@ export default function LogsPage() {
     const { user } = useUser();
     
     const logsQuery = useMemoFirebase(() => {
-        // Ensure the query only runs when we have a firestore instance AND a user.
-        // This prevents the query from running before the user is authenticated,
-        // which was causing the permission denied errors.
         if (!firestore || !user) return null;
         return query(collection(firestore, 'apiLogs'), orderBy('timestamp', 'desc'));
     }, [firestore, user]);
