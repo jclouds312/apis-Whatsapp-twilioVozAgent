@@ -3,62 +3,28 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // Helper functions for auth and ownership checks
+    // Helper functions
     function isSignedIn() {
       return request.auth != null;
     }
 
     function isOwner(userId) {
-      return isSignedIn() && request.auth.uid == userId;
+      return request.auth.uid == userId;
     }
 
     function newDocHasCorrectOwner(userId) {
       return request.resource.data.userId == userId;
     }
-
-    function ownerIsImmutable() {
-      return request.resource.data.userId == resource.data.userId;
+    
+    // User-specific data
+    match /users/{userId}/{document=**} {
+      allow read, write: if isOwner(userId);
     }
-
-    // User-specific data is nested under the user's UID
-    match /users/{userId} {
-      allow read, write: if false; // Disallow direct access to user document
-
-      // API Keys: Only the owner can manage their keys.
-      match /apiKeys/{apiKeyId} {
-        allow read, write: if isOwner(userId);
-      }
-      
-      // Exposed APIs: Only the owner can manage their exposed APIs.
-      match /exposedApis/{exposedApiId} {
-        allow read, write: if isOwner(userId);
-      }
-
-      // Workflows: Only the owner can manage their workflows.
-      match /workflows/{workflowId} {
-        allow read, write: if isOwner(userId);
-      }
-
-      // Conversations: Only the owner can manage their conversations.
-      match /conversations/{conversationId} {
-        allow read, create, update, delete: if isOwner(userId) && (
-          (request.method == 'create' && newDocHasCorrectOwner(userId)) ||
-          (request.method != 'create')
-        );
-        
-        // Messages: Only the owner of the parent conversation can manage messages.
-        match /messages/{messageId} {
-          allow read, create: if isOwner(userId);
-          // To maintain chat integrity, disallow client-side updates/deletes of messages.
-          allow update, delete: if false; 
-        }
-      }
-    }
-
+    
     // Global Collections
-    // apiLogs collection is publicly readable, but not writable from the client.
+    // apiLogs collection is publicly readable for listing, but not writable from the client.
     match /apiLogs/{apiLogId} {
-        allow read, list: if true;
+        allow list, get: if true;
         allow write: if false;
     }
 
