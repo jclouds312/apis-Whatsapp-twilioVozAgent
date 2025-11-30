@@ -68,32 +68,31 @@ function ProtectedDashboardLayout({ children }: { children: React.ReactNode }) {
 
     if (!user && !authAttempted) {
       setAuthAttempted(true);
-      
-      const unsubscribe = onAuthStateChanged(auth, 
-        (user) => {
-          // If user exists after check, do nothing, the main hook will handle it.
-        },
-        (error) => {
-          console.error("Auth state change error:", error);
-        }
-      );
-      
-      // Attempt to sign in
-      initiateEmailSignIn(auth, 'admin@example.com', 'password');
 
-      // This is a failsafe to handle user creation if sign-in fails
-      const timer = setTimeout(() => {
-        if (!auth.currentUser) {
-            initiateEmailSignUp(auth, 'admin@example.com', 'password');
+      const attemptLogin = async () => {
+        try {
+          // Firebase sign-in returns a promise that rejects on failure
+          // We can't use the non-blocking version here as we need to react to the failure.
+          await auth.signInWithEmailAndPassword('admin@example.com', 'password');
+          // onAuthStateChanged will handle the rest.
+        } catch (error: any) {
+          // If sign-in fails because the user doesn't exist, create it.
+          if (error.code === 'auth/user-not-found' || error.code === 'auth/invalid-credential') {
+            console.log("User not found, attempting to create a new user...");
+            try {
+              await auth.createUserWithEmailAndPassword('admin@example.com', 'password');
+              // onAuthStateChanged will now pick up the new user.
+            } catch (signUpError) {
+              console.error("Failed to create user after login failed:", signUpError);
+            }
+          } else {
+            console.error("An unexpected error occurred during sign-in:", error);
+          }
         }
-      }, 2000); // Wait 2s before trying to sign up
-
-      return () => {
-        unsubscribe();
-        clearTimeout(timer);
       };
-    }
 
+      attemptLogin();
+    }
   }, [user, isUserLoading, auth, authAttempted]);
 
 
