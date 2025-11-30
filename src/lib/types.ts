@@ -62,6 +62,45 @@ export type Message = {
   isSender: boolean; // True if the current user sent the message
 };
 
+
+
+export type TwilioCall = {
+  id: string;
+  callSid: string;
+  to: string;
+  from: string;
+  status: 'queued' | 'ringing' | 'in-progress' | 'completed' | 'busy' | 'failed' | 'no-answer' | 'canceled';
+  direction: 'inbound' | 'outbound';
+  duration: string;
+  cost: number;
+  createdAt: any;
+  userId: string;
+};
+
+export type TwilioRecording = {
+  id: string;
+  callSid: string;
+  recordingSid: string;
+  duration: number;
+  size: number;
+  url: string;
+  status: string;
+  createdAt: any;
+  userId: string;
+};
+
+export type VoiceUser = {
+  id: string;
+  name: string;
+  phoneNumber: string;
+  email?: string;
+  status: 'active' | 'inactive';
+  totalCalls: number;
+  totalDuration: number;
+  createdAt: any;
+  userId: string;
+};
+
 export type Order = {
   id: string;
   date: string;
