@@ -4,7 +4,8 @@ import { suggestOptimalWorkflows } from '@/ai/flows/suggest-optimal-workflows';
 import { retellAgent } from '@/ai/flows/retell-agent';
 import { generateSpeech } from '@/ai/flows/text-to-speech';
 import { z } from 'zod';
-import { addDoc, collection, getApp, getApps, getFirestore, initializeApp } from 'firebase/firestore';
+import { addDoc, collection, getFirestore } from 'firebase/firestore';
+import { getApp, getApps, initializeApp } from 'firebase/app';
 import axios from 'axios';
 import { firebaseConfig } from '@/firebase/config';
 

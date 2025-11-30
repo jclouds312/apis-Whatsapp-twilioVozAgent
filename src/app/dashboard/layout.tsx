@@ -3,7 +3,9 @@
 import { SidebarProvider, Sidebar, SidebarHeader, SidebarContent, SidebarFooter } from '@/components/ui/sidebar';
 import Link from 'next/link';
 import { DashboardNav } from '@/components/dashboard/dashboard-nav';
-import { FirebaseClientProvider } from '@/firebase/client-provider';
+import { FirebaseClientProvider, useUser } from '@/firebase';
+import { redirect } from 'next/navigation';
+import { useEffect } from 'react';
 
 const Logo = () => (
   <svg
@@ -52,6 +54,47 @@ const Logo = () => (
   </svg>
 );
 
+
+function ProtectedDashboardLayout({ children }: { children: React.ReactNode }) {
+  const { user, isUserLoading } = useUser();
+
+  useEffect(() => {
+    if (!isUserLoading && !user) {
+      redirect('/login');
+    }
+  }, [user, isUserLoading]);
+
+  if (isUserLoading || !user) {
+    return (
+        <div className="flex h-screen w-full items-center justify-center">
+            <div className="h-16 w-16 animate-spin rounded-full border-4 border-dashed border-primary"></div>
+        </div>
+    );
+  }
+
+  return (
+    <SidebarProvider>
+      <Sidebar>
+        <SidebarHeader>
+          <Link href="/dashboard" className="flex items-center gap-2 font-semibold text-lg text-sidebar-foreground">
+            <Logo />
+            <span className="text-base font-semibold">APIs Manager</span>
+          </Link>
+        </SidebarHeader>
+        <SidebarContent>
+          <DashboardNav />
+        </SidebarContent>
+        <SidebarFooter>
+        </SidebarFooter>
+      </Sidebar>
+      <main className="flex flex-1 flex-col bg-background">
+        {children}
+      </main>
+    </SidebarProvider>
+  );
+}
+
+
 export default function DashboardLayout({
   children,
 }: {
@@ -60,24 +103,9 @@ export default function DashboardLayout({
 
   return (
     <FirebaseClientProvider>
-      <SidebarProvider>
-        <Sidebar>
-          <SidebarHeader>
-            <Link href="/dashboard" className="flex items-center gap-2 font-semibold text-lg text-sidebar-foreground">
-              <Logo />
-              <span className="text-base font-semibold">APIs Manager</span>
-            </Link>
-          </SidebarHeader>
-          <SidebarContent>
-            <DashboardNav />
-          </SidebarContent>
-          <SidebarFooter>
-          </SidebarFooter>
-        </Sidebar>
-        <main className="flex flex-1 flex-col bg-background">
-          {children}
-        </main>
-      </SidebarProvider>
+      <ProtectedDashboardLayout>
+        {children}
+      </ProtectedDashboardLayout>
     </FirebaseClientProvider>
   );
 }
