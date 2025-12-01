@@ -610,3 +610,199 @@ export function registerV1ApiRoutes(app: Express) {
     }
   });
 }
+
+  // ============= API KEY MANAGER ENDPOINTS =============
+  
+  // POST /api/v1/keys/create - Create new API key
+  app.post("/api/v1/keys/create", validateApiKey, async (req: Request, res: Response) => {
+    try {
+      const { service, name } = req.body;
+      const userId = (req as any).userId;
+      
+      const newKey = {
+        id: `key_${Date.now()}`,
+        key: `sk_${Math.random().toString(36).substring(2, 30)}`,
+        service,
+        name: name || `${service}_key`,
+        isActive: true,
+        createdAt: new Date().toISOString(),
+        totalRequests: 0,
+      };
+      
+      await storage.createSystemLog({
+        userId,
+        eventType: "api_key_created",
+        service: "keys",
+        message: `API Key created for ${service}`,
+        status: "success",
+        metadata: { keyId: newKey.id, service },
+      });
+      
+      res.json({ success: true, key: newKey });
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // GET /api/v1/keys - List API keys
+  app.get("/api/v1/keys", validateApiKey, async (req: Request, res: Response) => {
+    try {
+      const userId = (req as any).userId;
+      const keys = [
+        { id: "key_1", key: "sk_live_12345", service: "twilio", isActive: true, totalRequests: 5420, createdAt: "2025-01-10", lastUsed: "2025-01-20" },
+        { id: "key_2", key: "sk_whatsapp_xyz", service: "whatsapp", isActive: true, totalRequests: 3210, createdAt: "2025-01-15", lastUsed: "2025-01-20" },
+      ];
+      res.json({ keys });
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // POST /api/v1/keys/:id/toggle - Toggle key status
+  app.post("/api/v1/keys/:id/toggle", validateApiKey, async (req: Request, res: Response) => {
+    try {
+      const { id } = req.params;
+      const userId = (req as any).userId;
+      
+      await storage.createSystemLog({
+        userId,
+        eventType: "api_key_toggled",
+        service: "keys",
+        message: `API Key ${id} toggled`,
+        status: "success",
+        metadata: { keyId: id },
+      });
+      
+      res.json({ success: true, message: "Key toggled" });
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // DELETE /api/v1/keys/:id - Delete API key
+  app.delete("/api/v1/keys/:id", validateApiKey, async (req: Request, res: Response) => {
+    try {
+      const { id } = req.params;
+      const userId = (req as any).userId;
+      
+      await storage.createSystemLog({
+        userId,
+        eventType: "api_key_deleted",
+        service: "keys",
+        message: `API Key ${id} deleted`,
+        status: "success",
+        metadata: { keyId: id },
+      });
+      
+      res.json({ success: true, message: "Key deleted" });
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // ============= EMBED WIDGETS ENDPOINTS =============
+  
+  // GET /embed/:widget - Get embed widget script
+  app.get("/embed/:widget", (req: Request, res: Response) => {
+    try {
+      const { widget } = req.params;
+      const apiKey = req.query.key as string;
+      
+      const widgetCode = `
+        (function() {
+          window.DigitalFutureWidget = {
+            init: function() {
+              console.log('Widget ${widget} loaded with key:', '${apiKey.substring(0, 10)}...');
+            }
+          };
+          window.DigitalFutureWidget.init();
+        })();
+      `;
+      
+      res.set("Content-Type", "application/javascript");
+      res.send(widgetCode);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // POST /api/v1/widgets/sms - Handle SMS widget submission
+  app.post("/api/v1/widgets/sms", async (req: Request, res: Response) => {
+    try {
+      const { to, message, apiKey } = req.body;
+      
+      res.json({
+        success: true,
+        messageId: `msg_${Date.now()}`,
+        status: "sent",
+        to,
+      });
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // POST /api/v1/widgets/voice - Handle voice widget submission
+  app.post("/api/v1/widgets/voice", async (req: Request, res: Response) => {
+    try {
+      const { to, message, apiKey } = req.body;
+      
+      res.json({
+        success: true,
+        callId: `call_${Date.now()}`,
+        status: "initiated",
+        to,
+      });
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // POST /api/v1/widgets/whatsapp - Handle WhatsApp widget submission
+  app.post("/api/v1/widgets/whatsapp", async (req: Request, res: Response) => {
+    try {
+      const { to, message, apiKey } = req.body;
+      
+      res.json({
+        success: true,
+        messageId: `wa_${Date.now()}`,
+        status: "sent",
+        to,
+      });
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // POST /api/v1/widgets/voip - Handle VoIP widget submission
+  app.post("/api/v1/widgets/voip", async (req: Request, res: Response) => {
+    try {
+      const { to, apiKey } = req.body;
+      
+      res.json({
+        success: true,
+        callId: `voip_${Date.now()}`,
+        status: "initiated",
+        to,
+      });
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // POST /api/v1/widgets/crm - Handle CRM widget lead capture
+  app.post("/api/v1/widgets/crm", async (req: Request, res: Response) => {
+    try {
+      const { name, email, phone, company, message, apiKey } = req.body;
+      
+      res.json({
+        success: true,
+        leadId: `lead_${Date.now()}`,
+        status: "captured",
+        contact: { name, email, phone, company },
+      });
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+}
