@@ -10,6 +10,10 @@ import OverviewPage from "@/pages/Overview";
 import WhatsAppPage from "@/pages/WhatsApp";
 import TwilioPage from "@/pages/Twilio";
 import RetellPage from "@/pages/Retell";
+import VerifyPage from "@/pages/Verify";
+import ApiKeysPage from "@/pages/ApiKeys";
+import ApiConsolePage from "@/pages/ApiConsole";
+import SettingsPage from "@/pages/Settings";
 
 function Router() {
   return (
@@ -18,7 +22,11 @@ function Router() {
         <Route path="/" component={OverviewPage} />
         <Route path="/whatsapp" component={WhatsAppPage} />
         <Route path="/twilio" component={TwilioPage} />
+        <Route path="/verify" component={VerifyPage} />
         <Route path="/retell" component={RetellPage} />
+        <Route path="/api-keys" component={ApiKeysPage} />
+        <Route path="/api-console" component={ApiConsolePage} />
+        <Route path="/settings" component={SettingsPage} />
         <Route component={NotFound} />
       </Switch>
     </DashboardLayout>

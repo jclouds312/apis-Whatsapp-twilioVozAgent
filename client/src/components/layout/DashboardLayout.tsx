@@ -10,7 +10,10 @@ import {
   X,
   LogOut,
   Cpu,
-  CloudLightning
+  CloudLightning,
+  ShieldCheck,
+  Key,
+  Terminal
 } from "lucide-react";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
@@ -24,8 +27,10 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     { icon: LayoutDashboard, label: "Overview", path: "/" },
     { icon: MessageSquare, label: "WhatsApp Manager", path: "/whatsapp" },
     { icon: Phone, label: "Twilio Voice", path: "/twilio" },
+    { icon: ShieldCheck, label: "Twilio Verify", path: "/verify" },
     { icon: Bot, label: "Retell AI Agents", path: "/retell" },
-    { icon: Activity, label: "Live Monitoring", path: "/monitoring" },
+    { icon: Key, label: "API Keys", path: "/api-keys" },
+    { icon: Terminal, label: "API Console", path: "/api-console" },
     { icon: Settings, label: "Settings", path: "/settings" },
   ];
 
