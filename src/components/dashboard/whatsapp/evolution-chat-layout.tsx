@@ -1,4 +1,3 @@
-// Trigger rebuild
 'use client';
 
 import React, { useState, useEffect } from 'react';
@@ -9,7 +8,7 @@ import { Send, Paperclip, Mic, Smile } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { useToast } from "@/components/ui/toast";
+import { useToast } from "@/hooks/use-toast";
 
 // Types matching the Evolution API response
 type Chat = {
