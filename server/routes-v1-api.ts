@@ -609,7 +609,6 @@ export function registerV1ApiRoutes(app: Express) {
       res.status(500).json({ error: error.message });
     }
   });
-}
 
   // ============= API KEY MANAGER ENDPOINTS =============
   
