@@ -127,25 +127,30 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       </div>
 
       {/* Main Content */}
-      <main className="flex-1 flex flex-col min-w-0 overflow-hidden bg-background">
+      <main className="flex-1 flex flex-col min-w-0 overflow-hidden bg-gradient-to-br from-background via-background to-primary/5">
         {/* Header */}
         <header className="h-16 border-b border-border/40 flex items-center justify-between px-6 bg-background/80 backdrop-blur-sm sticky top-0 z-30">
           <div className="flex items-center gap-4">
             <Button variant="ghost" size="icon" className="md:hidden" onClick={() => setIsMobileMenuOpen(true)}>
               <Menu className="h-5 w-5" />
             </Button>
-            <h1 className="font-semibold text-lg hidden md:block">
-              {navItems.find(i => i.path === location)?.label || "Dashboard"}
-            </h1>
+            <div className="flex items-center gap-2">
+              <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-blue-600 to-purple-600 flex items-center justify-center">
+                <Zap className="h-4 w-4 text-white" />
+              </div>
+              <h1 className="font-semibold text-lg hidden md:block">
+                {navItems.find(i => i.path === location)?.label || "Dashboard"}
+              </h1>
+            </div>
           </div>
           
           <div className="flex items-center gap-4">
             <div className="hidden md:flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/20">
               <div className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
-              <span className="text-xs font-medium text-emerald-500">Socket Connected</span>
+              <span className="text-xs font-medium text-emerald-500">Operational</span>
             </div>
-            <div className="h-8 w-8 rounded-full bg-primary/20 border border-primary/30 flex items-center justify-center text-xs font-bold text-primary">
-              AD
+            <div className="h-8 w-8 rounded-full bg-gradient-to-br from-blue-600 to-purple-600 flex items-center justify-center text-xs font-bold text-white">
+              NC
             </div>
           </div>
         </header>
