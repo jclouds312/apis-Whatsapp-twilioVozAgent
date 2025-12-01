@@ -38,6 +38,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     { icon: Zap, label: "Function Connect", path: "/function-connect" },
     { icon: Sparkles, label: "Workflow Suggester", path: "/workflow-suggester" },
     { icon: Key, label: "API Key Manager", path: "/api-key-manager" },
+    { icon: MessageSquare, label: "Facebook Integration", path: "/facebook-integration" },
     { icon: Zap, label: "Twilio Voice+SMS", path: "/twilio-voice" },
     { icon: Users, label: "CRM Integration", path: "/crm-integration" },
     { icon: Terminal, label: "Embed Widgets", path: "/embed-widgets" },
