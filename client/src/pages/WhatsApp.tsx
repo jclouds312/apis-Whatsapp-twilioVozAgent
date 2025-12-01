@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, Loader2 } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -19,13 +19,58 @@ import {
   RefreshCw
 } from "lucide-react";
 
+import { useMutation, useQuery } from "@tanstack/react-query";
+import { toast } from "sonner";
+
+const DEMO_USER_ID = "demo-user-123";
+const DEMO_PHONE = "+1234567890";
+
 export default function WhatsAppPage() {
+  const [recipientPhone, setRecipientPhone] = useState("");
+  const [messageText, setMessageText] = useState("");
+  const [selectedTemplate, setSelectedTemplate] = useState("welcome_message");
+
   const [templates] = useState([
     { id: 1, name: "welcome_message", language: "en_US", status: "approved", category: "marketing" },
     { id: 2, name: "order_update", language: "en_US", status: "approved", category: "utility" },
     { id: 3, name: "verification_code", language: "es_ES", status: "approved", category: "auth" },
     { id: 4, name: "promo_winter", language: "en_US", status: "rejected", category: "marketing" },
   ]);
+
+  const { data: messages = [], refetch: refetchMessages, isLoading } = useQuery({
+    queryKey: ["whatsappMessages"],
+    queryFn: async () => {
+      const res = await fetch(`/api/whatsapp/messages?userId=${DEMO_USER_ID}`);
+      return res.json();
+    },
+    refetchInterval: 5000,
+  });
+
+  const sendMessageMutation = useMutation({
+    mutationFn: async () => {
+      const res = await fetch("/api/whatsapp/messages", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          userId: DEMO_USER_ID,
+          phoneNumber: DEMO_PHONE,
+          recipientPhone,
+          message: messageText,
+          status: "pending",
+          direction: "outbound",
+        }),
+      });
+      if (!res.ok) throw new Error("Failed to send message");
+      return res.json();
+    },
+    onSuccess: () => {
+      toast.success("Message sent successfully!");
+      setMessageText("");
+      setRecipientPhone("");
+      refetchMessages();
+    },
+    onError: () => toast.error("Failed to send message"),
+  });
 
   return (
     <div className="space-y-6 max-w-6xl mx-auto">
@@ -169,35 +214,79 @@ export default function WhatsAppPage() {
           <div className="grid gap-4 md:grid-cols-3 h-[600px]">
             <Card className="md:col-span-1 bg-card/50 border-border/50 flex flex-col">
               <CardHeader>
-                <CardTitle>Test Configuration</CardTitle>
+                <CardTitle>Send Message</CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="space-y-2">
                   <Label>To Phone Number</Label>
-                  <Input placeholder="+1 234 567 8900" />
+                  <Input 
+                    placeholder="+1 234 567 8900"
+                    value={recipientPhone}
+                    onChange={(e) => setRecipientPhone(e.target.value)}
+                  />
                 </div>
                 <div className="space-y-2">
                   <Label>Template</Label>
-                  <select className="w-full h-10 rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2">
-                    <option>welcome_message</option>
-                    <option>order_update</option>
+                  <select 
+                    value={selectedTemplate}
+                    onChange={(e) => setSelectedTemplate(e.target.value)}
+                    className="w-full h-10 rounded-md border border-input bg-background px-3 py-2 text-sm"
+                  >
+                    {templates.map((t) => (
+                      <option key={t.id} value={t.name}>{t.name}</option>
+                    ))}
                   </select>
                 </div>
                 <div className="space-y-2">
-                  <Label>Variables (JSON)</Label>
-                  <Textarea className="font-mono text-xs h-32" defaultValue='{
-  "1": "John Doe",
-  "2": "NX-8821"
-}' />
+                  <Label>Message Text</Label>
+                  <Textarea 
+                    className="font-mono text-xs h-24"
+                    placeholder="Enter custom message or use template"
+                    value={messageText}
+                    onChange={(e) => setMessageText(e.target.value)}
+                  />
                 </div>
-                <Button className="w-full">
-                  <Send className="h-4 w-4 mr-2" />
-                  Send Test Message
+                <Button 
+                  className="w-full"
+                  onClick={() => sendMessageMutation.mutate()}
+                  disabled={!recipientPhone || !messageText || sendMessageMutation.isPending}
+                >
+                  {sendMessageMutation.isPending ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Send className="h-4 w-4 mr-2" />}
+                  Send Message
                 </Button>
               </CardContent>
             </Card>
             
             <Card className="md:col-span-2 bg-card/50 border-border/50 flex flex-col overflow-hidden">
+              <div className="bg-muted/50 p-4 border-b border-border/50 flex items-center justify-between">
+                <span className="text-sm font-medium">Recent Messages</span>
+                <Badge variant="outline">{messages.length} total</Badge>
+              </div>
+              <div className="flex-1 overflow-auto p-4 space-y-2">
+                {isLoading ? (
+                  <div className="flex justify-center py-8"><span className="text-muted-foreground">Loading...</span></div>
+                ) : messages.length === 0 ? (
+                  <p className="text-center text-muted-foreground py-8">No messages yet</p>
+                ) : (
+                  messages.slice(-5).map((msg: any) => (
+                    <div key={msg.id} className="p-3 bg-muted/30 rounded-lg text-sm border border-border/50">
+                      <p className="font-mono text-xs text-muted-foreground">{msg.recipientPhone}</p>
+                      <p className="mt-1">{msg.message}</p>
+                      <div className="flex justify-between items-center mt-2">
+                        <Badge variant="outline" className={`text-xs ${
+                          msg.status === 'sent' ? 'bg-green-500/10 text-green-500' :
+                          msg.status === 'delivered' ? 'bg-blue-500/10 text-blue-500' :
+                          'bg-yellow-500/10 text-yellow-500'
+                        }`}>
+                          {msg.status}
+                        </Badge>
+                        <span className="text-xs text-muted-foreground">{new Date(msg.createdAt).toLocaleTimeString()}</span>
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+            </Card>
               <div className="bg-muted/50 p-4 border-b border-border/50 flex items-center gap-2">
                 <Smartphone className="h-4 w-4 text-muted-foreground" />
                 <span className="text-sm font-medium">Device Preview</span>

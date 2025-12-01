@@ -32,8 +32,46 @@ function StatCard({ title, value, description, Icon, iconColor }: any) {
   );
 }
 
+import { useMutation, useQuery } from "@tanstack/react-query";
+import { toast } from "sonner";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { Plus, Loader2 } from "lucide-react";
+import { useState } from "react";
+
+const DEMO_USER_ID = "demo-user-123";
+
 export default function CrmPage() {
+  const [showForm, setShowForm] = useState(false);
+  const [formData, setFormData] = useState({ name: "", email: "", phone: "", company: "" });
   const isCrmConnected = true;
+
+  const { data: contacts = [], isLoading, refetch } = useQuery({
+    queryKey: ["crmContacts"],
+    queryFn: async () => {
+      const res = await fetch(`/api/crm/contacts?userId=${DEMO_USER_ID}`);
+      return res.json();
+    },
+    refetchInterval: 5000,
+  });
+
+  const createContactMutation = useMutation({
+    mutationFn: async (data) => {
+      const res = await fetch("/api/crm/contacts", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ userId: DEMO_USER_ID, ...data, status: "new", source: "manual" }),
+      });
+      return res.json();
+    },
+    onSuccess: () => {
+      toast.success("Contact created!");
+      setFormData({ name: "", email: "", phone: "", company: "" });
+      setShowForm(false);
+      refetch();
+    },
+    onError: () => toast.error("Failed to create contact"),
+  });
 
   return (
     <div className="space-y-6 max-w-6xl mx-auto">
@@ -63,17 +101,17 @@ export default function CrmPage() {
           </CardContent>
         </Card>
         <StatCard 
-            title="New Leads (24h)"
-            value="18"
-            description="From all channels"
-            Icon={TrendingUp}
+            title="Total Contacts"
+            value={contacts.length}
+            description="In your CRM"
+            Icon={Users}
             iconColor="text-blue-500"
         />
         <StatCard 
-            title="Contacts Synced"
-            value="1,204"
-            description="Total in CRM"
-            Icon={Users}
+            title="New Contacts"
+            value={contacts.filter((c: any) => c.status === "new").length}
+            description="Unqualified leads"
+            Icon={TrendingUp}
             iconColor="text-purple-500"
         />
         <StatCard 
@@ -85,11 +123,53 @@ export default function CrmPage() {
         />
       </div>
 
+      {showForm && (
+        <Card className="bg-card/50 border-border/50 border-primary/50">
+          <CardHeader>
+            <CardTitle>Add Contact</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="grid gap-4 md:grid-cols-2">
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Name *</label>
+                <Input placeholder="John Doe" value={formData.name} onChange={(e) => setFormData({ ...formData, name: e.target.value })} />
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Email</label>
+                <Input type="email" placeholder="john@example.com" value={formData.email} onChange={(e) => setFormData({ ...formData, email: e.target.value })} />
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Phone</label>
+                <Input placeholder="+1234567890" value={formData.phone} onChange={(e) => setFormData({ ...formData, phone: e.target.value })} />
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Company</label>
+                <Input placeholder="Acme Corp" value={formData.company} onChange={(e) => setFormData({ ...formData, company: e.target.value })} />
+              </div>
+            </div>
+            <div className="flex gap-2">
+              <Button onClick={() => createContactMutation.mutate(formData)} disabled={!formData.name || createContactMutation.isPending}>
+                {createContactMutation.isPending ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Plus className="h-4 w-4 mr-2" />}
+                Save Contact
+              </Button>
+              <Button variant="outline" onClick={() => setShowForm(false)}>Cancel</Button>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      <div className="flex justify-end mb-4">
+        <Button onClick={() => setShowForm(!showForm)}>
+          <Plus className="h-4 w-4 mr-2" />
+          {showForm ? "Close" : "Add Contact"}
+        </Button>
+      </div>
+
       <div className="grid gap-6 md:grid-cols-2">
         <Card className="transition-all hover:shadow-lg">
           <CardHeader>
-            <CardTitle>Recent CRM Activity</CardTitle>
-            <CardDescription>Live feed of CRM-related events.</CardDescription>
+            <CardTitle>Recent Contacts</CardTitle>
+            <CardDescription>Latest contacts added to your CRM.</CardDescription>
           </CardHeader>
           <CardContent>
             <Table>
@@ -101,19 +181,21 @@ export default function CrmPage() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {mockLogs.map(log => (
-                  <TableRow key={log.id}>
-                    <TableCell className="text-muted-foreground text-xs">{log.timestamp}</TableCell>
+                {isLoading ? (
+                  <TableRow><TableCell colSpan={3} className="text-center py-8"><Loader2 className="h-4 w-4 animate-spin inline" /></TableCell></TableRow>
+                ) : contacts.slice(-5).map((contact: any) => (
+                  <TableRow key={contact.id}>
+                    <TableCell className="font-medium">{contact.name}</TableCell>
+                    <TableCell className="text-muted-foreground text-xs">{contact.email || contact.phone}</TableCell>
                     <TableCell>
-                      <Badge variant="outline" className={`
-                        ${log.level === 'info' ? 'bg-blue-500/10 text-blue-500' : 
-                          log.level === 'warn' ? 'bg-yellow-500/10 text-yellow-500' : 
-                          'bg-red-500/10 text-red-500'}
-                      `}>
-                        {log.level}
+                      <Badge variant="outline" className={`text-xs ${
+                        contact.status === 'new' ? 'bg-blue-500/10 text-blue-500' :
+                        contact.status === 'contacted' ? 'bg-yellow-500/10 text-yellow-500' :
+                        'bg-green-500/10 text-green-500'
+                      }`}>
+                        {contact.status}
                       </Badge>
                     </TableCell>
-                    <TableCell className="text-sm">{log.message}</TableCell>
                   </TableRow>
                 ))}
               </TableBody>

@@ -22,12 +22,56 @@ import {
   Workflow
 } from "lucide-react";
 
+import { useMutation, useQuery } from "@tanstack/react-query";
+import { toast } from "sonner";
+import { Loader2 } from "lucide-react";
+
+const DEMO_USER_ID = "demo-user-123";
+const DEMO_FROM_NUMBER = "+1234567890";
+
 export default function TwilioPage() {
+  const [toNumber, setToNumber] = useState("");
+  const [twimlUrl, setTwimlUrl] = useState("https://api.nexus-core.com/voice/twiml");
+
   const [numbers] = useState([
     { id: 1, number: "+1 (555) 123-4567", country: "US", type: "Local", capabilities: ["Voice", "SMS"], status: "active" },
     { id: 2, number: "+1 (555) 987-6543", country: "US", type: "Toll-Free", capabilities: ["Voice"], status: "active" },
     { id: 3, number: "+44 20 7123 4567", country: "GB", type: "National", capabilities: ["Voice", "SMS"], status: "inactive" },
   ]);
+
+  const { data: calls = [], isLoading, refetch } = useQuery({
+    queryKey: ["twilioCalls"],
+    queryFn: async () => {
+      const res = await fetch(`/api/twilio/calls?userId=${DEMO_USER_ID}`);
+      return res.json();
+    },
+    refetchInterval: 3000,
+  });
+
+  const initiateCallMutation = useMutation({
+    mutationFn: async () => {
+      const res = await fetch("/api/twilio/calls", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          userId: DEMO_USER_ID,
+          callSid: `call_${Date.now()}`,
+          fromNumber: DEMO_FROM_NUMBER,
+          toNumber,
+          status: "initiated",
+          direction: "outbound",
+        }),
+      });
+      if (!res.ok) throw new Error("Failed to initiate call");
+      return res.json();
+    },
+    onSuccess: () => {
+      toast.success("Call initiated!");
+      setToNumber("");
+      refetch();
+    },
+    onError: () => toast.error("Failed to initiate call"),
+  });
 
   return (
     <div className="space-y-6 max-w-6xl mx-auto">
@@ -174,35 +218,72 @@ export default function TwilioPage() {
         </TabsContent>
 
         <TabsContent value="logs">
-          <Card className="bg-card/50 border-border/50">
-            <CardHeader>
-              <CardTitle>Recent Voice Logs</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-2">
-                {[1, 2, 3, 4, 5].map((i) => (
-                  <div key={i} className="flex items-center justify-between p-3 border-b border-border/40 last:border-0 text-sm">
-                    <div className="flex items-center gap-3">
-                      <div className="bg-primary/10 p-2 rounded-full">
-                        {i % 2 === 0 ? <Phone className="h-4 w-4 text-primary" /> : <Mic className="h-4 w-4 text-purple-500" />}
+          <div className="grid gap-4 md:grid-cols-3">
+            <Card className="md:col-span-1 bg-card/50 border-border/50">
+              <CardHeader>
+                <CardTitle>Initiate Call</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="space-y-2">
+                  <Label>To Number</Label>
+                  <Input 
+                    placeholder="+1 555 987 6543"
+                    value={toNumber}
+                    onChange={(e) => setToNumber(e.target.value)}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>From Number</Label>
+                  <Input disabled value={DEMO_FROM_NUMBER} className="bg-muted/50" />
+                </div>
+                <Button 
+                  className="w-full"
+                  onClick={() => initiateCallMutation.mutate()}
+                  disabled={!toNumber || initiateCallMutation.isPending}
+                >
+                  {initiateCallMutation.isPending ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Phone className="h-4 w-4 mr-2" />}
+                  Make Call
+                </Button>
+              </CardContent>
+            </Card>
+
+            <Card className="md:col-span-2 bg-card/50 border-border/50">
+              <CardHeader>
+                <CardTitle>Recent Calls</CardTitle>
+              </CardHeader>
+              <CardContent>
+                {isLoading ? (
+                  <div className="flex justify-center py-8"><Loader2 className="h-8 w-8 animate-spin text-muted-foreground" /></div>
+                ) : (
+                  <div className="space-y-2">
+                    {calls.slice(-10).map((call: any) => (
+                      <div key={call.id} className="flex items-center justify-between p-3 border-b border-border/40 last:border-0 text-sm">
+                        <div className="flex items-center gap-3">
+                          <div className="bg-primary/10 p-2 rounded-full">
+                            <Phone className="h-4 w-4 text-primary" />
+                          </div>
+                          <div>
+                            <p className="font-medium">{call.toNumber}</p>
+                            <p className="text-xs text-muted-foreground">{new Date(call.createdAt).toLocaleString()}</p>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-4">
+                          <Badge variant="outline" className={`text-xs ${
+                            call.status === 'completed' ? 'bg-green-500/10 text-green-500' :
+                            call.status === 'failed' ? 'bg-red-500/10 text-red-500' :
+                            'bg-blue-500/10 text-blue-500'
+                          }`}>
+                            {call.status}
+                          </Badge>
+                          <span className="font-mono text-xs text-muted-foreground">{call.duration || '-'}</span>
+                        </div>
                       </div>
-                      <div>
-                        <p className="font-medium">+1 (555) 123-4567</p>
-                        <p className="text-xs text-muted-foreground">Today, 10:{20 + i} AM</p>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-4">
-                      <Badge variant="outline">{i % 2 === 0 ? 'Completed' : 'No Answer'}</Badge>
-                      <span className="font-mono text-xs text-muted-foreground">04:2{i}</span>
-                      <Button variant="ghost" size="icon" className="h-8 w-8">
-                        <PlayCircle className="h-4 w-4" />
-                      </Button>
-                    </div>
+                    ))}
                   </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
+                )}
+              </CardContent>
+            </Card>
+          </div>
         </TabsContent>
       </Tabs>
     </div>
