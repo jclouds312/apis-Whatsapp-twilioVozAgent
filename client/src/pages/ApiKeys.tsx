@@ -137,7 +137,7 @@ export default function ApiKeysPage() {
             <p className="text-center text-muted-foreground py-8">No API keys configured yet.</p>
           ) : (
             <div className="space-y-4">
-              {keys.map((key) => (
+              {keys.map((key: any) => (
                 <div key={key.id} className="flex items-center justify-between p-4 border border-border/50 rounded-lg hover:border-primary/30 transition-colors bg-card">
                   <div className="space-y-1">
                     <div className="flex items-center gap-2">

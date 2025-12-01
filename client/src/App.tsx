@@ -6,6 +6,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import NotFound from "@/pages/not-found";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import OverviewPage from "@/pages/Overview";
+import { AuthProvider } from "@/context/AuthContext";
 
 import WhatsAppPage from "@/pages/WhatsApp";
 import TwilioPage from "@/pages/Twilio";
@@ -18,6 +19,8 @@ import SystemLogsPage from "@/pages/SystemLogs";
 import CrmPage from "@/pages/CRM";
 import FunctionConnectPage from "@/pages/FunctionConnect";
 import WorkflowSuggesterPage from "@/pages/WorkflowSuggester";
+import AdminPage from "@/pages/Admin";
+import DeploymentPage from "@/pages/Deployment";
 
 function Router() {
   return (
@@ -34,6 +37,8 @@ function Router() {
         <Route path="/api-keys" component={ApiKeysPage} />
         <Route path="/api-console" component={ApiConsolePage} />
         <Route path="/logs" component={SystemLogsPage} />
+        <Route path="/admin" component={AdminPage} />
+        <Route path="/deployment" component={DeploymentPage} />
         <Route path="/settings" component={SettingsPage} />
         <Route component={NotFound} />
       </Switch>
@@ -45,8 +50,10 @@ function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
-        <Toaster />
-        <Router />
+        <AuthProvider>
+          <Toaster />
+          <Router />
+        </AuthProvider>
       </TooltipProvider>
     </QueryClientProvider>
   );

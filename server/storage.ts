@@ -32,6 +32,8 @@ export interface IStorage {
   // ===== USERS =====
   getUser(id: string): Promise<User | undefined>;
   getUserByUsername(username: string): Promise<User | undefined>;
+  getUserByEmail(email: string): Promise<User | undefined>;
+  getUserByGoogleId(googleId: string): Promise<User | undefined>;
   createUser(user: InsertUser): Promise<User>;
 
   // ===== API KEYS =====
@@ -107,6 +109,18 @@ export class DbStorage implements IStorage {
   async getUserByUsername(username: string): Promise<User | undefined> {
     return db.query.users.findFirst({
       where: eq(users.username, username),
+    });
+  }
+
+  async getUserByEmail(email: string): Promise<User | undefined> {
+    return db.query.users.findFirst({
+      where: eq(users.email, email),
+    });
+  }
+
+  async getUserByGoogleId(googleId: string): Promise<User | undefined> {
+    return db.query.users.findFirst({
+      where: eq(users.googleId, googleId),
     });
   }
 

@@ -14,15 +14,22 @@ import { z } from "zod";
 export const users = pgTable("users", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   username: text("username").notNull().unique(),
-  password: text("password").notNull(),
-  email: text("email"),
+  password: text("password"),
+  email: text("email").notNull().unique(),
+  googleId: text("google_id"),
+  googleEmail: text("google_email"),
+  avatar: text("avatar"),
+  role: text("role").default("user"), // 'admin', 'user'
+  isActive: boolean("is_active").default(true),
+  emailVerified: boolean("email_verified").default(false),
   createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
 });
 
-export const insertUserSchema = createInsertSchema(users).pick({
-  username: true,
-  password: true,
-  email: true,
+export const insertUserSchema = createInsertSchema(users).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
 });
 
 export type InsertUser = z.infer<typeof insertUserSchema>;
