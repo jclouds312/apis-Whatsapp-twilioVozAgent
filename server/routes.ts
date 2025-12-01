@@ -340,6 +340,198 @@ export async function registerRoutes(
     }
   });
 
+  // ============= PUBLIC API v1 ROUTES =============
+  // WhatsApp Send Message API
+  app.post("/api/v1/whatsapp/send", async (req: Request, res: Response) => {
+    try {
+      const apiKey = req.headers.authorization?.replace("Bearer ", "");
+      if (!apiKey) return res.status(401).json({ error: "Missing API key" });
+
+      const { to, message, type = "text" } = req.body;
+
+      if (!process.env.WHATSAPP_PHONE_ID || !process.env.WHATSAPP_ACCESS_TOKEN) {
+        return res.status(503).json({ error: "WhatsApp service not configured" });
+      }
+
+      const whatsappService = createWhatsAppService(
+        process.env.WHATSAPP_PHONE_ID,
+        process.env.WHATSAPP_ACCESS_TOKEN,
+        process.env.WHATSAPP_BUSINESS_ACCOUNT_ID || ""
+      );
+
+      const result = await whatsappService.sendMessage(to, message, "api-v1-call");
+
+      res.json({
+        success: true,
+        messageId: result.messages?.[0]?.id || "pending",
+        status: "sent",
+        timestamp: new Date().toISOString(),
+      });
+    } catch (error: any) {
+      res.status(400).json({ error: error.message || "Failed to send message" });
+    }
+  });
+
+  // Twilio Initiate Call API
+  app.post("/api/v1/twilio/call", async (req: Request, res: Response) => {
+    try {
+      const apiKey = req.headers.authorization?.replace("Bearer ", "");
+      if (!apiKey) return res.status(401).json({ error: "Missing API key" });
+
+      const { to, from = "+18622770131", message } = req.body;
+
+      if (!process.env.TWILIO_ACCOUNT_SID || !process.env.TWILIO_AUTH_TOKEN) {
+        return res.status(503).json({ error: "Twilio service not configured" });
+      }
+
+      const twilioService = createTwilioService(
+        process.env.TWILIO_ACCOUNT_SID,
+        process.env.TWILIO_AUTH_TOKEN,
+        from
+      );
+
+      const call = await twilioService.initiateCall(to, "api-v1-call");
+
+      res.json({
+        success: true,
+        callSid: call.sid,
+        status: "initiated",
+        duration: 0,
+        timestamp: new Date().toISOString(),
+      });
+    } catch (error: any) {
+      res.status(400).json({ error: error.message || "Failed to initiate call" });
+    }
+  });
+
+  // CRM Contacts API - GET all contacts
+  app.get("/api/v1/crm/contacts", async (req: Request, res: Response) => {
+    try {
+      const apiKey = req.headers.authorization?.replace("Bearer ", "");
+      if (!apiKey) return res.status(401).json({ error: "Missing API key" });
+
+      const contacts = await storage.getCrmContactsByUser("api-v1-call");
+      res.json({
+        success: true,
+        contacts,
+        total: contacts.length,
+        timestamp: new Date().toISOString(),
+      });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch contacts" });
+    }
+  });
+
+  // CRM Contacts API - POST create contact
+  app.post("/api/v1/crm/contacts", async (req: Request, res: Response) => {
+    try {
+      const apiKey = req.headers.authorization?.replace("Bearer ", "");
+      if (!apiKey) return res.status(401).json({ error: "Missing API key" });
+
+      const { name, email, phone, company, tags } = req.body;
+
+      const contact = await storage.createCrmContact({
+        userId: "api-v1-call",
+        name,
+        email,
+        phone,
+        company,
+        tags: tags || [],
+        status: "active",
+      });
+
+      await storage.createSystemLog({
+        eventType: "crm_contact_created",
+        service: "crm",
+        message: `Contact created via API: ${name}`,
+        status: "success",
+        metadata: { contactId: contact.id, name, email },
+      });
+
+      res.status(201).json({
+        success: true,
+        contact,
+        timestamp: new Date().toISOString(),
+      });
+    } catch (error) {
+      res.status(400).json({ error: "Failed to create contact" });
+    }
+  });
+
+  // CRM Contacts API - PUT update contact
+  app.put("/api/v1/crm/contacts/:id", async (req: Request, res: Response) => {
+    try {
+      const apiKey = req.headers.authorization?.replace("Bearer ", "");
+      if (!apiKey) return res.status(401).json({ error: "Missing API key" });
+
+      const { id } = req.params;
+      const updates = req.body;
+
+      const contact = await storage.updateCrmContact(id, updates);
+
+      res.json({
+        success: true,
+        contact,
+        timestamp: new Date().toISOString(),
+      });
+    } catch (error) {
+      res.status(400).json({ error: "Failed to update contact" });
+    }
+  });
+
+  // CRM Contacts API - DELETE contact
+  app.delete("/api/v1/crm/contacts/:id", async (req: Request, res: Response) => {
+    try {
+      const apiKey = req.headers.authorization?.replace("Bearer ", "");
+      if (!apiKey) return res.status(401).json({ error: "Missing API key" });
+
+      await storage.deleteCrmContact(req.params.id);
+
+      res.json({
+        success: true,
+        message: "Contact deleted",
+        timestamp: new Date().toISOString(),
+      });
+    } catch (error) {
+      res.status(400).json({ error: "Failed to delete contact" });
+    }
+  });
+
+  // API Documentation endpoint
+  app.get("/api/v1/docs", (req: Request, res: Response) => {
+    res.json({
+      api: "Nexus Core v1",
+      version: "1.0.0",
+      baseUrl: "https://api.nexus-core.com",
+      authentication: "Bearer token in Authorization header",
+      endpoints: {
+        whatsapp: {
+          send: {
+            method: "POST",
+            path: "/api/v1/whatsapp/send",
+            description: "Send WhatsApp message",
+            params: { to: "recipient phone", message: "message text", type: "text|template" },
+          },
+        },
+        twilio: {
+          call: {
+            method: "POST",
+            path: "/api/v1/twilio/call",
+            description: "Initiate phone call",
+            params: { to: "recipient phone", from: "from number", message: "voice message" },
+          },
+        },
+        crm: {
+          contacts: {
+            method: "GET|POST|PUT|DELETE",
+            path: "/api/v1/crm/contacts",
+            description: "Manage CRM contacts",
+          },
+        },
+      },
+    });
+  });
+
   // ============= HEALTH CHECK =============
   app.get("/api/health", (req: Request, res: Response) => {
     res.json({
@@ -347,6 +539,8 @@ export async function registerRoutes(
       whatsappConfigured: !!process.env.WHATSAPP_PHONE_ID,
       twilioConfigured: !!process.env.TWILIO_ACCOUNT_SID,
       adminPhone: "+18622770131",
+      apiVersion: "v1.0.0",
+      apiUrl: "https://api.nexus-core.com",
     });
   });
 
