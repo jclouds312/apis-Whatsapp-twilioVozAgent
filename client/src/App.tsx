@@ -14,6 +14,7 @@ import RetellPage from "@/pages/Retell";
 import VerifyPage from "@/pages/Verify";
 import ApiKeysPage from "@/pages/ApiKeys";
 import ApiConsolePage from "@/pages/ApiConsole";
+import ApiDocumentationPage from "@/pages/ApiDocumentation";
 import SettingsPage from "@/pages/Settings";
 import SystemLogsPage from "@/pages/SystemLogs";
 import CrmPage from "@/pages/CRM";
