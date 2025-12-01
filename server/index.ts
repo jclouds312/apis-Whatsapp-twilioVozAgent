@@ -70,6 +70,10 @@ app.use((req, res, next) => {
   const { registerV1ApiRoutes } = await import("./routes-v1-api");
   registerV1ApiRoutes(app);
 
+  // Import and register embed widget routes
+  const { registerEmbedWidgetRoutes } = await import("./routes-embed-widgets");
+  registerEmbedWidgetRoutes(app);
+
   app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
     const status = err.status || err.statusCode || 500;
     const message = err.message || "Internal Server Error";

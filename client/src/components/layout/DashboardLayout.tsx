@@ -17,7 +17,8 @@ import {
   ScrollText,
   Users,
   Zap,
-  Sparkles
+  Sparkles,
+  Globe
 } from "lucide-react";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
@@ -37,7 +38,9 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     { icon: Zap, label: "Function Connect", path: "/function-connect" },
     { icon: Sparkles, label: "Workflow Suggester", path: "/workflow-suggester" },
     { icon: Key, label: "API Key Generator", path: "/api-key-generator" },
-    { icon: Key, label: "API Keys", path: "/api-keys" },
+    { icon: Zap, label: "Twilio Voice+SMS", path: "/twilio-voice" },
+    { icon: Users, label: "CRM Integration", path: "/crm-integration" },
+    { icon: Globe, label: "Embed Widgets", path: "/embed-widgets" },
     { icon: Terminal, label: "API Console", path: "/api-console" },
     { icon: ScrollText, label: "System Logs", path: "/logs" },
     { icon: Settings, label: "Settings", path: "/settings" },
