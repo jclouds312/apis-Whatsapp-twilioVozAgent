@@ -15,6 +15,9 @@ import ApiKeysPage from "@/pages/ApiKeys";
 import ApiConsolePage from "@/pages/ApiConsole";
 import SettingsPage from "@/pages/Settings";
 import SystemLogsPage from "@/pages/SystemLogs";
+import CrmPage from "@/pages/CRM";
+import FunctionConnectPage from "@/pages/FunctionConnect";
+import WorkflowSuggesterPage from "@/pages/WorkflowSuggester";
 
 function Router() {
   return (
@@ -25,6 +28,9 @@ function Router() {
         <Route path="/twilio" component={TwilioPage} />
         <Route path="/verify" component={VerifyPage} />
         <Route path="/retell" component={RetellPage} />
+        <Route path="/crm" component={CrmPage} />
+        <Route path="/function-connect" component={FunctionConnectPage} />
+        <Route path="/workflow-suggester" component={WorkflowSuggesterPage} />
         <Route path="/api-keys" component={ApiKeysPage} />
         <Route path="/api-console" component={ApiConsolePage} />
         <Route path="/logs" component={SystemLogsPage} />

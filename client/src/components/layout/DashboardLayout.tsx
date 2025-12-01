@@ -14,7 +14,10 @@ import {
   ShieldCheck,
   Key,
   Terminal,
-  ScrollText
+  ScrollText,
+  Users,
+  Zap,
+  Sparkles
 } from "lucide-react";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
@@ -30,6 +33,9 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     { icon: Phone, label: "Twilio Voice", path: "/twilio" },
     { icon: ShieldCheck, label: "Twilio Verify", path: "/verify" },
     { icon: Bot, label: "Retell AI Agents", path: "/retell" },
+    { icon: Users, label: "CRM", path: "/crm" },
+    { icon: Zap, label: "Function Connect", path: "/function-connect" },
+    { icon: Sparkles, label: "Workflow Suggester", path: "/workflow-suggester" },
     { icon: Key, label: "API Keys", path: "/api-keys" },
     { icon: Terminal, label: "API Console", path: "/api-console" },
     { icon: ScrollText, label: "System Logs", path: "/logs" },

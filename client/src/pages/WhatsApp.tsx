@@ -6,8 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
-import { Separator } from "@/components/ui/separator";
-import { ScrollArea } from "@/components/ui/scroll-area";
+import EvolutionChat from "@/components/chat/EvolutionChat";
 import { 
   MessageSquare, 
   Save, 
@@ -44,13 +43,19 @@ export default function WhatsAppPage() {
         </Button>
       </div>
 
-      <Tabs defaultValue="config" className="space-y-4">
+      <Tabs defaultValue="evolution-chat" className="space-y-4">
         <TabsList className="bg-card border border-border/50">
+          <TabsTrigger value="evolution-chat">Evolution Chat</TabsTrigger>
           <TabsTrigger value="config">Configuration</TabsTrigger>
           <TabsTrigger value="templates">Templates</TabsTrigger>
           <TabsTrigger value="simulator">Simulator</TabsTrigger>
           <TabsTrigger value="logs">Logs</TabsTrigger>
         </TabsList>
+
+        {/* Evolution Chat Tab */}
+        <TabsContent value="evolution-chat">
+            <EvolutionChat />
+        </TabsContent>
 
         {/* Configuration Tab */}
         <TabsContent value="config" className="space-y-4">
