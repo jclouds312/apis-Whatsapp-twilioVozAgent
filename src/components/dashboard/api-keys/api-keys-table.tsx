@@ -120,6 +120,7 @@ export function ApiKeysTable() {
                   <SelectContent>
                     <SelectItem value="Evolution">Evolution API (WhatsApp)</SelectItem>
                     <SelectItem value="Twilio">Twilio API</SelectItem>
+                    <SelectItem value="Call API">Call API</SelectItem>
                     <SelectItem value="General">General Use</SelectItem>
                   </SelectContent>
                 </Select>
@@ -188,7 +189,7 @@ export function ApiKeysTable() {
                 <TableCell><Badge variant={apiKey.status === 'active' ? 'default' : 'secondary'}>{apiKey.status}</Badge></TableCell>
                 <TableCell>{apiKey.createdAt?.toDate().toLocaleDateString()}</TableCell>
                 <TableCell>
-                  <Button variant="ghost" size="icon" onClick={() => handleDeleteKey(apiKey.id!)}>
+                  <Button variant="ghost" size="icon" onClick={() => handleDeleteKey(.id!)}>
                     <Trash2 className="h-4 w-4 text-red-500" />
                   </Button>
                 </TableCell>
