@@ -17,6 +17,13 @@ const mockWorkflows = [
   { id: 3, name: "Stale Lead -> Email", trigger: "CRM: No Activity", status: "inactive" },
 ];
 
+import { useMutation, useQuery } from "@tanstack/react-query";
+import { toast } from "sonner";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { Plus, Loader2 } from "lucide-react";
+import { useState } from "react";
+
 function StatCard({ title, value, description, Icon, iconColor }: any) {
   return (
     <Card className="transition-all hover:shadow-md">
@@ -31,13 +38,6 @@ function StatCard({ title, value, description, Icon, iconColor }: any) {
     </Card>
   );
 }
-
-import { useMutation, useQuery } from "@tanstack/react-query";
-import { toast } from "sonner";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import { Plus, Loader2 } from "lucide-react";
-import { useState } from "react";
 
 const DEMO_USER_ID = "demo-user-123";
 
@@ -56,7 +56,7 @@ export default function CrmPage() {
   });
 
   const createContactMutation = useMutation({
-    mutationFn: async (data) => {
+    mutationFn: async (data: typeof formData) => {
       const res = await fetch("/api/crm/contacts", {
         method: "POST",
         headers: { "Content-Type": "application/json" },

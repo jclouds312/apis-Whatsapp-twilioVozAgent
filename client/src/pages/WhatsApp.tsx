@@ -287,40 +287,6 @@ export default function WhatsAppPage() {
                 )}
               </div>
             </Card>
-              <div className="bg-muted/50 p-4 border-b border-border/50 flex items-center gap-2">
-                <Smartphone className="h-4 w-4 text-muted-foreground" />
-                <span className="text-sm font-medium">Device Preview</span>
-              </div>
-              <div className="flex-1 bg-[#0b141a] p-6 relative overflow-hidden">
-                {/* WhatsApp Background Pattern Mockup */}
-                <div className="absolute inset-0 opacity-[0.06]" style={{ backgroundImage: 'url("https://user-images.githubusercontent.com/15075759/28719144-86dc0f70-73b1-11e7-911d-60d70fcded21.png")' }}></div>
-                
-                <div className="relative z-10 space-y-4 max-w-md mx-auto">
-                  <div className="flex justify-start">
-                    <div className="bg-[#202c33] text-[#e9edef] p-3 rounded-lg rounded-tl-none max-w-[80%] shadow-sm text-sm">
-                      <p>Hello! Welcome to Nexus Core support.</p>
-                      <span className="text-[10px] text-gray-400 block text-right mt-1">10:23 AM</span>
-                    </div>
-                  </div>
-                  
-                  <div className="flex justify-end">
-                    <div className="bg-[#005c4b] text-[#e9edef] p-3 rounded-lg rounded-tr-none max-w-[80%] shadow-sm text-sm">
-                      <p>I need to check my API status.</p>
-                      <span className="text-[10px] text-[#86cbb4] block text-right mt-1 flex justify-end gap-1 items-center">
-                        10:24 AM <CheckCircle2 className="h-3 w-3" />
-                      </span>
-                    </div>
-                  </div>
-
-                  <div className="flex justify-start">
-                    <div className="bg-[#202c33] text-[#e9edef] p-3 rounded-lg rounded-tl-none max-w-[80%] shadow-sm text-sm">
-                      <p>Sure, John Doe. Your system status is currently: <strong className="text-emerald-400">Operational</strong>.</p>
-                      <span className="text-[10px] text-gray-400 block text-right mt-1">10:24 AM</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </Card>
           </div>
         </TabsContent>
       </Tabs>
