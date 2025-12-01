@@ -34,8 +34,8 @@ import { format } from "date-fns";
 import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell } from "recharts";
 
 const DEMO_USER_ID = "demo-user-123";
-const DEMO_WABA_ID = process.env.REACT_APP_WABA_ID || "123456789";
-const DEMO_BUSINESS_ID = process.env.REACT_APP_BUSINESS_ID || "987654321";
+const DEMO_WABA_ID = import.meta.env.VITE_REACT_APP_WABA_ID || "123456789";
+const DEMO_BUSINESS_ID = import.meta.env.VITE_REACT_APP_BUSINESS_ID || "987654321";
 
 // Sample data
 const messageVolumeData = [
