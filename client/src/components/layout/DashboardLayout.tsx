@@ -36,6 +36,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     { icon: Users, label: "CRM", path: "/crm" },
     { icon: Zap, label: "Function Connect", path: "/function-connect" },
     { icon: Sparkles, label: "Workflow Suggester", path: "/workflow-suggester" },
+    { icon: Key, label: "API Key Generator", path: "/api-key-generator" },
     { icon: Key, label: "API Keys", path: "/api-keys" },
     { icon: Terminal, label: "API Console", path: "/api-console" },
     { icon: ScrollText, label: "System Logs", path: "/logs" },

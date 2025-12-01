@@ -61,6 +61,10 @@ app.use((req, res, next) => {
 
 (async () => {
   await registerRoutes(httpServer, app);
+  
+  // Import and register API key generation routes
+  const { registerApiKeyGenerationRoutes } = await import("./routes-api-keygen");
+  registerApiKeyGenerationRoutes(app);
 
   app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
     const status = err.status || err.statusCode || 500;

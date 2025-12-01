@@ -21,6 +21,7 @@ import FunctionConnectPage from "@/pages/FunctionConnect";
 import WorkflowSuggesterPage from "@/pages/WorkflowSuggester";
 import AdminPage from "@/pages/Admin";
 import DeploymentPage from "@/pages/Deployment";
+import ApiKeyGeneratorPage from "@/pages/ApiKeyGenerator";
 
 function Router() {
   return (
@@ -35,6 +36,7 @@ function Router() {
         <Route path="/function-connect" component={FunctionConnectPage} />
         <Route path="/workflow-suggester" component={WorkflowSuggesterPage} />
         <Route path="/api-keys" component={ApiKeysPage} />
+        <Route path="/api-key-generator" component={ApiKeyGeneratorPage} />
         <Route path="/api-console" component={ApiConsolePage} />
         <Route path="/logs" component={SystemLogsPage} />
         <Route path="/admin" component={AdminPage} />
