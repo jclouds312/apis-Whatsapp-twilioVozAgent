@@ -63,7 +63,7 @@ export async function GET(req: NextRequest) {
 
         const token = new AccessToken(
             twilioCreds.twilioAccountSid,
-            process.env.TWILIO_API_KEY_SID!, // Use API Key SID and Secret for best practice
+            process.env.TWILIO_API_KEY_SID!,
             process.env.TWILIO_API_KEY_SECRET!,
             { 
                 identity: `user_${Date.now()}`, // A unique identity for the user
