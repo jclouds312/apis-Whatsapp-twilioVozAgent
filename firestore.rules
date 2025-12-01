@@ -23,10 +23,10 @@ service cloud.firestore {
     
     // --- Global Collections ---
 
-    // Allow anyone to read logs (for dashboard display).
+    // Allow any authenticated user to read logs (for dashboard display).
     // Disallow any client-side writes to prevent tampering.
     match /apiLogs/{apiLogId} {
-        allow read: if true;
+        allow get, list: if isSignedIn();
         allow write: if false;
     }
 
