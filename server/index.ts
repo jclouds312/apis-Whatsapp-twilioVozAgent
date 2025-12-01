@@ -78,6 +78,10 @@ app.use((req, res, next) => {
   const { registerApiKeyRoutes } = await import("./routes-api-keys");
   registerApiKeyRoutes(app);
 
+  // Import and register Meta WhatsApp routes
+  const { registerMetaWhatsAppRoutes } = await import("./routes-meta-whatsapp");
+  registerMetaWhatsAppRoutes(app);
+
   app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
     const status = err.status || err.statusCode || 500;
     const message = err.message || "Internal Server Error";

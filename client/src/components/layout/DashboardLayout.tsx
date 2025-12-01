@@ -40,7 +40,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     { icon: Key, label: "API Key Manager", path: "/api-key-manager" },
     { icon: Zap, label: "Twilio Voice+SMS", path: "/twilio-voice" },
     { icon: Users, label: "CRM Integration", path: "/crm-integration" },
-    { icon: Globe, label: "Embed Widgets", path: "/embed-widgets" },
+    { icon: Terminal, label: "Embed Widgets", path: "/embed-widgets" },
     { icon: Terminal, label: "API Console", path: "/api-console" },
     { icon: ScrollText, label: "System Logs", path: "/logs" },
     { icon: Settings, label: "Settings", path: "/settings" },
