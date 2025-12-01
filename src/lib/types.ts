@@ -83,4 +83,16 @@ export type Conversation = {
   userId: string;
 };
 
-    
+export type MetaError = {
+  error: {
+    message: string;
+    type: string;
+    code: number;
+    fbtrace_id: string;
+  };
+};
+
+export type MetaUser = {
+  id: string;
+  name: string;
+};
