@@ -1,31 +1,46 @@
+
 'use client';
 
-import { useState } from "react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { useToast } from "@/hooks/use-toast";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { ShieldCheck, Send, Loader2 } from 'lucide-react';
+import { useState } from 'react';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { useToast } from '@/hooks/use-toast';
+import { sendVerificationCode, verifyCode } from '@/app/dashboard/twilio/actions';
+import { Loader2 } from 'lucide-react';
 
-export function VerifyForm() {
-    const [phoneNumber, setPhoneNumber] = useState("");
-    const [verificationCode, setVerificationCode] = useState("");
-    const [isVerifying, setIsVerifying] = useState(false);
+interface VerifyFormProps {
+    onVerificationSuccess?: (phoneNumber: string) => void;
+}
+
+export function VerifyForm({ onVerificationSuccess }: VerifyFormProps) {
+    const [phoneNumber, setPhoneNumber] = useState('');
+    const [verificationCode, setVerificationCode] = useState('');
     const [verificationSent, setVerificationSent] = useState(false);
+    const [isSending, setIsSending] = useState(false);
+    const [isVerifying, setIsVerifying] = useState(false);
     const { toast } = useToast();
 
-    const handleSendVerification = async (e: React.FormEvent) => {
+    const handleSendCode = async (e: React.FormEvent) => {
         e.preventDefault();
-        setIsVerifying(true);
+        setIsSending(true);
 
         try {
-            // Aquí iría la lógica de envío de verificación con Twilio
-            toast({
-                title: "Verification sent",
-                description: `Code sent to ${phoneNumber}`,
-            });
-            setVerificationSent(true);
+            const result = await sendVerificationCode(phoneNumber);
+            
+            if (result.success) {
+                toast({
+                    title: "Code Sent",
+                    description: result.message,
+                });
+                setVerificationSent(true);
+            } else {
+                toast({
+                    variant: "destructive",
+                    title: "Error",
+                    description: result.message,
+                });
+            }
         } catch (error) {
             toast({
                 variant: "destructive",
@@ -33,7 +48,7 @@ export function VerifyForm() {
                 description: "Failed to send verification code",
             });
         } finally {
-            setIsVerifying(false);
+            setIsSending(false);
         }
     };
 
@@ -42,14 +57,24 @@ export function VerifyForm() {
         setIsVerifying(true);
 
         try {
-            // Aquí iría la lógica de verificación del código
-            toast({
-                title: "Success",
-                description: "Phone number verified successfully",
-            });
-            setPhoneNumber("");
-            setVerificationCode("");
-            setVerificationSent(false);
+            const result = await verifyCode(phoneNumber, verificationCode);
+            
+            if (result.success) {
+                toast({
+                    title: "Success",
+                    description: result.message,
+                });
+                onVerificationSuccess?.(phoneNumber);
+                setPhoneNumber("");
+                setVerificationCode("");
+                setVerificationSent(false);
+            } else {
+                toast({
+                    variant: "destructive",
+                    title: "Error",
+                    description: result.message,
+                });
+            }
         } catch (error) {
             toast({
                 variant: "destructive",
@@ -61,79 +86,80 @@ export function VerifyForm() {
         }
     };
 
+    if (!verificationSent) {
+        return (
+            <form onSubmit={handleSendCode} className="space-y-4">
+                <div className="space-y-2">
+                    <Label htmlFor="phone">Phone Number</Label>
+                    <Input
+                        id="phone"
+                        type="tel"
+                        placeholder="+1234567890"
+                        value={phoneNumber}
+                        onChange={(e) => setPhoneNumber(e.target.value)}
+                        required
+                        disabled={isSending}
+                    />
+                    <p className="text-xs text-muted-foreground">
+                        Enter phone number with country code (e.g., +1 for USA)
+                    </p>
+                </div>
+                <Button type="submit" className="w-full" disabled={isSending}>
+                    {isSending ? (
+                        <>
+                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                            Sending...
+                        </>
+                    ) : (
+                        'Send Verification Code'
+                    )}
+                </Button>
+            </form>
+        );
+    }
+
     return (
-        <Card>
-          <CardHeader>
-            <CardTitle>WhatsApp Verification</CardTitle>
-            <CardDescription>
-              Send a one-time passcode to a WhatsApp number to verify it.
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-6">
-            <div className="space-y-4">
-                {!verificationSent ? (
-                    <form onSubmit={handleSendVerification} className="space-y-4">
-                        <div className="grid gap-2">
-                            <Label htmlFor="phone">Phone Number</Label>
-                            <Input
-                                id="phone"
-                                type="tel"
-                                placeholder="+14155552671"
-                                value={phoneNumber}
-                                onChange={(e) => setPhoneNumber(e.target.value)}
-                                required
-                                disabled={isVerifying}
-                            />
-                        </div>
-                        <Button type="submit" disabled={isVerifying} className="w-full">
-                            {isVerifying ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Send className="mr-2 h-4 w-4" />}
-                            {isVerifying ? 'Sending...' : 'Send Verification Code'}
-                        </Button>
-                    </form>
-                ) : (
-                    <form onSubmit={handleVerifyCode} className="space-y-4">
-                        <p className="text-sm text-center text-muted-foreground">
-                           A code was sent to <strong>{phoneNumber}</strong>. Please enter it below.
-                        </p>
-                        <div className="grid gap-2">
-                            <Label htmlFor="code">Verification Code</Label>
-                            <Input
-                                id="code"
-                                type="text"
-                                inputMode="numeric"
-                                pattern="[0-9]{6}"
-                                placeholder="123456"
-                                value={verificationCode}
-                                onChange={(e) => setVerificationCode(e.target.value)}
-                                required
-                                className="text-center font-mono tracking-widest text-lg h-12"
-                            />
-                        </div>
-                        <div className="flex gap-2">
-                            <Button type="submit" disabled={isVerifying} className="w-full">
-                                {isVerifying ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <ShieldCheck className="mr-2 h-4 w-4" />}
-                                {isVerifying ? 'Verifying...' : 'Verify Code'}
-                            </Button>
-                            <Button
-                                type="button"
-                                variant="outline"
-                                onClick={() => {
-                                    setVerificationSent(false);
-                                    setPhoneNumber("");
-                                }}
-                            >
-                                Try Different Number
-                            </Button>
-                        </div>
-                    </form>
-                )}
+        <form onSubmit={handleVerifyCode} className="space-y-4">
+            <div className="space-y-2">
+                <Label htmlFor="code">Verification Code</Label>
+                <Input
+                    id="code"
+                    type="text"
+                    placeholder="123456"
+                    value={verificationCode}
+                    onChange={(e) => setVerificationCode(e.target.value)}
+                    required
+                    disabled={isVerifying}
+                    maxLength={6}
+                />
+                <p className="text-xs text-muted-foreground">
+                    Enter the 6-digit code sent to {phoneNumber}
+                </p>
             </div>
-          </CardContent>
-          <CardFooter>
-            <p className="text-xs text-muted-foreground">
-                Powered by Twilio Verify API. Ensure your Account SID, Auth Token, and Verify Service SID are set in your environment variables.
-            </p>
-          </CardFooter>
-        </Card>
+            <div className="flex gap-2">
+                <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => {
+                        setVerificationSent(false);
+                        setVerificationCode('');
+                    }}
+                    disabled={isVerifying}
+                    className="flex-1"
+                >
+                    Cancel
+                </Button>
+                <Button type="submit" disabled={isVerifying} className="flex-1">
+                    {isVerifying ? (
+                        <>
+                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                            Verifying...
+                        </>
+                    ) : (
+                        'Verify Code'
+                    )}
+                </Button>
+            </div>
+        </form>
     );
 }

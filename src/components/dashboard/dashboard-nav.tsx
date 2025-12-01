@@ -48,20 +48,27 @@ const CrmIcon = (props: React.SVGProps<SVGSVGElement>) => (
 
 const navItems = [
   { href: '/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
-  { href: '/dashboard/whatsapp', icon: WhatsAppIcon, label: 'WhatsApp', color: 'text-[#25D366]' },
   {
-    href: '/dashboard/twilio',
-    icon: TwilioIcon,
-    label: 'Twilio',
-    color: 'text-[#F22F46]',
+    href: '/dashboard/communications',
+    icon: WhatsAppIcon,
+    label: 'Communications',
+    color: 'text-[#25D366]',
     subItems: [
-      { href: '/dashboard/twilio', label: 'Voice Dashboard' },
-      { href: '/dashboard/twilio/verify', icon: ShieldCheck, label: 'Verify', color: 'text-blue-500' },
+      { href: '/dashboard/whatsapp', icon: WhatsAppIcon, label: 'WhatsApp', color: 'text-[#25D366]' },
+      { href: '/dashboard/twilio', icon: TwilioIcon, label: 'Twilio Voice', color: 'text-[#F22F46]' },
+      { href: '/dashboard/twilio/verify', icon: ShieldCheck, label: 'Phone Verify', color: 'text-blue-500' },
     ]
   },
-  { href: '/dashboard/exposed-apis', icon: CodeXml, label: 'Exposed APIs' },
-  { href: '/dashboard/function-connect', icon: Workflow, label: 'Function Connect' },
   { href: '/dashboard/crm', icon: CrmIcon, label: 'CRM', color: 'text-sky-500'},
+  {
+    href: '/dashboard/automation',
+    icon: Workflow,
+    label: 'Automation',
+    subItems: [
+      { href: '/dashboard/function-connect', icon: Workflow, label: 'Function Connect' },
+      { href: '/dashboard/exposed-apis', icon: CodeXml, label: 'Exposed APIs' },
+    ]
+  },
   {
     href: '/dashboard/ai-agents',
     icon: Bot,
