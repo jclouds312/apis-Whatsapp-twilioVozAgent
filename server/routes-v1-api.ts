@@ -483,7 +483,6 @@ export function registerV1ApiRoutes(app: Express) {
       res.status(500).json({ error: error.message || "Failed to delete contact" });
     }
   });
-}
 
   // ============= TWILIO VoIP ENDPOINTS =============
   
@@ -610,3 +609,4 @@ export function registerV1ApiRoutes(app: Express) {
       res.status(500).json({ error: error.message });
     }
   });
+}
