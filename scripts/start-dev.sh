@@ -1,41 +1,36 @@
 
 #!/bin/bash
 
-set -e
+echo "🚀 Iniciando aplicación Next.js..."
 
-echo "🔍 Verificando estado del proyecto..."
-
-# Función para limpiar procesos de npm que puedan estar bloqueando
-cleanup_npm() {
-    echo "🧹 Limpiando procesos de npm anteriores..."
-    pkill -9 node || true
-    pkill -9 npm || true
-    sleep 2
-}
-
-# Limpiar procesos anteriores
-cleanup_npm
-
-# Verificar si node_modules existe y tiene contenido
-if [ ! -d "node_modules" ] || [ ! -d "node_modules/.bin" ]; then
-    echo "📦 Instalando dependencias desde cero..."
-    rm -rf node_modules package-lock.json .next || true
-    npm install --legacy-peer-deps --prefer-offline --no-audit --no-fund
-else
-    echo "✅ Dependencias ya instaladas"
-fi
-
-# Verificar que Next.js esté instalado correctamente
+# Verificar si Next.js está disponible
 if [ ! -f "node_modules/.bin/next" ]; then
-    echo "❌ Next.js no encontrado, reinstalando todo..."
-    rm -rf node_modules package-lock.json .next
-    npm install --legacy-peer-deps --prefer-offline --no-audit --no-fund
+    echo "⚡ Instalando dependencias necesarias..."
+    npm install --prefer-offline --no-audit --no-fund --legacy-peer-deps &
+    INSTALL_PID=$!
+    
+    # Esperar máximo 60 segundos para la instalación
+    timeout=60
+    elapsed=0
+    while [ $elapsed -lt $timeout ]; do
+        if [ -f "node_modules/.bin/next" ]; then
+            echo "✅ Dependencias instaladas"
+            break
+        fi
+        sleep 2
+        elapsed=$((elapsed + 2))
+        echo "⏳ Instalando... ($elapsed/$timeout segundos)"
+    done
+    
+    # Si aún no está listo después del timeout, continuar de todos modos
+    if [ ! -f "node_modules/.bin/next" ]; then
+        echo "⚠️ Instalación en curso, intentando iniciar de todos modos..."
+    fi
 fi
 
-# Limpiar caché de Next.js
-echo "🗑️ Limpiando caché de Next.js..."
-rm -rf .next || true
+# Limpiar caché de Next.js si existe
+rm -rf .next 2>/dev/null || true
 
-# Iniciar el servidor de desarrollo
-echo "🚀 Iniciando servidor de desarrollo en puerto 9002..."
-NODE_ENV=development npm run dev
+# Iniciar el servidor
+echo "🌐 Iniciando servidor en puerto 9002..."
+exec npx next dev --turbopack --port 9002 --hostname 0.0.0.0
