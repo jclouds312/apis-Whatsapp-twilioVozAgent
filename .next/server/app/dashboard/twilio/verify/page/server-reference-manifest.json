@@ -1,0 +1,27 @@
+{
+  "node": {
+    "40e6b51cfa00a34b671a8c0a2d3539d1a5984669e6": {
+      "workers": {
+        "app/dashboard/twilio/verify/page": {
+          "moduleId": "[project]/.next-internal/server/app/dashboard/twilio/verify/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/app/dashboard/twilio/actions.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
+          "async": false
+        }
+      },
+      "layer": {
+        "app/dashboard/twilio/verify/page": "action-browser"
+      }
+    },
+    "60ecfbfb55e8763d2cfea44c4e022b9ee8cdeb4218": {
+      "workers": {
+        "app/dashboard/twilio/verify/page": {
+          "moduleId": "[project]/.next-internal/server/app/dashboard/twilio/verify/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/app/dashboard/twilio/actions.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
+          "async": false
+        }
+      },
+      "layer": {
+        "app/dashboard/twilio/verify/page": "action-browser"
+      }
+    }
+  },
+  "edge": {}
+}
