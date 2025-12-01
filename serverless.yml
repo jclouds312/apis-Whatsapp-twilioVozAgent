@@ -1,0 +1,95 @@
+service: nexus-enterprise-api
+
+frameworkVersion: '3'
+
+provider:
+  name: aws
+  runtime: nodejs20.x
+  region: us-east-1
+  stage: ${opt:stage, 'prod'}
+  environment:
+    DATABASE_URL: ${env:DATABASE_URL}
+    WHATSAPP_PHONE_ID: ${env:WHATSAPP_PHONE_ID}
+    META_WHATSAPP_TOKEN: ${env:META_WHATSAPP_TOKEN}
+    TWILIO_ACCOUNT_SID: ${env:TWILIO_ACCOUNT_SID}
+    TWILIO_AUTH_TOKEN: ${env:TWILIO_AUTH_TOKEN}
+    TWILIO_PHONE_NUMBER: ${env:TWILIO_PHONE_NUMBER}
+    RETELL_API_KEY: ${env:RETELL_API_KEY}
+    AWS_S3_BUCKET: ${self:service}-${self:provider.stage}
+
+  iam:
+    role:
+      statements:
+        - Effect: Allow
+          Action:
+            - s3:*
+          Resource: "arn:aws:s3:::${self:provider.environment.AWS_S3_BUCKET}*"
+        - Effect: Allow
+          Action:
+            - logs:CreateLogGroup
+            - logs:CreateLogStream
+            - logs:PutLogEvents
+          Resource: "arn:aws:logs:*:*:*"
+
+functions:
+  api:
+    handler: dist/index.handler
+    events:
+      - http:
+          path: /{proxy+}
+          method: ANY
+      - http:
+          path: /
+          method: ANY
+    timeout: 30
+    memorySize: 1024
+
+  retellWebhook:
+    handler: dist/webhooks/retell.handler
+    events:
+      - http:
+          path: /api/v1/retell/webhook
+          method: POST
+    timeout: 30
+
+resources:
+  Resources:
+    S3Bucket:
+      Type: AWS::S3::Bucket
+      Properties:
+        BucketName: ${self:provider.environment.AWS_S3_BUCKET}
+        VersioningConfiguration:
+          Status: Enabled
+        PublicAccessBlockConfiguration:
+          BlockPublicAcls: false
+          BlockPublicPolicy: false
+          IgnorePublicAcls: false
+          RestrictPublicBuckets: false
+
+    S3BucketPolicy:
+      Type: AWS::S3::BucketPolicy
+      Properties:
+        Bucket: !Ref S3Bucket
+        PolicyText:
+          Version: '2012-10-17'
+          Statement:
+            - Sid: PublicReadGetObject
+              Effect: Allow
+              Principal: '*'
+              Action: 's3:GetObject'
+              Resource: !Sub '${S3Bucket.Arn}/*'
+
+plugins:
+  - serverless-esbuild
+  - serverless-offline
+  - serverless-s3-local
+
+custom:
+  esbuild:
+    bundle: true
+    minify: true
+    sourcemap: true
+    target: node20
+  s3:
+    host: localhost
+    directory: ./s3_local

@@ -24,6 +24,7 @@ import FacebookIntegrationPage from "@/pages/FacebookIntegration";
 import SettingsPage from "@/pages/Settings";
 import SystemLogsPage from "@/pages/SystemLogs";
 import CrmPage from "@/pages/CRM";
+import CRMAdminPage from "@/pages/CRMAdmin";
 import FunctionConnectPage from "@/pages/FunctionConnect";
 import WorkflowSuggesterPage from "@/pages/WorkflowSuggester";
 import AdminPage from "@/pages/Admin";
@@ -53,6 +54,7 @@ function Router() {
         <Route path="/api-console" component={ApiConsolePage} />
         <Route path="/logs" component={SystemLogsPage} />
         <Route path="/admin" component={AdminPage} />
+        <Route path="/crm-admin" component={CRMAdminPage} />
         <Route path="/deployment" component={DeploymentPage} />
         <Route path="/settings" component={SettingsPage} />
         <Route component={NotFound} />
