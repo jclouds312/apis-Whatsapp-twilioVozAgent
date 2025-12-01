@@ -64,12 +64,17 @@ export const apiKeys = pgTable("api_keys", {
   userId: varchar("user_id").notNull(),
   serviceId: varchar("service_id"), // Link to service
   service: text("service").notNull(), // 'whatsapp', 'twilio', 'evolution'
+  name: text("name"), // Custom name for the key
   key: text("key").notNull(),
   secret: text("secret"),
   webhookUrl: text("webhook_url"),
   isActive: boolean("is_active").default(true),
+  usageCount: text("usage_count").default("0"), // JSON string for daily counts
+  totalRequests: text("total_requests").default("0"),
   lastUsed: timestamp("last_used"),
+  metadata: jsonb("metadata").default({}), // Store usage stats and info
   createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
 });
 
 export const insertApiKeySchema = createInsertSchema(apiKeys).omit({

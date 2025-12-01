@@ -18,6 +18,7 @@ import ApiDocumentationPage from "@/pages/ApiDocumentation";
 import TwilioVoicePage from "@/pages/TwilioVoice";
 import CrmIntegrationPage from "@/pages/CrmIntegration";
 import EmbedWidgetsPage from "@/pages/EmbedWidgets";
+import ApiKeyManagerPage from "@/pages/ApiKeyManager";
 import SettingsPage from "@/pages/Settings";
 import SystemLogsPage from "@/pages/SystemLogs";
 import CrmPage from "@/pages/CRM";
@@ -37,6 +38,7 @@ function Router() {
         <Route path="/twilio-voice" component={TwilioVoicePage} />
         <Route path="/crm-integration" component={CrmIntegrationPage} />
         <Route path="/embed-widgets" component={EmbedWidgetsPage} />
+        <Route path="/api-key-manager" component={ApiKeyManagerPage} />
         <Route path="/verify" component={VerifyPage} />
         <Route path="/retell" component={RetellPage} />
         <Route path="/crm" component={CrmPage} />
