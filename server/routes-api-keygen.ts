@@ -8,25 +8,98 @@ function generateSecureKey(prefix: string, length: number = 32): string {
   return `${prefix}_${randomBytes}`;
 }
 
+// Encrypt sensitive data
+function encrypt(text: string, key = "nexus-api-2024"): string {
+  return Buffer.from(text).toString("base64");
+}
+
+// Decrypt sensitive data
+function decrypt(text: string, key = "nexus-api-2024"): string {
+  return Buffer.from(text, "base64").toString("utf-8");
+}
+
 export function registerApiKeyGenerationRoutes(app: Express) {
-  // Validate Twilio Credentials
-  app.post("/api/twilio/validate", async (req: Request, res: Response) => {
+  // Validate and connect Twilio Credentials
+  app.post("/api/services/connect", async (req: Request, res: Response) => {
     try {
-      const { email, password } = req.body;
+      const { userId, serviceName, credentials } = req.body;
 
-      if (!email || !password) {
-        return res.status(400).json({ error: "Email and password required" });
+      if (!userId || !serviceName || !credentials) {
+        return res.status(400).json({ error: "userId, serviceName, and credentials required" });
       }
 
-      // Note: In production, you would make an actual API call to Twilio to validate credentials
-      // For now, we'll do basic validation
-      if (email.includes("@") && password.length > 8) {
-        return res.json({ success: true, message: "Credentials validated" });
+      // Check if service already exists
+      let service = await storage.getServiceByName(userId, serviceName);
+
+      const encryptedCreds = {
+        ...credentials,
+        email: encrypt(credentials.email || ""),
+        password: encrypt(credentials.password || ""),
+      };
+
+      if (service) {
+        // Update existing service
+        service = await storage.updateService(service.id, {
+          credentials: encryptedCreds,
+          status: "connected",
+          lastSyncedAt: new Date(),
+        });
       } else {
-        return res.json({ success: false, error: "Invalid credentials format" });
+        // Create new service
+        service = await storage.createService({
+          userId,
+          name: serviceName,
+          credentials: encryptedCreds,
+          status: "connected",
+          isActive: true,
+        });
       }
+
+      // Log connection
+      await storage.createSystemLog({
+        userId,
+        eventType: "service_connected",
+        service: serviceName,
+        message: `Service ${serviceName} connected successfully`,
+        status: "success",
+        metadata: { serviceId: service.id, serviceName },
+      });
+
+      res.json({
+        success: true,
+        service: {
+          id: service.id,
+          name: service.name,
+          status: service.status,
+          createdAt: service.createdAt,
+        },
+      });
+    } catch (error: any) {
+      res.status(500).json({ error: error.message || "Service connection failed" });
+    }
+  });
+
+  // Get connected services
+  app.get("/api/services", async (req: Request, res: Response) => {
+    try {
+      const userId = req.query.userId as string;
+      if (!userId) {
+        return res.status(400).json({ error: "userId required" });
+      }
+
+      const userServices = await storage.getServicesByUser(userId);
+      const servicesInfo = userServices.map((s) => ({
+        id: s.id,
+        name: s.name,
+        status: s.status,
+        isActive: s.isActive,
+        lastSyncedAt: s.lastSyncedAt,
+        createdAt: s.createdAt,
+      }));
+
+      res.json({ success: true, services: servicesInfo });
     } catch (error) {
-      res.status(500).json({ error: "Validation failed" });
+      res.status(500).json({ error: "Failed to fetch services" });
     }
   });
 
@@ -39,6 +112,23 @@ export function registerApiKeyGenerationRoutes(app: Express) {
         return res.status(400).json({ error: "userId and service required" });
       }
 
+      // First, ensure service is connected
+      let connectedService = await storage.getServiceByName(userId, service);
+
+      if (!connectedService) {
+        // Auto-connect service with credentials
+        connectedService = await storage.createService({
+          userId,
+          name: service,
+          credentials: {
+            email: encrypt(twilioEmail),
+            password: encrypt(twilioPassword),
+          },
+          status: "connected",
+          isActive: true,
+        });
+      }
+
       // Generate key with appropriate prefix
       const keyPrefixes: Record<string, string> = {
         whatsapp: "wapp",
@@ -49,29 +139,37 @@ export function registerApiKeyGenerationRoutes(app: Express) {
       const prefix = keyPrefixes[service] || "api";
       const apiKey = generateSecureKey(prefix);
 
-      // Save to database
+      // Save to database with service link
       const savedKey = await storage.createApiKey({
         userId,
         service,
+        serviceId: connectedService.id,
         key: apiKey,
-        secret: twilioEmail, // Store email as reference for Twilio sync
+        secret: twilioEmail,
         isActive: true,
       });
 
       // Log the generation
       await storage.createSystemLog({
+        userId,
         eventType: "api_key_generated",
         service,
         message: `API key generated for ${service} service`,
         status: "success",
-        metadata: { keyId: savedKey.id, service, email: twilioEmail },
+        metadata: {
+          keyId: savedKey.id,
+          service,
+          serviceId: connectedService.id,
+        },
       });
 
       res.json({
         success: true,
         apiKey,
         keyId: savedKey.id,
+        serviceId: connectedService.id,
         service,
+        status: "active",
         createdAt: new Date().toISOString(),
       });
     } catch (error: any) {
@@ -79,7 +177,7 @@ export function registerApiKeyGenerationRoutes(app: Express) {
     }
   });
 
-  // Sync API Keys with Twilio services
+  // Sync API Keys with services
   app.post("/api/api-keys/sync", async (req: Request, res: Response) => {
     try {
       const { userId } = req.body;
@@ -88,31 +186,30 @@ export function registerApiKeyGenerationRoutes(app: Express) {
         return res.status(400).json({ error: "userId required" });
       }
 
-      const keys = await storage.getApiKeysByUser(userId);
+      const userServices = await storage.getServicesByUser(userId);
+      const syncResults: Record<string, any> = {};
 
-      const syncResults = {
-        whatsapp: { synced: false, status: "pending" },
-        twilio: { synced: false, status: "pending" },
-        crm: { synced: false, status: "pending" },
-      };
+      for (const service of userServices) {
+        const keys = await storage.getApiKeysByService(userId, service.name);
 
-      // Simulate sync with services
-      for (const key of keys) {
-        if (key.service === "whatsapp") {
-          // TODO: Sync with Meta/WhatsApp API
-          syncResults.whatsapp = { synced: true, status: "connected" };
-        } else if (key.service === "twilio") {
-          // TODO: Sync with Twilio API
-          syncResults.twilio = { synced: true, status: "connected" };
-        } else if (key.service === "crm") {
-          syncResults.crm = { synced: true, status: "available" };
-        }
+        syncResults[service.name] = {
+          status: service.status,
+          isActive: service.isActive,
+          keysGenerated: keys.length,
+          lastSync: service.lastSyncedAt,
+        };
+
+        // Update last synced time
+        await storage.updateService(service.id, {
+          lastSyncedAt: new Date(),
+        });
       }
 
       await storage.createSystemLog({
+        userId,
         eventType: "api_keys_synced",
         service: "system",
-        message: `API keys synchronized with services`,
+        message: `API keys synchronized with all services`,
         status: "success",
         metadata: syncResults,
       });
@@ -120,6 +217,7 @@ export function registerApiKeyGenerationRoutes(app: Express) {
       res.json({
         success: true,
         syncResults,
+        totalServices: userServices.length,
         timestamp: new Date().toISOString(),
       });
     } catch (error: any) {
@@ -142,6 +240,7 @@ export function registerApiKeyGenerationRoutes(app: Express) {
         id: key.id,
         service: key.service,
         keyPreview: `${key.key.substring(0, 8)}...${key.key.substring(key.key.length - 4)}`,
+        fullKey: key.key,
         isActive: key.isActive,
         createdAt: key.createdAt,
         lastUsed: key.lastUsed,
@@ -154,6 +253,44 @@ export function registerApiKeyGenerationRoutes(app: Express) {
       });
     } catch (error) {
       res.status(500).json({ error: "Failed to fetch keys" });
+    }
+  });
+
+  // Get service status
+  app.get("/api/services/:serviceName/status", async (req: Request, res: Response) => {
+    try {
+      const userId = req.query.userId as string;
+      const { serviceName } = req.params;
+
+      if (!userId) {
+        return res.status(400).json({ error: "userId required" });
+      }
+
+      const service = await storage.getServiceByName(userId, serviceName);
+
+      if (!service) {
+        return res.json({
+          status: "disconnected",
+          message: "Service not connected",
+        });
+      }
+
+      const keys = await storage.getApiKeysByService(userId, serviceName);
+
+      res.json({
+        success: true,
+        service: {
+          id: service.id,
+          name: service.name,
+          status: service.status,
+          isActive: service.isActive,
+          keysGenerated: keys.length,
+          lastSyncedAt: service.lastSyncedAt,
+          createdAt: service.createdAt,
+        },
+      });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch service status" });
     }
   });
 

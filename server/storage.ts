@@ -17,6 +17,8 @@ import {
   type InsertSystemLog,
   type ExposedApi,
   type InsertExposedApi,
+  type Service,
+  type InsertService,
   users,
   apiKeys,
   whatsappMessages,
@@ -25,6 +27,7 @@ import {
   crmContacts,
   systemLogs,
   exposedApis,
+  services,
 } from "@shared/schema";
 import { db } from "./db";
 
@@ -36,9 +39,18 @@ export interface IStorage {
   getUserByGoogleId(googleId: string): Promise<User | undefined>;
   createUser(user: InsertUser): Promise<User>;
 
+  // ===== SERVICES =====
+  getService(id: string): Promise<Service | undefined>;
+  getServicesByUser(userId: string): Promise<Service[]>;
+  getServiceByName(userId: string, name: string): Promise<Service | undefined>;
+  createService(service: InsertService): Promise<Service>;
+  updateService(id: string, updates: Partial<Service>): Promise<Service | undefined>;
+  deleteService(id: string): Promise<void>;
+
   // ===== API KEYS =====
   getApiKey(id: string): Promise<ApiKey | undefined>;
   getApiKeysByUser(userId: string): Promise<ApiKey[]>;
+  getApiKeysByService(userId: string, service: string): Promise<ApiKey[]>;
   getApiKeyByService(userId: string, service: string): Promise<ApiKey | undefined>;
   createApiKey(apiKey: InsertApiKey): Promise<ApiKey>;
   updateApiKey(id: string, updates: Partial<ApiKey>): Promise<ApiKey | undefined>;
@@ -170,6 +182,60 @@ export class DbStorage implements IStorage {
 
   async deleteApiKey(id: string): Promise<void> {
     await db.delete(apiKeys).where(eq(apiKeys.id, id));
+  }
+
+  async getApiKeysByService(userId: string, service: string): Promise<ApiKey[]> {
+    return db.query.apiKeys.findMany({
+      where: and(
+        eq(apiKeys.userId, userId),
+        eq(apiKeys.service, service)
+      ),
+      orderBy: (ak) => ak.createdAt,
+    });
+  }
+
+  // ===== SERVICES =====
+  async getService(id: string): Promise<Service | undefined> {
+    return db.query.services.findFirst({
+      where: eq(services.id, id),
+    });
+  }
+
+  async getServicesByUser(userId: string): Promise<Service[]> {
+    return db.query.services.findMany({
+      where: eq(services.userId, userId),
+      orderBy: (s) => s.createdAt,
+    });
+  }
+
+  async getServiceByName(userId: string, name: string): Promise<Service | undefined> {
+    return db.query.services.findFirst({
+      where: and(
+        eq(services.userId, userId),
+        eq(services.name, name)
+      ),
+    });
+  }
+
+  async createService(insertService: InsertService): Promise<Service> {
+    const [service] = await db
+      .insert(services)
+      .values(insertService)
+      .returning();
+    return service;
+  }
+
+  async updateService(id: string, updates: Partial<Service>): Promise<Service | undefined> {
+    const [updated] = await db
+      .update(services)
+      .set({ ...updates, updatedAt: new Date() })
+      .where(eq(services.id, id))
+      .returning();
+    return updated;
+  }
+
+  async deleteService(id: string): Promise<void> {
+    await db.delete(services).where(eq(services.id, id));
   }
 
   // ===== WHATSAPP MESSAGES =====

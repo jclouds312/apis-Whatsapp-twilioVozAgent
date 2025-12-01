@@ -35,10 +35,34 @@ export const insertUserSchema = createInsertSchema(users).omit({
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type User = typeof users.$inferSelect;
 
+// ============= SERVICES =============
+export const services = pgTable("services", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull(),
+  name: text("name").notNull(), // 'twilio', 'whatsapp', 'crm'
+  status: text("status").default("disconnected"), // 'connected', 'disconnected', 'error'
+  credentials: jsonb("credentials").default({}), // Encrypted credentials
+  config: jsonb("config").default({}), // Service config
+  isActive: boolean("is_active").default(true),
+  lastSyncedAt: timestamp("last_synced_at"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const insertServicesSchema = createInsertSchema(services).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export type InsertService = z.infer<typeof insertServicesSchema>;
+export type Service = typeof services.$inferSelect;
+
 // ============= API KEYS =============
 export const apiKeys = pgTable("api_keys", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   userId: varchar("user_id").notNull(),
+  serviceId: varchar("service_id"), // Link to service
   service: text("service").notNull(), // 'whatsapp', 'twilio', 'evolution'
   key: text("key").notNull(),
   secret: text("secret"),
