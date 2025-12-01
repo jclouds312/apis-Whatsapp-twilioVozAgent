@@ -125,16 +125,16 @@ export default function FacebookIntegration() {
     <div className="space-y-6">
       {/* Header */}
       <div>
-        <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-600 to-blue-400 bg-clip-text text-transparent flex items-center gap-2">
-          📱 Facebook Integration
+        <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-600 via-purple-500 to-pink-500 bg-clip-text text-transparent flex items-center gap-2">
+          📱 Facebook SDK v21.0 Integration
         </h1>
         <p className="text-muted-foreground mt-2">
-          Conecta tu cuenta de Facebook usando SDK v21.0 con Promises
+          Integración completa con Facebook SDK v21.0 • Promise-based API • Async/Await support
         </p>
       </div>
 
       {/* Authentication Status */}
-      <Card className="bg-gradient-to-r from-blue-500/5 to-blue-400/5 border-blue-500/20">
+      <Card className="bg-gradient-to-r from-blue-500/10 via-purple-500/5 to-pink-500/10 border-primary/30 shadow-lg">
         <CardHeader>
           <CardTitle>Estado de Autenticación</CardTitle>
         </CardHeader>

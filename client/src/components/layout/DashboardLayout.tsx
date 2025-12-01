@@ -29,20 +29,19 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   const navItems = [
-    { icon: LayoutDashboard, label: "Overview", path: "/" },
-    { icon: MessageSquare, label: "WhatsApp Manager", path: "/whatsapp" },
-    { icon: Phone, label: "Twilio Voice", path: "/twilio" },
-    { icon: ShieldCheck, label: "Twilio Verify", path: "/verify" },
-    { icon: Bot, label: "Retell AI Agents", path: "/retell" },
+    { icon: LayoutDashboard, label: "Dashboard", path: "/", badge: "v2.4" },
+    { icon: MessageSquare, label: "WhatsApp Manager", path: "/whatsapp", badge: "API" },
+    { icon: Phone, label: "Twilio Voice", path: "/twilio", badge: "Voice" },
+    { icon: ShieldCheck, label: "Verify", path: "/verify", badge: "Auth" },
+    { icon: Bot, label: "AI Agents", path: "/retell", badge: "Beta" },
     { icon: Users, label: "CRM", path: "/crm" },
-    { icon: Zap, label: "Function Connect", path: "/function-connect" },
-    { icon: Sparkles, label: "Workflow Suggester", path: "/workflow-suggester" },
-    { icon: Key, label: "API Key Manager", path: "/api-key-manager" },
-    { icon: MessageSquare, label: "Facebook Integration", path: "/facebook-integration" },
-    { icon: Zap, label: "Twilio Voice+SMS", path: "/twilio-voice" },
-    { icon: Users, label: "CRM Integration", path: "/crm-integration" },
-    { icon: Terminal, label: "Embed Widgets", path: "/embed-widgets" },
+    { icon: Globe, label: "Facebook SDK", path: "/facebook-integration", badge: "v21" },
+    { icon: Key, label: "API Key Manager", path: "/api-key-manager", badge: "Premium" },
     { icon: Terminal, label: "API Console", path: "/api-console" },
+    { icon: Zap, label: "Twilio SMS", path: "/twilio-voice" },
+    { icon: Terminal, label: "Widgets", path: "/embed-widgets" },
+    { icon: Users, label: "CRM Pro", path: "/crm-integration" },
+    { icon: Sparkles, label: "Workflows", path: "/workflow-suggester" },
     { icon: ScrollText, label: "System Logs", path: "/logs" },
     { icon: Settings, label: "Settings", path: "/settings" },
   ];
@@ -50,56 +49,76 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   return (
     <div className="min-h-screen bg-background flex font-sans">
       {/* Sidebar Desktop */}
-      <aside className="hidden md:flex flex-col w-64 border-r border-border/40 bg-sidebar text-sidebar-foreground h-screen sticky top-0">
-        <div className="p-6 flex items-center gap-3">
-          <div className="h-8 w-8 rounded-lg bg-primary flex items-center justify-center">
-            <Cpu className="h-5 w-5 text-primary-foreground" />
+      <aside className="hidden md:flex flex-col w-72 border-r border-gradient-to-b from-primary/20 via-purple-500/10 to-pink-500/10 bg-gradient-to-b from-slate-950 via-slate-900 to-slate-950 text-sidebar-foreground h-screen sticky top-0">
+        <div className="p-6 flex items-center gap-3 bg-gradient-to-r from-primary/10 to-purple-500/10 border-b border-primary/20">
+          <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-primary via-purple-500 to-pink-500 flex items-center justify-center shadow-lg">
+            <Cpu className="h-5 w-5 text-white" />
           </div>
-          <span className="font-bold text-lg tracking-tight">NEXUS<span className="text-primary">CORE</span></span>
+          <div className="flex-1">
+            <div className="font-bold text-lg tracking-tight bg-gradient-to-r from-primary via-purple-400 to-pink-400 bg-clip-text text-transparent">
+              NEXUSCORE
+            </div>
+            <div className="text-xs text-muted-foreground">Enterprise v2.4</div>
+          </div>
         </div>
         
         <Separator className="opacity-10" />
 
-        <nav className="flex-1 py-6 px-4 space-y-1">
-          {navItems.map((item) => {
+        <nav className="flex-1 py-6 px-3 space-y-0.5 overflow-y-auto">
+          {navItems.map((item: any) => {
             const isActive = location === item.path;
             return (
               <Link key={item.path} href={item.path}>
                 <div 
                   className={`
-                    flex items-center gap-3 px-3 py-2.5 rounded-md text-sm font-medium transition-all duration-200 cursor-pointer group
+                    flex items-center justify-between gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-300 cursor-pointer group
                     ${isActive 
-                      ? "bg-primary/10 text-primary shadow-[0_0_0_1px_rgba(59,130,246,0.1)]" 
-                      : "text-muted-foreground hover:bg-muted/50 hover:text-foreground"
+                      ? "bg-gradient-to-r from-primary/30 via-purple-500/20 to-pink-500/10 text-primary shadow-[0_0_10px_rgba(59,130,246,0.3)] border border-primary/40" 
+                      : "text-muted-foreground hover:bg-muted/40 hover:text-foreground hover:shadow-md"
                     }
                   `}
                 >
-                  <item.icon className={`h-4 w-4 ${isActive ? "text-primary" : "text-muted-foreground group-hover:text-foreground"}`} />
-                  {item.label}
+                  <div className="flex items-center gap-3">
+                    <item.icon className={`h-4 w-4 transition-all ${isActive ? "text-primary" : "text-muted-foreground group-hover:text-foreground"}`} />
+                    {item.label}
+                  </div>
+                  {item.badge && (
+                    <span className={`text-xs px-2 py-0.5 rounded-full font-semibold transition-all ${
+                      isActive 
+                        ? "bg-primary/40 text-primary" 
+                        : "bg-muted/50 text-muted-foreground group-hover:bg-muted"
+                    }`}>
+                      {item.badge}
+                    </span>
+                  )}
                 </div>
               </Link>
             );
           })}
         </nav>
 
-        <div className="p-4 mt-auto">
-          <div className="rounded-lg bg-muted/30 p-4 border border-border/40">
+        <div className="p-4 mt-auto space-y-3 border-t border-primary/20">
+          <div className="rounded-lg bg-gradient-to-br from-green-500/10 via-emerald-500/5 to-teal-500/10 p-3 border border-green-500/30">
             <div className="flex items-center gap-2 mb-2">
-              <CloudLightning className="h-4 w-4 text-green-500" />
-              <span className="text-xs font-semibold text-muted-foreground">SYSTEM STATUS</span>
-            </div>
-            <div className="space-y-1">
-              <div className="flex justify-between text-xs">
-                <span className="text-muted-foreground">API Gateway</span>
-                <span className="text-green-500">Operational</span>
+              <div className="flex gap-1">
+                <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
+                <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" style={{animationDelay: "0.2s"}} />
+                <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" style={{animationDelay: "0.4s"}} />
               </div>
-              <div className="flex justify-between text-xs">
-                <span className="text-muted-foreground">Webhooks</span>
-                <span className="text-green-500">Active</span>
+              <span className="text-xs font-bold text-green-400">SYSTEM ONLINE</span>
+            </div>
+            <div className="space-y-1 text-xs">
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">API Latency</span>
+                <span className="text-green-400 font-mono">45ms</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">Uptime</span>
+                <span className="text-green-400 font-mono">99.99%</span>
               </div>
             </div>
           </div>
-          <Button variant="ghost" className="w-full mt-4 justify-start text-muted-foreground hover:text-destructive">
+          <Button variant="ghost" className="w-full justify-start text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded-lg transition-all">
             <LogOut className="mr-2 h-4 w-4" />
             Disconnect
           </Button>
