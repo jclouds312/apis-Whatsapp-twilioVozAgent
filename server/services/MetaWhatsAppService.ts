@@ -16,17 +16,34 @@ interface MessageTemplate {
 interface WABAInfo {
   id: string;
   name: string;
-  message_templates: {
+  message_templates?: {
     data: MessageTemplate[];
   };
-  phone_numbers: {
-    data: Array<{
-      id: string;
-      display_phone_number: string;
-      phone_number_id: string;
-      quality_rating: string;
-    }>;
+  phone_numbers?: {
+    data: any[];
   };
+}
+
+interface PhoneNumber {
+  id: string;
+  display_phone_number: string;
+  phone_number_id: string;
+  quality_rating: string;
+}
+
+interface AssignedUser {
+  id: string;
+  name: string;
+  email: string;
+}
+
+interface ExtendedCredit {
+  id: string;
+  owner_id: string;
+  owner_name: string;
+  owning_credit_allocation_configs: any[];
+  display_string: string;
+  currency: string;
 }
 
 export class MetaWhatsAppService {
@@ -44,7 +61,8 @@ export class MetaWhatsAppService {
     });
   }
 
-  // Get WABA info including templates and phone numbers
+  // ============= WABA OPERATIONS =============
+  // GET WABA info
   async getWABAInfo(wabaId: string): Promise<WABAInfo> {
     try {
       const response = await this.client.get(
@@ -56,11 +74,61 @@ export class MetaWhatsAppService {
     }
   }
 
-  // Get all message templates
+  // ============= ASSIGNED USERS =============
+  // GET assigned users
+  async getAssignedUsers(wabaId: string): Promise<AssignedUser[]> {
+    try {
+      const response = await this.client.get(`/${wabaId}/assigned_users`);
+      return response.data.data || [];
+    } catch (error: any) {
+      throw new Error(`Failed to fetch assigned users: ${error.message}`);
+    }
+  }
+
+  // POST assign user to WABA
+  async assignUser(wabaId: string, userId: string, role: string = "ADMIN") {
+    try {
+      const response = await this.client.post(`/${wabaId}/assigned_users`, {
+        user_id: userId,
+        role,
+      });
+      return response.data;
+    } catch (error: any) {
+      throw new Error(`Failed to assign user: ${error.message}`);
+    }
+  }
+
+  // DELETE assigned user
+  async removeAssignedUser(wabaId: string, userId: string) {
+    try {
+      const response = await this.client.delete(`/${wabaId}/assigned_users`, {
+        data: { user_id: userId },
+      });
+      return response.data;
+    } catch (error: any) {
+      throw new Error(`Failed to remove assigned user: ${error.message}`);
+    }
+  }
+
+  // ============= PHONE NUMBERS =============
+  // GET phone numbers
+  async getPhoneNumbers(wabaId: string): Promise<PhoneNumber[]> {
+    try {
+      const response = await this.client.get(
+        `/${wabaId}/phone_numbers?fields=id,display_phone_number,phone_number_id,quality_rating,verification_status,platform_type,name_status`
+      );
+      return response.data.data || [];
+    } catch (error: any) {
+      throw new Error(`Failed to fetch phone numbers: ${error.message}`);
+    }
+  }
+
+  // ============= MESSAGE TEMPLATES =============
+  // GET all message templates
   async getMessageTemplates(wabaId: string): Promise<MessageTemplate[]> {
     try {
       const response = await this.client.get(
-        `/${wabaId}/message_templates?fields=name,status,category,language,components`
+        `/${wabaId}/message_templates?fields=name,status,category,language,components,id`
       );
       return response.data.data || [];
     } catch (error: any) {
@@ -68,7 +136,7 @@ export class MetaWhatsAppService {
     }
   }
 
-  // Create new message template
+  // POST create message template
   async createMessageTemplate(
     wabaId: string,
     template: {
@@ -86,19 +154,115 @@ export class MetaWhatsAppService {
     }
   }
 
-  // Get phone numbers linked to WABA
-  async getPhoneNumbers(wabaId: string) {
+  // DELETE message template
+  async deleteMessageTemplate(wabaId: string, templateName: string) {
     try {
-      const response = await this.client.get(
-        `/${wabaId}/phone_numbers?fields=id,display_phone_number,phone_number_id,quality_rating`
-      );
-      return response.data.data || [];
+      const response = await this.client.delete(`/${wabaId}/message_templates`, {
+        data: { name: templateName },
+      });
+      return response.data;
     } catch (error: any) {
-      throw new Error(`Failed to fetch phone numbers: ${error.message}`);
+      throw new Error(`Failed to delete template: ${error.message}`);
     }
   }
 
-  // Send message using template
+  // ============= SUBSCRIBED APPS =============
+  // GET subscribed apps
+  async getSubscribedApps(wabaId: string) {
+    try {
+      const response = await this.client.get(`/${wabaId}/subscribed_apps`);
+      return response.data.data || [];
+    } catch (error: any) {
+      throw new Error(`Failed to fetch subscribed apps: ${error.message}`);
+    }
+  }
+
+  // POST subscribe app to WABA
+  async subscribeApp(wabaId: string, appId: string) {
+    try {
+      const response = await this.client.post(`/${wabaId}/subscribed_apps`, {
+        app_id: appId,
+      });
+      return response.data;
+    } catch (error: any) {
+      throw new Error(`Failed to subscribe app: ${error.message}`);
+    }
+  }
+
+  // DELETE unsubscribe app
+  async unsubscribeApp(wabaId: string, appId: string) {
+    try {
+      const response = await this.client.delete(`/${wabaId}/subscribed_apps`, {
+        data: { app_id: appId },
+      });
+      return response.data;
+    } catch (error: any) {
+      throw new Error(`Failed to unsubscribe app: ${error.message}`);
+    }
+  }
+
+  // ============= EXTENDED CREDITS =============
+  // GET extended credits for business
+  async getExtendedCredits(businessId: string): Promise<ExtendedCredit[]> {
+    try {
+      const response = await this.client.get(
+        `/${businessId}/extendedcredits?fields=id,owner_id,owner_name,owning_credit_allocation_configs,display_string,currency`
+      );
+      return response.data.data || [];
+    } catch (error: any) {
+      throw new Error(`Failed to fetch extended credits: ${error.message}`);
+    }
+  }
+
+  // POST share WhatsApp credit
+  async shareWhatsAppCredit(extendedCreditId: string, creditData: any) {
+    try {
+      const response = await this.client.post(
+        `/${extendedCreditId}/whatsapp_credit_sharing_and_attach`,
+        creditData
+      );
+      return response.data;
+    } catch (error: any) {
+      throw new Error(`Failed to share WhatsApp credit: ${error.message}`);
+    }
+  }
+
+  // GET allocation config
+  async getAllocationConfig(allocationConfigId: string) {
+    try {
+      const response = await this.client.get(
+        `/${allocationConfigId}?fields=id,credit_type,amount,owner_id`
+      );
+      return response.data;
+    } catch (error: any) {
+      throw new Error(`Failed to fetch allocation config: ${error.message}`);
+    }
+  }
+
+  // DELETE allocation config
+  async deleteAllocationConfig(allocationConfigId: string) {
+    try {
+      const response = await this.client.delete(`/${allocationConfigId}`);
+      return response.data;
+    } catch (error: any) {
+      throw new Error(`Failed to delete allocation config: ${error.message}`);
+    }
+  }
+
+  // GET owning credit allocation configs
+  async getOwningCreditAllocationConfigs(extendedCreditId: string) {
+    try {
+      const response = await this.client.get(
+        `/${extendedCreditId}/owning_credit_allocation_configs?fields=id,credit_type,amount,recipient_id,status`
+      );
+      return response.data.data || [];
+    } catch (error: any) {
+      throw new Error(`Failed to fetch credit allocation configs: ${error.message}`);
+    }
+  }
+
+  // ============= MESSAGING =============
+  // Send template message
   async sendTemplateMessage(
     phoneNumberId: string,
     recipientPhone: string,
