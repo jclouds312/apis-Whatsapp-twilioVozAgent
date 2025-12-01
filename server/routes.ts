@@ -436,7 +436,6 @@ export async function registerRoutes(
         email,
         phone,
         company,
-        tags: tags || [],
         status: "active",
       });
 
@@ -485,7 +484,10 @@ export async function registerRoutes(
       const apiKey = req.headers.authorization?.replace("Bearer ", "");
       if (!apiKey) return res.status(401).json({ error: "Missing API key" });
 
-      await storage.deleteCrmContact(req.params.id);
+      const contact = await storage.getCrmContact(req.params.id);
+      if (contact) {
+        await storage.updateCrmContact(req.params.id, { status: "deleted" });
+      }
 
       res.json({
         success: true,

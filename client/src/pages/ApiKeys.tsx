@@ -424,8 +424,8 @@ export default function ApiKeysPage() {
               <div className="bg-muted/50 p-3 rounded-lg">
                 <p className="text-xs font-mono text-muted-foreground">
                   curl -X POST https://api.nexus-core.com/api/v1/twilio/call \ <br/>
-                  -H "Authorization: Bearer sk_xxxxxxxxxxxx" \ <br/>
-                  -d '{"to":"+1234567890","message":"Hello"}'
+                  -H &quot;Authorization: Bearer sk_xxxxxxxxxxxx&quot; \ <br/>
+                  -d &apos;{`{"to":"+1234567890","message":"Hello"}`}&apos;
                 </p>
               </div>
             </CardContent>
@@ -475,8 +475,8 @@ export default function ApiKeysPage() {
               <div className="bg-muted/50 p-3 rounded-lg">
                 <p className="text-xs font-mono text-muted-foreground">
                   curl -X POST https://api.nexus-core.com/api/v1/crm/contacts \ <br/>
-                  -H "Authorization: Bearer sk_xxxxxxxxxxxx" \ <br/>
-                  -d '{"name":"John Doe","email":"john@example.com"}'
+                  -H &quot;Authorization: Bearer sk_xxxxxxxxxxxx&quot; \ <br/>
+                  -d &apos;{`{"name":"John Doe","email":"john@example.com"}`}&apos;
                 </p>
               </div>
             </CardContent>
