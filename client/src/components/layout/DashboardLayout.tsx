@@ -13,7 +13,8 @@ import {
   CloudLightning,
   ShieldCheck,
   Key,
-  Terminal
+  Terminal,
+  ScrollText
 } from "lucide-react";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
@@ -31,6 +32,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     { icon: Bot, label: "Retell AI Agents", path: "/retell" },
     { icon: Key, label: "API Keys", path: "/api-keys" },
     { icon: Terminal, label: "API Console", path: "/api-console" },
+    { icon: ScrollText, label: "System Logs", path: "/logs" },
     { icon: Settings, label: "Settings", path: "/settings" },
   ];
 

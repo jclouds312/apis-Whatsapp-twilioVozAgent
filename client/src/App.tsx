@@ -14,6 +14,7 @@ import VerifyPage from "@/pages/Verify";
 import ApiKeysPage from "@/pages/ApiKeys";
 import ApiConsolePage from "@/pages/ApiConsole";
 import SettingsPage from "@/pages/Settings";
+import SystemLogsPage from "@/pages/SystemLogs";
 
 function Router() {
   return (
@@ -26,6 +27,7 @@ function Router() {
         <Route path="/retell" component={RetellPage} />
         <Route path="/api-keys" component={ApiKeysPage} />
         <Route path="/api-console" component={ApiConsolePage} />
+        <Route path="/logs" component={SystemLogsPage} />
         <Route path="/settings" component={SettingsPage} />
         <Route component={NotFound} />
       </Switch>

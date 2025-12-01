@@ -173,34 +173,48 @@ export default function OverviewPage() {
 
         <Card className="col-span-3 bg-card/50 border-border/50">
           <CardHeader>
-            <CardTitle>Recent Deployments</CardTitle>
-            <CardDescription>Latest API configuration updates.</CardDescription>
+            <CardTitle>Active Workflows</CardTitle>
+            <CardDescription>Real-time automation status.</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="space-y-8">
+            <div className="space-y-6">
               {[
-                { id: 1, name: "WhatsApp Flow v2.4", status: "Deployed", time: "2m ago", type: "success" },
-                { id: 2, name: "Retell Voice Agent A", status: "Processing", time: "15m ago", type: "warning" },
-                { id: 3, name: "Twilio Number Config", status: "Failed", time: "1h ago", type: "error" },
-                { id: 4, name: "System Webhook Update", status: "Deployed", time: "3h ago", type: "success" },
+                { id: 1, name: "Lead to WhatsApp", status: "Running", trigger: "New CRM Lead", success_rate: "98%" },
+                { id: 2, name: "Voice Support Bot", status: "Active", trigger: "Incoming Call", success_rate: "95%" },
+                { id: 3, name: "OTP Verification", status: "Idle", trigger: "API Request", success_rate: "100%" },
               ].map((item) => (
-                <div key={item.id} className="flex items-center">
-                  <div className={`h-2 w-2 rounded-full mr-4 ${
-                    item.type === 'success' ? 'bg-emerald-500' : 
-                    item.type === 'warning' ? 'bg-amber-500' : 'bg-rose-500'
-                  }`} />
-                  <div className="space-y-1 flex-1">
-                    <p className="text-sm font-medium leading-none">{item.name}</p>
-                    <p className="text-xs text-muted-foreground">{item.time}</p>
+                <div key={item.id} className="flex items-center justify-between">
+                  <div className="space-y-1">
+                    <p className="text-sm font-medium leading-none flex items-center gap-2">
+                      {item.name}
+                      {item.status === 'Running' && <span className="relative flex h-2 w-2"><span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span><span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span></span>}
+                    </p>
+                    <p className="text-xs text-muted-foreground">Trigger: {item.trigger}</p>
                   </div>
-                  <div className={`text-xs font-medium ${
-                    item.type === 'success' ? 'text-emerald-500' : 
-                    item.type === 'warning' ? 'text-amber-500' : 'text-rose-500'
-                  }`}>
-                    {item.status}
+                  <div className="text-right">
+                     <div className="text-sm font-bold text-foreground">{item.success_rate}</div>
+                     <div className="text-[10px] text-muted-foreground">Success Rate</div>
                   </div>
                 </div>
               ))}
+            </div>
+            
+            <div className="mt-6 pt-6 border-t border-border/50">
+              <h4 className="text-xs font-semibold text-muted-foreground uppercase mb-4">Recent System Errors</h4>
+              <div className="space-y-3">
+                {[
+                  { msg: "Webhook signature mismatch", time: "2m ago", source: "Twilio" },
+                  { msg: "Rate limit exceeded", time: "1h ago", source: "OpenAI" }
+                ].map((err, i) => (
+                   <div key={i} className="flex items-start gap-2 text-sm">
+                     <div className="h-1.5 w-1.5 rounded-full bg-rose-500 mt-1.5 shrink-0" />
+                     <div>
+                       <p className="text-rose-200/80">{err.msg}</p>
+                       <p className="text-[10px] text-muted-foreground">{err.source} • {err.time}</p>
+                     </div>
+                   </div>
+                ))}
+              </div>
             </div>
           </CardContent>
         </Card>
