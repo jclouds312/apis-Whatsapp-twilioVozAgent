@@ -199,3 +199,42 @@ export async function sendWhatsAppMessage(
     return { success: false, error: errorMessage };
   }
 }
+
+const EVOLUTION_API_URL = 'http://localhost:3333'; // URL of your Evolution API
+
+/**
+ * Sends a message through the Evolution API.
+ * @param to The recipient's phone number (e.g., 5511999999999@c.us).
+ * @param text The content of the message.
+ * @returns An object indicating success or failure.
+ */
+export async function sendEvolutionWhatsAppMessage(
+  to: string,
+  text: string
+): Promise<{ success: boolean; error?: string }> {
+  const url = `${EVOLUTION_API_URL}/message/sendText`;
+
+  const payload = {
+    number: to,
+    options: {
+      delay: 1200,
+      presence: "composing",
+    },
+    textMessage: {
+      text: text,
+    },
+  };
+
+  try {
+    const response = await axios.post(url, payload);
+    console.log('Evolution API message sent successfully:', response.data);
+    return { success: true };
+  } catch (error: any) {
+    const errorMessage =
+      error.response?.data?.message ||
+      error.message ||
+      'An unknown error occurred.';
+    console.error('Failed to send Evolution API message:', errorMessage);
+    return { success: false, error: errorMessage };
+  }
+}
