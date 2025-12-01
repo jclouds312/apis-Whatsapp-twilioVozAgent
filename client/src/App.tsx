@@ -16,6 +16,7 @@ import ApiKeysPage from "@/pages/ApiKeys";
 import ApiConsolePage from "@/pages/ApiConsole";
 import ApiDocumentationPage from "@/pages/ApiDocumentation";
 import TwilioVoicePage from "@/pages/TwilioVoice";
+import TwilioVoIPPage from "@/pages/TwilioVoIP";
 import CrmIntegrationPage from "@/pages/CrmIntegration";
 import EmbedWidgetsPage from "@/pages/EmbedWidgets";
 import ApiKeyManagerPage from "@/pages/ApiKeyManager";
@@ -37,6 +38,7 @@ function Router() {
         <Route path="/whatsapp" component={WhatsAppPage} />
         <Route path="/twilio" component={TwilioPage} />
         <Route path="/twilio-voice" component={TwilioVoicePage} />
+        <Route path="/twilio-voip" component={TwilioVoIPPage} />
         <Route path="/crm-integration" component={CrmIntegrationPage} />
         <Route path="/embed-widgets" component={EmbedWidgetsPage} />
         <Route path="/api-key-manager" component={ApiKeyManagerPage} />
