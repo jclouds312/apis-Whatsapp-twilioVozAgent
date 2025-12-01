@@ -11,6 +11,9 @@ import {
   insertSystemLogSchema,
   insertExposedApiSchema,
 } from "@shared/schema";
+import { createTwilioService } from "./services/TwilioService";
+import { createWhatsAppService } from "./services/WhatsAppService";
+import { handleWhatsAppWebhook, handleTwilioWebhook } from "./webhooks";
 
 export async function registerRoutes(
   httpServer: Server,
@@ -74,42 +77,35 @@ export async function registerRoutes(
 
   app.post("/api/whatsapp/messages", async (req: Request, res: Response) => {
     try {
-      const data = insertWhatsappMessageSchema.parse(req.body);
-      const message = await storage.createWhatsappMessage(data);
+      const { userId, recipientPhone, message: messageText } = req.body;
       
-      // Log the action
-      await storage.createSystemLog({
-        userId: data.userId,
-        eventType: "message_sent",
-        service: "whatsapp",
-        message: `Message sent to ${data.recipientPhone}`,
-        status: "success",
-        metadata: { messageId: message.id, phone: data.recipientPhone },
-      });
+      if (!process.env.WHATSAPP_PHONE_ID || !process.env.WHATSAPP_ACCESS_TOKEN) {
+        return res.status(400).json({ error: "WhatsApp credentials not configured" });
+      }
 
-      res.status(201).json(message);
+      const whatsappService = createWhatsAppService(
+        process.env.WHATSAPP_PHONE_ID,
+        process.env.WHATSAPP_ACCESS_TOKEN,
+        process.env.WHATSAPP_BUSINESS_ACCOUNT_ID || ""
+      );
+
+      const response = await whatsappService.sendMessage(recipientPhone, messageText, userId);
+      res.status(201).json(response);
     } catch (error) {
-      res.status(400).json({ error: "Invalid message data" });
+      res.status(400).json({ error: "Failed to send WhatsApp message" });
     }
   });
 
-  app.post("/api/whatsapp/webhook", async (req: Request, res: Response) => {
-    try {
-      const { from, to, body, mediaUrl } = req.body;
-      
-      // Find user by phone number (would need an association in real app)
-      // For now, we'll log the webhook
-      await storage.createSystemLog({
-        eventType: "webhook_received",
-        service: "whatsapp",
-        message: `Webhook received from ${from}`,
-        status: "info",
-        metadata: { from, to, hasMedia: !!mediaUrl },
-      });
+  app.post("/api/whatsapp/webhook", handleWhatsAppWebhook);
 
-      res.json({ success: true });
-    } catch (error) {
-      res.status(500).json({ error: "Failed to process webhook" });
+  app.get("/api/whatsapp/webhook", (req: Request, res: Response) => {
+    const token = req.query["hub.verify_token"];
+    const challenge = req.query["hub.challenge"];
+    
+    if (token === process.env.WHATSAPP_WEBHOOK_TOKEN) {
+      res.status(200).send(challenge);
+    } else {
+      res.status(403).json({ error: "Invalid token" });
     }
   });
 
@@ -128,45 +124,37 @@ export async function registerRoutes(
 
   app.post("/api/twilio/calls", async (req: Request, res: Response) => {
     try {
-      const data = insertTwilioCallSchema.parse(req.body);
-      const call = await storage.createTwilioCall(data);
+      const { userId, toNumber, retellAgentId } = req.body;
 
-      await storage.createSystemLog({
-        userId: data.userId,
-        eventType: "call_initiated",
-        service: "twilio",
-        message: `Call initiated to ${data.toNumber}`,
-        status: "success",
-        metadata: { callId: call.id, toNumber: data.toNumber },
-      });
+      if (!process.env.TWILIO_ACCOUNT_SID || !process.env.TWILIO_AUTH_TOKEN) {
+        return res.status(400).json({ error: "Twilio credentials not configured" });
+      }
 
+      const twilioService = createTwilioService(
+        process.env.TWILIO_ACCOUNT_SID,
+        process.env.TWILIO_AUTH_TOKEN,
+        process.env.TWILIO_PHONE_NUMBER || "+18622770131"
+      );
+
+      const call = await twilioService.initiateCall(toNumber, userId, retellAgentId);
       res.status(201).json(call);
     } catch (error) {
-      res.status(400).json({ error: "Invalid call data" });
+      res.status(400).json({ error: "Failed to initiate call" });
     }
   });
 
-  app.post("/api/twilio/webhook", async (req: Request, res: Response) => {
-    try {
-      const { CallSid, CallStatus, From, To } = req.body;
+  app.post("/api/twilio/webhook", handleTwilioWebhook);
 
-      const call = await storage.getTwilioCallByCallSid(CallSid);
-      if (call) {
-        await storage.updateTwilioCall(call.id, { status: CallStatus });
-      }
-
-      await storage.createSystemLog({
-        eventType: "call_status_update",
-        service: "twilio",
-        message: `Call ${CallSid} status: ${CallStatus}`,
-        status: "info",
-        metadata: { callSid: CallSid, status: CallStatus },
-      });
-
-      res.json({ success: true });
-    } catch (error) {
-      res.status(500).json({ error: "Failed to process webhook" });
-    }
+  app.post("/api/twilio/twiml", (req: Request, res: Response) => {
+    res.set("Content-Type", "text/xml");
+    res.send(`<?xml version="1.0" encoding="UTF-8"?>
+      <Response>
+        <Say voice="alice">Thank you for calling. Your call is being processed.</Say>
+        <Gather numDigits="1" action="/api/twilio/gather" method="POST">
+          <Say>Press 1 for support, or 2 to repeat this message.</Say>
+        </Gather>
+      </Response>
+    `);
   });
 
   // ============= WORKFLOWS ROUTES =============
@@ -310,9 +298,56 @@ export async function registerRoutes(
     }
   });
 
+  // ============= AUTH ROUTES =============
+  app.post("/api/auth/register", async (req: Request, res: Response) => {
+    try {
+      const { username, email, password } = req.body;
+      const user = await storage.createUser({ username, email, password, role: "user" });
+      res.status(201).json({ user: { id: user.id, username: user.username, email: user.email } });
+    } catch (error) {
+      res.status(400).json({ error: "Registration failed" });
+    }
+  });
+
+  app.post("/api/auth/login", async (req: Request, res: Response) => {
+    try {
+      const { email, password } = req.body;
+      const user = await storage.getUserByEmail(email);
+      if (!user || user.password !== password) {
+        return res.status(401).json({ error: "Invalid credentials" });
+      }
+      res.json({ user: { id: user.id, username: user.username, email: user.email, role: user.role } });
+    } catch (error) {
+      res.status(400).json({ error: "Login failed" });
+    }
+  });
+
+  app.post("/api/auth/google", async (req: Request, res: Response) => {
+    try {
+      const { googleId, email } = req.body;
+      let user = await storage.getUserByGoogleId(googleId);
+      if (!user) {
+        user = await storage.createUser({
+          username: email.split("@")[0],
+          email,
+          googleId,
+          role: "user",
+        });
+      }
+      res.json({ user: { id: user.id, username: user.username, email: user.email, role: user.role } });
+    } catch (error) {
+      res.status(400).json({ error: "Google login failed" });
+    }
+  });
+
   // ============= HEALTH CHECK =============
   app.get("/api/health", (req: Request, res: Response) => {
-    res.json({ status: "ok" });
+    res.json({
+      status: "ok",
+      whatsappConfigured: !!process.env.WHATSAPP_PHONE_ID,
+      twilioConfigured: !!process.env.TWILIO_ACCOUNT_SID,
+      adminPhone: "+18622770131",
+    });
   });
 
   return httpServer;

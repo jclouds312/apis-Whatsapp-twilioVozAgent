@@ -24,7 +24,7 @@ import { useMutation, useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
 
 const DEMO_USER_ID = "demo-user-123";
-const DEMO_PHONE = "+1234567890";
+const ADMIN_PHONE = "+18622770131"; // Admin phone number configured
 
 export default function WhatsAppPage() {
   const [recipientPhone, setRecipientPhone] = useState("");
@@ -54,11 +54,8 @@ export default function WhatsAppPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           userId: DEMO_USER_ID,
-          phoneNumber: DEMO_PHONE,
           recipientPhone,
           message: messageText,
-          status: "pending",
-          direction: "outbound",
         }),
       });
       if (!res.ok) throw new Error("Failed to send message");

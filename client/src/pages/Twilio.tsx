@@ -27,7 +27,7 @@ import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
 
 const DEMO_USER_ID = "demo-user-123";
-const DEMO_FROM_NUMBER = "+1234567890";
+const ADMIN_PHONE_TWILIO = "+18622770131"; // Admin phone configured
 
 export default function TwilioPage() {
   const [toNumber, setToNumber] = useState("");
@@ -55,11 +55,7 @@ export default function TwilioPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           userId: DEMO_USER_ID,
-          callSid: `call_${Date.now()}`,
-          fromNumber: DEMO_FROM_NUMBER,
           toNumber,
-          status: "initiated",
-          direction: "outbound",
         }),
       });
       if (!res.ok) throw new Error("Failed to initiate call");
@@ -233,8 +229,8 @@ export default function TwilioPage() {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label>From Number</Label>
-                  <Input disabled value={DEMO_FROM_NUMBER} className="bg-muted/50" />
+                  <Label>From Number (Admin)</Label>
+                  <Input disabled value={ADMIN_PHONE_TWILIO} className="bg-muted/50" />
                 </div>
                 <Button 
                   className="w-full"
