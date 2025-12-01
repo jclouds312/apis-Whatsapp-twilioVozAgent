@@ -1,9 +1,6 @@
 import type { Express, Request, Response } from "express";
 import { storage } from "./storage";
-import axios from "axios";
-
-// NoCodeAPI Twilio endpoint
-const NOCODE_API_URL = "https://v1.nocodeapi.com/john474n/twilio/jbngLoZWwbtslepf";
+import { nocodeApiService } from "./services/NocodeApiService";
 
 // Middleware to validate API key
 async function validateApiKey(req: Request, res: Response, next: () => void) {
@@ -25,28 +22,180 @@ async function validateApiKey(req: Request, res: Response, next: () => void) {
 }
 
 export function registerV1ApiRoutes(app: Express) {
+  // ============= API DOCUMENTATION =============
+  
+  app.get("/api/v1/docs", (req: Request, res: Response) => {
+    res.json({
+      version: "1.0.0",
+      name: "Nexus Core Enterprise API",
+      description: "Complete API management platform for WhatsApp, Twilio Voice, and CRM",
+      baseUrl: "https://api.nexus-core.com/api/v1",
+      authentication: "Bearer Token (API Key required)",
+      endpoints: {
+        twilio: {
+          sms: {
+            method: "POST",
+            path: "/twilio/sms",
+            description: "Send SMS via Twilio",
+            parameters: {
+              to: "Phone number (e.g., +12345678901)",
+              body: "SMS message text",
+              from: "Sender phone (optional, defaults to +18622770131)",
+            },
+            example: {
+              curl: 'curl -X POST https://api.nexus-core.com/api/v1/twilio/sms -H "Authorization: Bearer YOUR_API_KEY" -H "Content-Type: application/json" -d \'{"to":"+12345678901","body":"Hello from Twilio"}\'',
+            },
+          },
+          call: {
+            method: "POST",
+            path: "/twilio/call",
+            description: "Initiate phone call",
+            parameters: {
+              to: "Destination phone number",
+              from: "Caller ID (optional)",
+              recordCall: "Record the call (boolean, default: true)",
+            },
+          },
+          voiceMessage: {
+            method: "POST",
+            path: "/twilio/voice-message",
+            description: "Send voice message (text-to-speech)",
+            parameters: {
+              to: "Recipient phone number",
+              message: "Voice message text",
+              voice: "Voice type (Alice, Woman, Man - default: Alice)",
+            },
+          },
+          callStatus: {
+            method: "GET",
+            path: "/twilio/call/:callSid",
+            description: "Get call status and details",
+          },
+          recordings: {
+            method: "GET",
+            path: "/twilio/recordings/:callSid",
+            description: "Get call recordings",
+          },
+          extension: {
+            method: "POST",
+            path: "/twilio/extension",
+            description: "Create new phone number in USA",
+            parameters: {
+              areaCode: "US area code (e.g., 201, 212)",
+            },
+          },
+        },
+        whatsapp: {
+          send: {
+            method: "POST",
+            path: "/whatsapp/send",
+            description: "Send WhatsApp message",
+            parameters: {
+              to: "Recipient phone number",
+              message: "Message text",
+            },
+          },
+          sendBulk: {
+            method: "POST",
+            path: "/whatsapp/send-bulk",
+            description: "Send message to multiple recipients",
+            parameters: {
+              recipients: "Array of phone numbers",
+              message: "Message text",
+            },
+          },
+        },
+        crm: {
+          createContact: {
+            method: "POST",
+            path: "/crm/contacts",
+            description: "Create new CRM contact",
+            parameters: {
+              name: "Contact name (required)",
+              email: "Email address",
+              phone: "Phone number",
+              company: "Company name",
+              source: "Contact source (optional)",
+            },
+          },
+          listContacts: {
+            method: "GET",
+            path: "/crm/contacts",
+            description: "List all contacts",
+          },
+          updateContact: {
+            method: "PUT",
+            path: "/crm/contacts/:id",
+            description: "Update contact",
+          },
+          deleteContact: {
+            method: "DELETE",
+            path: "/crm/contacts/:id",
+            description: "Delete contact",
+          },
+        },
+      },
+    });
+  });
+
   // ============= TWILIO V1 API via NoCodeAPI =============
+
+  // POST /api/v1/twilio/sms - Send SMS via NoCodeAPI
+  app.post("/api/v1/twilio/sms", validateApiKey, async (req: Request, res: Response) => {
+    try {
+      const { to, body, from } = req.body;
+      const userId = (req as any).userId;
+
+      if (!to || !body) {
+        return res.status(400).json({ error: "Missing 'to' or 'body' parameter" });
+      }
+
+      const smsResponse = await nocodeApiService.sendSMS(to, body, from || "+18622770131");
+
+      await storage.createSystemLog({
+        userId,
+        eventType: "sms_sent",
+        service: "twilio",
+        message: `SMS sent to ${to}`,
+        status: "success",
+        metadata: { messageSid: smsResponse.sid, to },
+      });
+
+      res.json({
+        success: true,
+        messageSid: smsResponse.sid || smsResponse.message_sid,
+        to,
+        body,
+        timestamp: new Date().toISOString(),
+      });
+    } catch (error: any) {
+      await storage.createSystemLog({
+        eventType: "sms_failed",
+        service: "twilio",
+        message: `Failed to send SMS to ${req.body.to}`,
+        status: "error",
+        metadata: { error: error.message },
+      });
+      res.status(500).json({ error: error.message || "Failed to send SMS" });
+    }
+  });
 
   // POST /api/v1/twilio/call - Initiate call via NoCodeAPI
   app.post("/api/v1/twilio/call", validateApiKey, async (req: Request, res: Response) => {
     try {
-      const { to, recordCall = true } = req.body;
+      const { to, from, recordCall = true } = req.body;
       const userId = (req as any).userId;
 
       if (!to) {
         return res.status(400).json({ error: "Missing 'to' parameter" });
       }
 
-      const callResponse = await axios.post(NOCODE_API_URL, {
-        action: "initiate_call",
-        to,
-        recordCall,
-      });
+      const callResponse = await nocodeApiService.makeCall(to, from || "+18622770131", recordCall);
 
       await storage.createTwilioCall({
         userId,
-        callSid: callResponse.data.callSid || `call_${Date.now()}`,
-        fromNumber: "+18622770131",
+        callSid: callResponse.callSid || callResponse.sid || `call_${Date.now()}`,
+        fromNumber: from || "+18622770131",
         toNumber: to,
         status: "initiated",
         direction: "outbound",
@@ -58,14 +207,14 @@ export function registerV1ApiRoutes(app: Express) {
         service: "twilio",
         message: `Call initiated to ${to}`,
         status: "success",
-        metadata: { callSid: callResponse.data.callSid, to },
+        metadata: { callSid: callResponse.callSid, to },
       });
 
       res.json({
         success: true,
-        callSid: callResponse.data.callSid,
+        callSid: callResponse.callSid || callResponse.sid,
         to,
-        from: "+18622770131",
+        from: from || "+18622770131",
         recordCall,
         status: "initiated",
         timestamp: new Date().toISOString(),
@@ -73,68 +222,26 @@ export function registerV1ApiRoutes(app: Express) {
     } catch (error: any) {
       res.status(500).json({
         error: error.message || "Failed to initiate call",
-        details: error.response?.data,
       });
-    }
-  });
-
-  // POST /api/v1/twilio/sms - Send SMS via NoCodeAPI
-  app.post("/api/v1/twilio/sms", validateApiKey, async (req: Request, res: Response) => {
-    try {
-      const { to, message } = req.body;
-      const userId = (req as any).userId;
-
-      if (!to || !message) {
-        return res.status(400).json({ error: "Missing 'to' or 'message'" });
-      }
-
-      const smsResponse = await axios.post(NOCODE_API_URL, {
-        action: "send_sms",
-        to,
-        message,
-      });
-
-      await storage.createSystemLog({
-        userId,
-        eventType: "sms_sent",
-        service: "twilio",
-        message: `SMS sent to ${to}`,
-        status: "success",
-        metadata: { messageSid: smsResponse.data.sid, to },
-      });
-
-      res.json({
-        success: true,
-        messageSid: smsResponse.data.sid,
-        to,
-        timestamp: new Date().toISOString(),
-      });
-    } catch (error: any) {
-      res.status(500).json({ error: error.message || "Failed to send SMS" });
     }
   });
 
   // POST /api/v1/twilio/voice-message - Send voice message via NoCodeAPI
   app.post("/api/v1/twilio/voice-message", validateApiKey, async (req: Request, res: Response) => {
     try {
-      const { to, message, voice = "Alice" } = req.body;
+      const { to, message, voice = "Alice", from } = req.body;
       const userId = (req as any).userId;
 
       if (!to || !message) {
         return res.status(400).json({ error: "Missing 'to' or 'message'" });
       }
 
-      const voiceResponse = await axios.post(NOCODE_API_URL, {
-        action: "send_voice_message",
-        to,
-        message,
-        voice,
-      });
+      const voiceResponse = await nocodeApiService.sendVoiceMessage(to, message, voice, from || "+18622770131");
 
       await storage.createTwilioCall({
         userId,
-        callSid: voiceResponse.data.callSid || `vcall_${Date.now()}`,
-        fromNumber: "+18622770131",
+        callSid: voiceResponse.callSid || voiceResponse.sid || `vcall_${Date.now()}`,
+        fromNumber: from || "+18622770131",
         toNumber: to,
         status: "initiated",
         direction: "outbound",
@@ -142,7 +249,7 @@ export function registerV1ApiRoutes(app: Express) {
 
       res.json({
         success: true,
-        callSid: voiceResponse.data.callSid,
+        callSid: voiceResponse.callSid || voiceResponse.sid,
         to,
         message,
         voice,
@@ -158,17 +265,14 @@ export function registerV1ApiRoutes(app: Express) {
     try {
       const { callSid } = req.params;
 
-      const statusResponse = await axios.post(NOCODE_API_URL, {
-        action: "get_call_status",
-        callSid,
-      });
+      const statusResponse = await nocodeApiService.getCallStatus(callSid);
 
       res.json({
         success: true,
         callSid,
-        status: statusResponse.data.status,
-        duration: statusResponse.data.duration,
-        direction: statusResponse.data.direction,
+        status: statusResponse.status,
+        duration: statusResponse.duration,
+        direction: statusResponse.direction,
         timestamp: new Date().toISOString(),
       });
     } catch (error: any) {
@@ -181,15 +285,12 @@ export function registerV1ApiRoutes(app: Express) {
     try {
       const { callSid } = req.params;
 
-      const recordingsResponse = await axios.post(NOCODE_API_URL, {
-        action: "get_recordings",
-        callSid,
-      });
+      const recordingsResponse = await nocodeApiService.getRecordings(callSid);
 
       res.json({
         success: true,
         callSid,
-        recordings: recordingsResponse.data.recordings || [],
+        recordings: recordingsResponse.recordings || [],
         timestamp: new Date().toISOString(),
       });
     } catch (error: any) {
@@ -202,15 +303,12 @@ export function registerV1ApiRoutes(app: Express) {
     try {
       const { areaCode = "201" } = req.body;
 
-      const extensionResponse = await axios.post(NOCODE_API_URL, {
-        action: "create_phone_number",
-        areaCode,
-      });
+      const extensionResponse = await nocodeApiService.buyPhoneNumber(areaCode);
 
       res.json({
         success: true,
-        phoneNumber: extensionResponse.data.phoneNumber,
-        sid: extensionResponse.data.sid,
+        phoneNumber: extensionResponse.phoneNumber,
+        sid: extensionResponse.sid,
         areaCode,
         timestamp: new Date().toISOString(),
       });
@@ -240,10 +338,20 @@ export function registerV1ApiRoutes(app: Express) {
         direction: "outbound",
       });
 
+      await storage.createSystemLog({
+        userId,
+        eventType: "whatsapp_message_sent",
+        service: "whatsapp",
+        message: `Message sent to ${to}`,
+        status: "success",
+        metadata: { messageId: whatsappMsg.id, to },
+      });
+
       res.json({
         success: true,
         messageId: whatsappMsg.id,
         to,
+        message,
         timestamp: new Date().toISOString(),
       });
     } catch (error: any) {
@@ -273,6 +381,15 @@ export function registerV1ApiRoutes(app: Express) {
         });
         results.push({ to, messageId: msg.id, status: "sent" });
       }
+
+      await storage.createSystemLog({
+        userId,
+        eventType: "whatsapp_bulk_sent",
+        service: "whatsapp",
+        message: `Bulk messages sent to ${recipients.length} recipients`,
+        status: "success",
+        metadata: { recipients: recipients.length },
+      });
 
       res.json({
         success: true,
