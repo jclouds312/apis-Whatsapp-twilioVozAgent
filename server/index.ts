@@ -78,6 +78,10 @@ app.use((req, res, next) => {
   const { registerRetellRoutes } = await import("./routes-retell");
   registerRetellRoutes(app);
 
+  // Import and register Asterisk VoIP routes
+  const { registerAsteriskRoutes } = await import("./routes-asterisk");
+  registerAsteriskRoutes(app);
+
   // Import and register API key management routes
   const { registerApiKeyRoutes } = await import("./routes-api-keys");
   registerApiKeyRoutes(app);

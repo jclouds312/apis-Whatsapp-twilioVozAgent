@@ -25,6 +25,7 @@ import SettingsPage from "@/pages/Settings";
 import SystemLogsPage from "@/pages/SystemLogs";
 import CrmPage from "@/pages/CRM";
 import CRMAdminPage from "@/pages/CRMAdmin";
+import ApiKeyDashboardPage from "@/pages/ApiKeyDashboard";
 import FunctionConnectPage from "@/pages/FunctionConnect";
 import WorkflowSuggesterPage from "@/pages/WorkflowSuggester";
 import AdminPage from "@/pages/Admin";
@@ -52,6 +53,7 @@ function Router() {
         <Route path="/api-keys" component={ApiKeysPage} />
         <Route path="/api-key-generator" component={ApiKeyGeneratorPage} />
         <Route path="/api-console" component={ApiConsolePage} />
+        <Route path="/api-key-dashboard" component={ApiKeyDashboardPage} />
         <Route path="/logs" component={SystemLogsPage} />
         <Route path="/admin" component={AdminPage} />
         <Route path="/crm-admin" component={CRMAdminPage} />

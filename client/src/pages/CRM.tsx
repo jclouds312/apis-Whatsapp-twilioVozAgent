@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Users, TrendingUp, Workflow as WorkflowIcon, Plus, Trash2, Loader2, Mail, Phone, Target, Zap, Headphones, Play, Copy, Check } from "lucide-react";
+import { Users, TrendingUp, Workflow as WorkflowIcon, Plus, Trash2, Loader2, Mail, Phone, Target, Zap, Headphones, Play, Copy, Check, Download } from "lucide-react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -221,9 +221,10 @@ export default function CrmPage() {
       </div>
 
       <Tabs defaultValue="contacts" className="space-y-4">
-        <TabsList className="grid w-full grid-cols-4 rounded-2xl">
+        <TabsList className="grid w-full grid-cols-5 rounded-2xl">
           <TabsTrigger value="contacts"><Users className="h-4 w-4 mr-2" />Contactos</TabsTrigger>
-          <TabsTrigger value="retell"><Headphones className="h-4 w-4 mr-2" />Retell Voice</TabsTrigger>
+          <TabsTrigger value="voip"><Phone className="h-4 w-4 mr-2" />VoIP Asterisk</TabsTrigger>
+          <TabsTrigger value="retell"><Headphones className="h-4 w-4 mr-2" />Retell AI</TabsTrigger>
           <TabsTrigger value="workflows"><WorkflowIcon className="h-4 w-4 mr-2" />Workflows</TabsTrigger>
           <TabsTrigger value="logs"><TrendingUp className="h-4 w-4 mr-2" />Logs</TabsTrigger>
         </TabsList>
@@ -300,6 +301,96 @@ export default function CrmPage() {
                   ))}
                 </TableBody>
               </Table>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* VOIP ASTERISK TAB */}
+        <TabsContent value="voip" className="space-y-4">
+          <Card className="rounded-3xl border-2 border-lime-500/50 bg-lime-950/20">
+            <CardHeader><CardTitle className="flex items-center gap-2"><Phone className="h-5 w-5 text-lime-400" />VoIP Core Call con Asterisk</CardTitle></CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid gap-4 md:grid-cols-2">
+                <div className="p-4 rounded-2xl border-2 border-slate-700 bg-slate-900/50">
+                  <p className="text-xs text-lime-400 font-bold mb-1">STATUS ASTERISK</p>
+                  <p className="text-2xl font-black text-lime-300">ONLINE</p>
+                  <p className="text-xs text-slate-400 mt-2">v20.0.0 • Uptime: 99.8%</p>
+                </div>
+                <div className="p-4 rounded-2xl border-2 border-slate-700 bg-slate-900/50">
+                  <p className="text-xs text-cyan-400 font-bold mb-1">LLAMADAS ACTIVAS</p>
+                  <p className="text-2xl font-black text-cyan-300">12</p>
+                  <p className="text-xs text-slate-400 mt-2">Duraciones: 2-15 min</p>
+                </div>
+              </div>
+
+              <div className="grid gap-4 md:grid-cols-2">
+                <div className="space-y-2">
+                  <Label>Número de Origen</Label>
+                  <Input placeholder="+18622770131" value={callPhoneNumber} onChange={e => setCallPhoneNumber(e.target.value)} className="rounded-2xl" />
+                </div>
+                <div className="space-y-2">
+                  <Label>Número Destino</Label>
+                  <Input placeholder="+34912345678" className="rounded-2xl" />
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label>Caller ID</Label>
+                <Input placeholder="Digital Future Sales" className="rounded-2xl" />
+              </div>
+
+              <Button className="w-full bg-gradient-to-r from-lime-600 to-green-600 rounded-2xl font-bold">
+                <Phone className="h-4 w-4 mr-2" />
+                Iniciar Llamada VoIP
+              </Button>
+
+              <div className="grid gap-4 md:grid-cols-2">
+                <Button variant="outline" className="rounded-2xl">Asignar DID Number</Button>
+                <Button variant="outline" className="rounded-2xl">Crear Menú IVR</Button>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="rounded-3xl border-2 border-cyan-500/30">
+            <CardHeader><CardTitle>Llamadas VoIP Activas</CardTitle></CardHeader>
+            <CardContent className="space-y-3">
+              {[
+                { id: 1, from: "+18622770131", to: "+34912345678", duration: "05:23", status: "active", quality: "HD" },
+                { id: 2, from: "+18622770131", to: "+34634567890", duration: "03:15", status: "active", quality: "HD" },
+              ].map(call => (
+                <div key={call.id} className="p-4 rounded-2xl border-2 border-slate-700 flex items-center justify-between">
+                  <div className="flex-1">
+                    <p className="font-bold text-white">{call.from} → {call.to}</p>
+                    <p className="text-xs text-slate-400">Duración: {call.duration}</p>
+                  </div>
+                  <div className="flex gap-2">
+                    <Badge className="bg-lime-500/30 text-lime-300 rounded-full">{call.status}</Badge>
+                    <Badge className="bg-cyan-500/30 text-cyan-300 rounded-full">{call.quality}</Badge>
+                    <Button size="sm" variant="outline" className="rounded-lg">Colgar</Button>
+                  </div>
+                </div>
+              ))}
+            </CardContent>
+          </Card>
+
+          <Card className="rounded-3xl border-2 border-purple-500/30">
+            <CardHeader><CardTitle>Grabaciones VoIP</CardTitle></CardHeader>
+            <CardContent className="space-y-3">
+              {[
+                { id: 1, from: "+18622770131", to: "+34912345678", date: "21:15", duration: "04:05", url: "#" },
+                { id: 2, from: "+18622770131", to: "+34634567890", date: "21:18", duration: "03:45", url: "#" },
+              ].map(rec => (
+                <div key={rec.id} className="p-3 rounded-2xl border-2 border-slate-700 flex items-center justify-between text-sm">
+                  <div className="flex-1">
+                    <p className="font-bold text-white">{rec.from} → {rec.to}</p>
+                    <p className="text-xs text-slate-400">{rec.date} • {rec.duration}</p>
+                  </div>
+                  <div className="flex gap-2">
+                    <Button size="sm" variant="ghost" className="rounded-lg"><Play className="h-4 w-4" /></Button>
+                    <Button size="sm" variant="ghost" className="rounded-lg"><Download className="h-4 w-4" /></Button>
+                  </div>
+                </div>
+              ))}
             </CardContent>
           </Card>
         </TabsContent>
