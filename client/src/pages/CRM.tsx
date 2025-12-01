@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { CheckCircle, Users, TrendingUp, Workflow as WorkflowIcon, Plus, Trash2, Loader2, Mail, Phone } from "lucide-react";
+import { Users, TrendingUp, Workflow as WorkflowIcon, Plus, Trash2, Loader2, Mail, Phone, Target, Zap } from "lucide-react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -90,44 +90,56 @@ export default function CrmPage() {
   }, []);
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-cyan-900/40 via-slate-900 to-slate-950 border border-cyan-500/30 p-8">
-        <div className="absolute inset-0 opacity-20">
-          <div className="absolute top-0 left-1/4 w-96 h-96 bg-cyan-500/20 rounded-full blur-3xl" />
-          <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-blue-500/10 rounded-full blur-3xl" />
+    <div className="space-y-8">
+      {/* Funciones Cards */}
+      <div className="grid gap-4 md:grid-cols-3 lg:grid-cols-4">
+        <div className="group relative rounded-3xl border-2 border-cyan-500/50 bg-gradient-to-br from-cyan-950/40 to-slate-950 p-6 hover:border-cyan-400 hover:shadow-[0_0_20px_rgba(34,211,238,0.3)] transition-all duration-300">
+          <div className="flex items-start justify-between"><Users className="h-8 w-8 text-cyan-400" /><span className="text-xs font-bold text-cyan-300">MANAGE</span></div>
+          <h3 className="mt-3 text-lg font-bold text-cyan-300">Lead Capture</h3>
+          <p className="text-xs text-slate-400 mt-2">Capturar contactos auto</p>
         </div>
-        <div className="relative">
-          <h1 className="text-5xl font-bold bg-gradient-to-r from-cyan-400 via-blue-400 to-purple-400 bg-clip-text text-transparent flex items-center gap-3">
-            <Users className="h-10 w-10 text-cyan-500" />
-            CRM Pro • Contact Manager
-          </h1>
-          <p className="text-muted-foreground mt-2 text-lg">Gestión de contactos • Lead tracking • Automatizaciones • Sincronización en tiempo real</p>
+        
+        <div className="group relative rounded-3xl border-2 border-purple-500/50 bg-gradient-to-br from-purple-950/40 to-slate-950 p-6 hover:border-purple-400 hover:shadow-[0_0_20px_rgba(168,85,247,0.3)] transition-all duration-300">
+          <div className="flex items-start justify-between"><Target className="h-8 w-8 text-purple-400" /><span className="text-xs font-bold text-purple-300">TRACK</span></div>
+          <h3 className="mt-3 text-lg font-bold text-purple-300">Lead Tracking</h3>
+          <p className="text-xs text-slate-400 mt-2">Seguimiento completo</p>
+        </div>
+
+        <div className="group relative rounded-3xl border-2 border-pink-500/50 bg-gradient-to-br from-pink-950/40 to-slate-950 p-6 hover:border-pink-400 hover:shadow-[0_0_20px_rgba(236,72,153,0.3)] transition-all duration-300">
+          <div className="flex items-start justify-between"><WorkflowIcon className="h-8 w-8 text-pink-400" /><span className="text-xs font-bold text-pink-300">AUTO</span></div>
+          <h3 className="mt-3 text-lg font-bold text-pink-300">Workflows</h3>
+          <p className="text-xs text-slate-400 mt-2">Automatización de ventas</p>
+        </div>
+
+        <div className="group relative rounded-3xl border-2 border-lime-500/50 bg-gradient-to-br from-lime-950/40 to-slate-950 p-6 hover:border-lime-400 hover:shadow-[0_0_20px_rgba(132,204,22,0.3)] transition-all duration-300">
+          <div className="flex items-start justify-between"><Zap className="h-8 w-8 text-lime-400" /><span className="text-xs font-bold text-lime-300">SYNC</span></div>
+          <h3 className="mt-3 text-lg font-bold text-lime-300">Real-time Sync</h3>
+          <p className="text-xs text-slate-400 mt-2">Sincronización en vivo</p>
         </div>
       </div>
 
       {/* Live Stats */}
       <div className="grid gap-4 md:grid-cols-4">
-        <Card className="bg-gradient-to-br from-cyan-500/10 to-transparent border-cyan-500/30">
-          <CardHeader className="pb-2"><CardTitle className="text-xs"><span>Total Contactos</span></CardTitle></CardHeader>
-          <CardContent><div className="text-3xl font-bold text-cyan-400">{liveStats.totalContacts}</div></CardContent>
+        <Card className="rounded-3xl border-2 border-cyan-500/50 bg-gradient-to-br from-cyan-500/10 to-transparent">
+          <CardHeader className="pb-2"><CardTitle className="text-xs">Total Contactos</CardTitle></CardHeader>
+          <CardContent><div className="text-4xl font-black text-cyan-300">{liveStats.totalContacts}</div></CardContent>
         </Card>
-        <Card className="bg-gradient-to-br from-blue-500/10 to-transparent border-blue-500/30">
+        <Card className="rounded-3xl border-2 border-blue-500/50 bg-gradient-to-br from-blue-500/10 to-transparent">
           <CardHeader className="pb-2"><CardTitle className="text-xs">Nuevos Leads</CardTitle></CardHeader>
-          <CardContent><div className="text-3xl font-bold text-blue-400">{liveStats.newLeads}</div></CardContent>
+          <CardContent><div className="text-4xl font-black text-blue-300">{liveStats.newLeads}</div></CardContent>
         </Card>
-        <Card className="bg-gradient-to-br from-purple-500/10 to-transparent border-purple-500/30">
+        <Card className="rounded-3xl border-2 border-purple-500/50 bg-gradient-to-br from-purple-500/10 to-transparent">
           <CardHeader className="pb-2"><CardTitle className="text-xs">Convertidos</CardTitle></CardHeader>
-          <CardContent><div className="text-3xl font-bold text-purple-400">{liveStats.converted}</div></CardContent>
+          <CardContent><div className="text-4xl font-black text-purple-300">{liveStats.converted}</div></CardContent>
         </Card>
-        <Card className="bg-gradient-to-br from-pink-500/10 to-transparent border-pink-500/30">
+        <Card className="rounded-3xl border-2 border-pink-500/50 bg-gradient-to-br from-pink-500/10 to-transparent">
           <CardHeader className="pb-2"><CardTitle className="text-xs">Workflows Activos</CardTitle></CardHeader>
-          <CardContent><div className="text-3xl font-bold text-pink-400">{liveStats.activeWorkflows}</div></CardContent>
+          <CardContent><div className="text-4xl font-black text-pink-300">{liveStats.activeWorkflows}</div></CardContent>
         </Card>
       </div>
 
       <Tabs defaultValue="contacts" className="space-y-4">
-        <TabsList className="grid w-full grid-cols-3">
+        <TabsList className="grid w-full grid-cols-3 rounded-2xl">
           <TabsTrigger value="contacts"><Users className="h-4 w-4 mr-2" />Contactos</TabsTrigger>
           <TabsTrigger value="workflows"><WorkflowIcon className="h-4 w-4 mr-2" />Workflows</TabsTrigger>
           <TabsTrigger value="logs"><TrendingUp className="h-4 w-4 mr-2" />Logs</TabsTrigger>
@@ -136,55 +148,40 @@ export default function CrmPage() {
         {/* CONTACTS TAB */}
         <TabsContent value="contacts" className="space-y-4">
           {showForm && (
-            <Card className="bg-card/50 border-blue-500/20">
+            <Card className="rounded-3xl border-2 border-blue-500/30 bg-card/50">
               <CardHeader><CardTitle>Agregar Contacto</CardTitle></CardHeader>
               <CardContent className="space-y-4">
                 <div className="grid gap-4 md:grid-cols-2">
-                  <div className="space-y-2">
-                    <Label>Nombre *</Label>
-                    <Input placeholder="Juan Pérez" value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} />
-                  </div>
-                  <div className="space-y-2">
-                    <Label>Email</Label>
-                    <Input type="email" placeholder="juan@empresa.com" value={formData.email} onChange={e => setFormData({...formData, email: e.target.value})} />
-                  </div>
-                  <div className="space-y-2">
-                    <Label>Teléfono</Label>
-                    <Input placeholder="+34912345678" value={formData.phone} onChange={e => setFormData({...formData, phone: e.target.value})} />
-                  </div>
-                  <div className="space-y-2">
-                    <Label>Empresa</Label>
-                    <Input placeholder="Tech Corp" value={formData.company} onChange={e => setFormData({...formData, company: e.target.value})} />
-                  </div>
+                  <div className="space-y-2"><Label>Nombre *</Label><Input placeholder="Juan Pérez" value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} className="rounded-2xl" /></div>
+                  <div className="space-y-2"><Label>Email</Label><Input type="email" placeholder="juan@empresa.com" value={formData.email} onChange={e => setFormData({...formData, email: e.target.value})} className="rounded-2xl" /></div>
+                  <div className="space-y-2"><Label>Teléfono</Label><Input placeholder="+34912345678" value={formData.phone} onChange={e => setFormData({...formData, phone: e.target.value})} className="rounded-2xl" /></div>
+                  <div className="space-y-2"><Label>Empresa</Label><Input placeholder="Tech Corp" value={formData.company} onChange={e => setFormData({...formData, company: e.target.value})} className="rounded-2xl" /></div>
                 </div>
-                <div className="space-y-2">
-                  <Label>Notas</Label>
-                  <Textarea placeholder="Notas sobre el contacto..." value={formData.notes} onChange={e => setFormData({...formData, notes: e.target.value})} rows={2} />
-                </div>
+                <div className="space-y-2"><Label>Notas</Label><Textarea placeholder="Notas sobre el contacto..." value={formData.notes} onChange={e => setFormData({...formData, notes: e.target.value})} rows={2} className="rounded-2xl" /></div>
                 <div className="flex gap-2">
-                  <Button onClick={() => createContactMutation.mutate(formData)} disabled={!formData.name || createContactMutation.isPending} className="flex-1 bg-gradient-to-r from-cyan-600 to-blue-600">
+                  <Button onClick={() => createContactMutation.mutate(formData)} disabled={!formData.name || createContactMutation.isPending} className="flex-1 bg-gradient-to-r from-cyan-600 to-blue-600 rounded-2xl font-bold">
                     {createContactMutation.isPending ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Plus className="h-4 w-4 mr-2" />}
                     Guardar
                   </Button>
-                  <Button variant="outline" onClick={() => setShowForm(false)} className="flex-1">Cancelar</Button>
+                  <Button variant="outline" onClick={() => setShowForm(false)} className="flex-1 rounded-2xl">Cancelar</Button>
                 </div>
               </CardContent>
             </Card>
           )}
 
           <div className="flex justify-end mb-4">
-            <Button onClick={() => setShowForm(!showForm)} className="bg-gradient-to-r from-cyan-600 to-blue-600">
+            <Button onClick={() => setShowForm(!showForm)} className="bg-gradient-to-r from-cyan-600 to-blue-600 rounded-2xl font-bold">
               <Plus className="h-4 w-4 mr-2" />
               {showForm ? "Cerrar" : "Agregar Contacto"}
             </Button>
           </div>
 
-          <Card>
+          <Card className="rounded-3xl border-2 border-cyan-500/30">
             <CardHeader><CardTitle>Todos los Contactos</CardTitle></CardHeader>
             <CardContent>
               <Table>
                 <TableHeader>
-                  <TableRow>
+                  <TableRow className="border-slate-700">
                     <TableHead>Nombre</TableHead>
                     <TableHead>Email/Teléfono</TableHead>
                     <TableHead>Empresa</TableHead>
@@ -194,25 +191,25 @@ export default function CrmPage() {
                 </TableHeader>
                 <TableBody>
                   {contacts.map(contact => (
-                    <TableRow key={contact.id}>
-                      <TableCell className="font-medium">{contact.name}</TableCell>
-                      <TableCell className="text-sm text-muted-foreground">{contact.email} / {contact.phone}</TableCell>
+                    <TableRow key={contact.id} className="border-slate-700">
+                      <TableCell className="font-bold text-white">{contact.name}</TableCell>
+                      <TableCell className="text-sm text-slate-400">{contact.email} / {contact.phone}</TableCell>
                       <TableCell>{contact.company}</TableCell>
                       <TableCell>
-                        <Badge className={contact.status === "new" ? "bg-blue-500/20 text-blue-700" : contact.status === "contacted" ? "bg-yellow-500/20 text-yellow-700" : "bg-green-500/20 text-green-700"}>
+                        <Badge className={contact.status === "new" ? "bg-cyan-500/30 text-cyan-300 rounded-full" : contact.status === "contacted" ? "bg-purple-500/30 text-purple-300 rounded-full" : "bg-lime-500/30 text-lime-300 rounded-full"}>
                           {contact.status}
                         </Badge>
                       </TableCell>
                       <TableCell>
                         <div className="flex gap-1">
                           {contact.status === "new" && (
-                            <Button size="sm" variant="outline" onClick={() => updateContactMutation.mutate(contact.id)}><Mail className="h-4 w-4" /></Button>
+                            <Button size="sm" variant="outline" onClick={() => updateContactMutation.mutate(contact.id)} className="rounded-lg"><Mail className="h-4 w-4" /></Button>
                           )}
-                          <Button size="sm" variant="ghost" onClick={() => setDeleteConfirm(deleteConfirm === contact.id ? null : contact.id)}>
+                          <Button size="sm" variant="ghost" onClick={() => setDeleteConfirm(deleteConfirm === contact.id ? null : contact.id)} className="rounded-lg">
                             <Trash2 className="h-4 w-4 text-red-500" />
                           </Button>
                           {deleteConfirm === contact.id && (
-                            <Button size="sm" variant="destructive" onClick={() => deleteContactMutation.mutate(contact.id)}>Confirmar</Button>
+                            <Button size="sm" variant="destructive" onClick={() => deleteContactMutation.mutate(contact.id)} className="rounded-lg">Confirmar</Button>
                           )}
                         </div>
                       </TableCell>
@@ -226,12 +223,12 @@ export default function CrmPage() {
 
         {/* WORKFLOWS TAB */}
         <TabsContent value="workflows" className="space-y-4">
-          <Card>
+          <Card className="rounded-3xl border-2 border-purple-500/30">
             <CardHeader><CardTitle>Workflows de CRM</CardTitle></CardHeader>
             <CardContent>
               <Table>
                 <TableHeader>
-                  <TableRow>
+                  <TableRow className="border-slate-700">
                     <TableHead>Nombre</TableHead>
                     <TableHead>Trigger</TableHead>
                     <TableHead>Acción</TableHead>
@@ -244,12 +241,12 @@ export default function CrmPage() {
                     { id: 2, name: "Deal Closed → Email", trigger: "Status: Qualified", action: "Send Email", status: "active" },
                     { id: 3, name: "Stale Lead → SMS", trigger: "No activity 30 días", action: "Send SMS", status: "inactive" },
                   ].map(wf => (
-                    <TableRow key={wf.id}>
-                      <TableCell className="font-medium">{wf.name}</TableCell>
-                      <TableCell className="text-sm">{wf.trigger}</TableCell>
+                    <TableRow key={wf.id} className="border-slate-700">
+                      <TableCell className="font-bold text-white">{wf.name}</TableCell>
+                      <TableCell className="text-sm text-slate-400">{wf.trigger}</TableCell>
                       <TableCell>{wf.action}</TableCell>
                       <TableCell>
-                        <Badge className={wf.status === "active" ? "bg-green-500/20 text-green-700" : "bg-gray-500/20"}>
+                        <Badge className={wf.status === "active" ? "bg-lime-500/30 text-lime-300 rounded-full" : "bg-slate-600/30 rounded-full"}>
                           {wf.status}
                         </Badge>
                       </TableCell>
@@ -263,12 +260,12 @@ export default function CrmPage() {
 
         {/* LOGS TAB */}
         <TabsContent value="logs" className="space-y-4">
-          <Card>
+          <Card className="rounded-3xl border-2 border-pink-500/30">
             <CardHeader><CardTitle>Historial de Auditoría</CardTitle></CardHeader>
             <CardContent className="space-y-2 max-h-96 overflow-y-auto">
               {[...Array(10)].map((_, i) => (
-                <div key={i} className="text-xs p-2 border-b pb-2 hover:bg-muted/50">
-                  <p className="font-mono text-muted-foreground">{new Date(Date.now() - i * 3600000).toLocaleString()} - Contact {i % 3 === 0 ? "created" : i % 3 === 1 ? "updated" : "deleted"}</p>
+                <div key={i} className="text-xs p-2 border-b border-slate-700 pb-2 hover:bg-slate-900/50 rounded-lg">
+                  <p className="font-mono text-slate-400">{new Date(Date.now() - i * 3600000).toLocaleString()} - Contact {i % 3 === 0 ? "created" : i % 3 === 1 ? "updated" : "deleted"}</p>
                 </div>
               ))}
             </CardContent>

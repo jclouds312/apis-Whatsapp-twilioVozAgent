@@ -6,7 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
-import { Loader2, Copy, Check, Trash2, Power, Plus, Eye, EyeOff, TrendingUp, Key, RefreshCw } from "lucide-react";
+import { Loader2, Copy, Check, Trash2, Power, Plus, Eye, EyeOff, TrendingUp, Key, RefreshCw, Shield, Lock, Zap } from "lucide-react";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { format } from "date-fns";
@@ -28,12 +28,8 @@ export default function ApiKeyManager() {
   ]);
 
   const chartData = [
-    { date: "Mon", usage: 2340 },
-    { date: "Tue", usage: 3210 },
-    { date: "Wed", usage: 2450 },
-    { date: "Thu", usage: 4560 },
-    { date: "Fri", usage: 3210 },
-    { date: "Sat", usage: 1230 },
+    { date: "Mon", usage: 2340 }, { date: "Tue", usage: 3210 }, { date: "Wed", usage: 2450 },
+    { date: "Thu", usage: 4560 }, { date: "Fri", usage: 3210 }, { date: "Sat", usage: 1230 },
     { date: "Sun", usage: 890 },
   ];
 
@@ -51,14 +47,9 @@ export default function ApiKeyManager() {
       toast.success("¡API Key creada!");
       setNewKeyName("");
       const newKey = {
-        id: `key_${Date.now()}`,
-        name: newKeyName || `${newKeyService}_key`,
-        service: newKeyService,
-        key: `sk_${Math.random().toString(36).substring(2, 20)}`,
-        isActive: true,
-        createdAt: format(new Date(), "yyyy-MM-dd"),
-        lastUsed: format(new Date(), "yyyy-MM-dd HH:mm"),
-        totalRequests: 0,
+        id: `key_${Date.now()}`, name: newKeyName || `${newKeyService}_key`, service: newKeyService,
+        key: `sk_${Math.random().toString(36).substring(2, 20)}`, isActive: true,
+        createdAt: format(new Date(), "yyyy-MM-dd"), lastUsed: format(new Date(), "yyyy-MM-dd HH:mm"), totalRequests: 0,
       };
       setApiKeys([...apiKeys, newKey]);
     },
@@ -68,8 +59,7 @@ export default function ApiKeyManager() {
   const toggleKeyMutation = useMutation({
     mutationFn: async (keyId: string) => {
       const res = await fetch(`/api/v1/keys/${keyId}/toggle`, {
-        method: "POST",
-        headers: { "Authorization": `Bearer ${API_KEY}` },
+        method: "POST", headers: { "Authorization": `Bearer ${API_KEY}` },
       });
       if (!res.ok) throw new Error("Failed to toggle key");
       return res.json();
@@ -83,8 +73,7 @@ export default function ApiKeyManager() {
   const deleteKeyMutation = useMutation({
     mutationFn: async (keyId: string) => {
       const res = await fetch(`/api/v1/keys/${keyId}`, {
-        method: "DELETE",
-        headers: { "Authorization": `Bearer ${API_KEY}` },
+        method: "DELETE", headers: { "Authorization": `Bearer ${API_KEY}` },
       });
       if (!res.ok) throw new Error("Failed to delete key");
       return res.json();
@@ -120,46 +109,52 @@ export default function ApiKeyManager() {
   }, []);
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-blue-900/40 via-slate-900 to-slate-950 border border-blue-500/30 p-8">
-        <div className="absolute inset-0 opacity-20">
-          <div className="absolute top-0 left-1/4 w-96 h-96 bg-blue-500/20 rounded-full blur-3xl" />
-          <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-purple-500/10 rounded-full blur-3xl" />
+    <div className="space-y-8">
+      {/* Funciones Cards */}
+      <div className="grid gap-4 md:grid-cols-3 lg:grid-cols-4">
+        <div className="group relative rounded-3xl border-2 border-cyan-500/50 bg-gradient-to-br from-cyan-950/40 to-slate-950 p-6 hover:border-cyan-400 hover:shadow-[0_0_20px_rgba(34,211,238,0.3)] transition-all duration-300">
+          <div className="flex items-start justify-between"><Shield className="h-8 w-8 text-cyan-400" /><span className="text-xs font-bold text-cyan-300">LIVE</span></div>
+          <h3 className="mt-3 text-lg font-bold text-cyan-300">Generar Keys</h3>
+          <p className="text-xs text-slate-400 mt-2">Crear nuevas claves seguras</p>
         </div>
-        <div className="relative space-y-4">
-          <h1 className="text-5xl font-bold bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400 bg-clip-text text-transparent flex items-center gap-3">
-            <Key className="h-10 w-10 text-blue-500" />
-            API Key Manager Pro
-          </h1>
-          <p className="text-muted-foreground text-lg">Gestión empresarial de claves API • Estadísticas en tiempo real • Auditoría completa</p>
+        
+        <div className="group relative rounded-3xl border-2 border-purple-500/50 bg-gradient-to-br from-purple-950/40 to-slate-950 p-6 hover:border-purple-400 hover:shadow-[0_0_20px_rgba(168,85,247,0.3)] transition-all duration-300">
+          <div className="flex items-start justify-between"><Lock className="h-8 w-8 text-purple-400" /><span className="text-xs font-bold text-purple-300">SECURE</span></div>
+          <h3 className="mt-3 text-lg font-bold text-purple-300">Encripción</h3>
+          <p className="text-xs text-slate-400 mt-2">Protección 256-bit AES</p>
+        </div>
+
+        <div className="group relative rounded-3xl border-2 border-pink-500/50 bg-gradient-to-br from-pink-950/40 to-slate-950 p-6 hover:border-pink-400 hover:shadow-[0_0_20px_rgba(236,72,153,0.3)] transition-all duration-300">
+          <div className="flex items-start justify-between"><TrendingUp className="h-8 w-8 text-pink-400" /><span className="text-xs font-bold text-pink-300">ACTIVE</span></div>
+          <h3 className="mt-3 text-lg font-bold text-pink-300">Analytics</h3>
+          <p className="text-xs text-slate-400 mt-2">Tracking en tiempo real</p>
+        </div>
+
+        <div className="group relative rounded-3xl border-2 border-lime-500/50 bg-gradient-to-br from-lime-950/40 to-slate-950 p-6 hover:border-lime-400 hover:shadow-[0_0_20px_rgba(132,204,22,0.3)] transition-all duration-300">
+          <div className="flex items-start justify-between"><Zap className="h-8 w-8 text-lime-400" /><span className="text-xs font-bold text-lime-300">FAST</span></div>
+          <h3 className="mt-3 text-lg font-bold text-lime-300">Performance</h3>
+          <p className="text-xs text-slate-400 mt-2">Latencia &lt;100ms</p>
         </div>
       </div>
 
       {/* Live Stats */}
       <div className="grid gap-4 md:grid-cols-3">
-        <Card className="bg-gradient-to-br from-blue-500/10 to-transparent border-blue-500/30">
-          <CardHeader className="pb-2">
-            <CardTitle className="flex items-center justify-between text-xs"><span>Sesiones Activas</span><RefreshCw className="h-4 w-4 text-blue-500" /></CardTitle>
-          </CardHeader>
-          <CardContent><div className="text-3xl font-bold text-blue-400">{liveStats.activeSessions}</div></CardContent>
+        <Card className="rounded-3xl border-2 border-cyan-500/50 bg-gradient-to-br from-cyan-500/10 to-transparent">
+          <CardHeader className="pb-2"><CardTitle className="flex items-center justify-between text-xs"><span>Sesiones Activas</span><RefreshCw className="h-5 w-5 text-cyan-400 animate-spin" /></CardTitle></CardHeader>
+          <CardContent><div className="text-4xl font-black text-cyan-300">{liveStats.activeSessions}</div></CardContent>
         </Card>
-        <Card className="bg-gradient-to-br from-purple-500/10 to-transparent border-purple-500/30">
-          <CardHeader className="pb-2">
-            <CardTitle className="flex items-center justify-between text-xs"><span>Total Requests</span><TrendingUp className="h-4 w-4 text-purple-500" /></CardTitle>
-          </CardHeader>
-          <CardContent><div className="text-3xl font-bold text-purple-400">{liveStats.totalRequests.toLocaleString()}</div></CardContent>
+        <Card className="rounded-3xl border-2 border-purple-500/50 bg-gradient-to-br from-purple-500/10 to-transparent">
+          <CardHeader className="pb-2"><CardTitle className="flex items-center justify-between text-xs"><span>Total Requests</span><TrendingUp className="h-5 w-5 text-purple-400" /></CardTitle></CardHeader>
+          <CardContent><div className="text-4xl font-black text-purple-300">{liveStats.totalRequests.toLocaleString()}</div></CardContent>
         </Card>
-        <Card className="bg-gradient-to-br from-pink-500/10 to-transparent border-pink-500/30">
-          <CardHeader className="pb-2">
-            <CardTitle className="flex items-center justify-between text-xs"><span>API Keys</span><Key className="h-4 w-4 text-pink-500" /></CardTitle>
-          </CardHeader>
-          <CardContent><div className="text-3xl font-bold text-pink-400">{apiKeys.length}</div></CardContent>
+        <Card className="rounded-3xl border-2 border-pink-500/50 bg-gradient-to-br from-pink-500/10 to-transparent">
+          <CardHeader className="pb-2"><CardTitle className="flex items-center justify-between text-xs"><span>API Keys</span><Key className="h-5 w-5 text-pink-400" /></CardTitle></CardHeader>
+          <CardContent><div className="text-4xl font-black text-pink-300">{apiKeys.length}</div></CardContent>
         </Card>
       </div>
 
       <Tabs defaultValue="keys" className="space-y-4">
-        <TabsList className="grid w-full grid-cols-3">
+        <TabsList className="grid w-full grid-cols-3 rounded-2xl">
           <TabsTrigger value="keys"><Plus className="h-4 w-4 mr-2" />API Keys</TabsTrigger>
           <TabsTrigger value="usage"><TrendingUp className="h-4 w-4 mr-2" />Uso</TabsTrigger>
           <TabsTrigger value="audit"><RefreshCw className="h-4 w-4 mr-2" />Auditoría</TabsTrigger>
@@ -167,17 +162,17 @@ export default function ApiKeyManager() {
 
         {/* API KEYS TAB */}
         <TabsContent value="keys" className="space-y-4">
-          <Card className="bg-gradient-to-r from-blue-500/5 to-purple-500/5 border-blue-500/20">
+          <Card className="rounded-3xl border-2 border-cyan-500/30 bg-gradient-to-r from-cyan-500/5 to-purple-500/5">
             <CardHeader><CardTitle>Crear Nueva API Key</CardTitle></CardHeader>
             <CardContent className="space-y-4">
               <div className="grid gap-4 md:grid-cols-3">
                 <div className="space-y-2">
                   <Label>Nombre</Label>
-                  <Input placeholder="Mi clave de producción" value={newKeyName} onChange={e => setNewKeyName(e.target.value)} />
+                  <Input placeholder="Mi clave de producción" value={newKeyName} onChange={e => setNewKeyName(e.target.value)} className="rounded-2xl" />
                 </div>
                 <div className="space-y-2">
                   <Label>Servicio</Label>
-                  <select value={newKeyService} onChange={e => setNewKeyService(e.target.value)} className="w-full px-3 py-2 bg-muted border border-primary/30 rounded-md text-sm">
+                  <select value={newKeyService} onChange={e => setNewKeyService(e.target.value)} className="w-full px-3 py-2 bg-muted border border-primary/30 rounded-2xl text-sm">
                     <option value="twilio">Twilio</option>
                     <option value="whatsapp">WhatsApp</option>
                     <option value="crm">CRM</option>
@@ -185,7 +180,7 @@ export default function ApiKeyManager() {
                   </select>
                 </div>
                 <div className="flex items-end">
-                  <Button onClick={() => createKeyMutation.mutate()} disabled={createKeyMutation.isPending} className="w-full bg-gradient-to-r from-blue-600 to-purple-600">
+                  <Button onClick={() => createKeyMutation.mutate()} disabled={createKeyMutation.isPending} className="w-full bg-gradient-to-r from-cyan-600 to-blue-600 rounded-2xl font-bold">
                     {createKeyMutation.isPending ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Plus className="h-4 w-4 mr-2" />}
                     Crear
                   </Button>
@@ -197,36 +192,36 @@ export default function ApiKeyManager() {
           {/* Keys List */}
           <div className="space-y-3">
             {apiKeys.map(key => (
-              <Card key={key.id} className={`border-l-4 ${key.isActive ? "border-l-green-500 bg-green-500/5" : "border-l-gray-500"}`}>
+              <Card key={key.id} className={`rounded-3xl border-2 ${key.isActive ? "border-lime-500/50 bg-lime-950/10" : "border-slate-600/30"}`}>
                 <CardContent className="pt-6">
                   <div className="flex items-start justify-between mb-4">
                     <div className="flex-1">
                       <div className="flex items-center gap-2 mb-2">
-                        <h3 className="font-semibold">{key.name}</h3>
-                        <Badge className={key.isActive ? "bg-green-500/20 text-green-700" : "bg-gray-500/20"}>{key.isActive ? "Activa" : "Inactiva"}</Badge>
-                        <Badge className="bg-blue-500/20 text-blue-700">{key.service}</Badge>
+                        <h3 className="font-bold text-lg text-white">{key.name}</h3>
+                        <Badge className={key.isActive ? "bg-lime-500/30 text-lime-200 rounded-full" : "bg-slate-600/30 rounded-full"}>{key.isActive ? "✓ Activa" : "Inactiva"}</Badge>
+                        <Badge className="bg-blue-500/30 text-blue-200 rounded-full">{key.service}</Badge>
                       </div>
-                      <p className="text-xs text-muted-foreground">Creada: {key.createdAt} • Últ. uso: {key.lastUsed}</p>
+                      <p className="text-xs text-slate-400">Creada: {key.createdAt} • Últ. uso: {key.lastUsed}</p>
                     </div>
-                    <div className="text-right"><p className="text-2xl font-bold text-blue-600">{key.totalRequests}</p><p className="text-xs text-muted-foreground">Requests</p></div>
+                    <div className="text-right"><p className="text-3xl font-black text-cyan-400">{key.totalRequests}</p><p className="text-xs text-slate-400">Requests</p></div>
                   </div>
-                  <div className="bg-muted p-3 rounded mb-4 flex items-center justify-between gap-2 font-mono text-xs">
-                    <div className="flex-1 overflow-hidden">{visibleKeys.has(key.id) ? key.key : "••••••••••••••••"}</div>
-                    <button onClick={() => toggleKeyVisibility(key.id)} className="p-1 hover:bg-muted-foreground/10 rounded">
+                  <div className="bg-slate-900 p-3 rounded-2xl mb-4 flex items-center justify-between gap-2 border border-slate-700">
+                    <div className="flex-1 font-mono text-xs text-slate-300 overflow-hidden">{visibleKeys.has(key.id) ? key.key : "••••••••••••••••"}</div>
+                    <button onClick={() => toggleKeyVisibility(key.id)} className="p-2 hover:bg-slate-800 rounded-xl">
                       {visibleKeys.has(key.id) ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                     </button>
-                    <button onClick={() => copyKey(key.key, key.id)} className="p-1 hover:bg-muted-foreground/10 rounded">
-                      {copiedKey === key.id ? <Check className="h-4 w-4 text-green-600" /> : <Copy className="h-4 w-4" />}
+                    <button onClick={() => copyKey(key.key, key.id)} className="p-2 hover:bg-slate-800 rounded-xl">
+                      {copiedKey === key.id ? <Check className="h-4 w-4 text-lime-400" /> : <Copy className="h-4 w-4" />}
                     </button>
                   </div>
                   <div className="flex gap-2">
-                    <Button size="sm" variant="outline" onClick={() => toggleKeyMutation.mutate(key.id)} className="flex-1"><Power className="h-4 w-4 mr-2" />{key.isActive ? "Desactivar" : "Activar"}</Button>
-                    <Button size="sm" variant="destructive" onClick={() => setDeleteConfirm(deleteConfirm === key.id ? null : key.id)} className="flex-1"><Trash2 className="h-4 w-4 mr-2" />Eliminar</Button>
+                    <Button size="sm" variant="outline" onClick={() => toggleKeyMutation.mutate(key.id)} className="flex-1 rounded-xl"><Power className="h-4 w-4 mr-2" />{key.isActive ? "Desactivar" : "Activar"}</Button>
+                    <Button size="sm" variant="destructive" onClick={() => setDeleteConfirm(deleteConfirm === key.id ? null : key.id)} className="flex-1 rounded-xl"><Trash2 className="h-4 w-4 mr-2" />Eliminar</Button>
                   </div>
                   {deleteConfirm === key.id && (
-                    <div className="mt-3 p-3 bg-red-500/10 border border-red-500/20 rounded">
-                      <p className="text-sm text-red-700 mb-2">¿Eliminar? Irreversible.</p>
-                      <Button size="sm" variant="destructive" onClick={() => deleteKeyMutation.mutate(key.id)} className="w-full">Confirmar</Button>
+                    <div className="mt-3 p-3 bg-red-500/20 border border-red-500/50 rounded-2xl">
+                      <p className="text-sm text-red-300 mb-2">¿Eliminar? Irreversible.</p>
+                      <Button size="sm" variant="destructive" onClick={() => deleteKeyMutation.mutate(key.id)} className="w-full rounded-xl">Confirmar</Button>
                     </div>
                   )}
                 </CardContent>
@@ -237,7 +232,7 @@ export default function ApiKeyManager() {
 
         {/* USAGE TAB */}
         <TabsContent value="usage" className="space-y-4">
-          <Card>
+          <Card className="rounded-3xl border-2 border-purple-500/30">
             <CardHeader><CardTitle>Uso de APIs en 7 días</CardTitle></CardHeader>
             <CardContent className="h-80">
               <ResponsiveContainer width="100%" height="100%">
@@ -247,7 +242,7 @@ export default function ApiKeyManager() {
                   <YAxis stroke="rgba(255,255,255,0.5)" />
                   <Tooltip contentStyle={{backgroundColor: "rgba(15, 23, 42, 0.9)"}} />
                   <Legend />
-                  <Line type="monotone" dataKey="usage" stroke="#8b5cf6" strokeWidth={2} />
+                  <Line type="monotone" dataKey="usage" stroke="#a855f7" strokeWidth={3} />
                 </LineChart>
               </ResponsiveContainer>
             </CardContent>
@@ -256,12 +251,12 @@ export default function ApiKeyManager() {
 
         {/* AUDIT TAB */}
         <TabsContent value="audit" className="space-y-4">
-          <Card>
+          <Card className="rounded-3xl border-2 border-pink-500/30">
             <CardHeader><CardTitle>Historial de Auditoría</CardTitle></CardHeader>
             <CardContent className="space-y-2 max-h-96 overflow-y-auto">
               {[...Array(8)].map((_, i) => (
-                <div key={i} className="text-xs p-3 border-b pb-2 hover:bg-muted/50">
-                  <p className="font-mono text-muted-foreground">{format(new Date(Date.now() - i * 3600000), "yyyy-MM-dd HH:mm")} - API Key {i % 3 === 0 ? "created" : i % 3 === 1 ? "toggled" : "used"}</p>
+                <div key={i} className="text-xs p-3 border-b border-slate-700 pb-2 hover:bg-slate-900/50 rounded-lg">
+                  <p className="font-mono text-slate-400">{format(new Date(Date.now() - i * 3600000), "yyyy-MM-dd HH:mm")} - API Key {i % 3 === 0 ? "created" : i % 3 === 1 ? "toggled" : "used"}</p>
                 </div>
               ))}
             </CardContent>
