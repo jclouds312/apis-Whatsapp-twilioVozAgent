@@ -1,6 +1,7 @@
 
 'use client';
 
+import { useEffect } from 'react';
 import { Header } from "@/components/dashboard/header";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { StatCard } from "@/components/dashboard/stat-card";
@@ -18,6 +19,23 @@ export default function CrmPage() {
     const { user } = useUser();
     const firestore = useFirestore();
 
+    useEffect(() => {
+        const onLoad = function() {
+            const script = document.createElement("script");
+            script.src = "https://book.visitoai.com/embed.min.js";
+            script.id = "visitowc";
+            script.setAttribute("data-domain", "visitoai.com");
+            script.setAttribute("data-apiKey", "79382be282bbd0af08d9080985fcb563");
+            document.body.appendChild(script);
+        };
+
+        if (document.readyState === "complete") {
+            onLoad();
+        } else {
+            window.addEventListener("load", onLoad);
+        }
+    }, []);
+
     const apiKeysQuery = useMemoFirebase(() => {
         if (!firestore || !user?.uid) return null;
         return collection(firestore, 'users', user.uid, 'apiKeys');
@@ -27,13 +45,13 @@ export default function CrmPage() {
     const workflowsQuery = useMemoFirebase(() => {
         if (!firestore || !user?.uid) return null;
         const q = query(
-            collection(firestore, 'users', user.uid, 'workflows'), 
+            collection(firestore, 'users', user.uid, 'workflows'),
             where('trigger.service', '==', 'CRM')
         );
         return q;
     }, [firestore, user?.uid]);
     const { data: workflows, isLoading: isLoadingWorkflows } = useCollection<Workflow>(workflowsQuery);
-    
+
     const logsQuery = useMemoFirebase(() => {
         if (!firestore || !user?.uid) return null;
         const q = query(collection(firestore, 'apiLogs'), where('endpoint', '==', 'CRM'));
@@ -78,21 +96,21 @@ export default function CrmPage() {
                              )}
                         </CardContent>
                     </Card>
-                     <StatCard 
+                     <StatCard
                         title="New Leads (24h)"
                         value="18"
                         description="Placeholder from all channels"
                         Icon={TrendingUp}
                         iconColor="text-blue-500"
                     />
-                     <StatCard 
+                     <StatCard
                         title="Contacts Synced"
                         value="1,204"
                         description="Placeholder total in CRM"
                         Icon={Users}
                         iconColor="text-purple-500"
                     />
-                     <StatCard 
+                     <StatCard
                         title="Active CRM Workflows"
                         value={isLoadingWorkflows ? '...' : crmWorkflows.filter(wf => wf.status === 'active').length.toString()}
                         description="Automations involving CRM"
@@ -165,9 +183,9 @@ export default function CrmPage() {
                                            <TableCell className="font-medium">{wf.name}</TableCell>
                                            <TableCell className="text-muted-foreground">{wf.trigger.service}: {wf.trigger.event}</TableCell>
                                            <TableCell>
-                                                <Badge variant={wf.status === 'active' ? 'default' : 'secondary'} 
-                                                    className={wf.status === 'active' 
-                                                        ? 'bg-green-100 text-green-800' 
+                                                <Badge variant={wf.status === 'active' ? 'default' : 'secondary'}
+                                                    className={wf.status === 'active'
+                                                        ? 'bg-green-100 text-green-800'
                                                         : ''
                                                     }>
                                                     {wf.status}
