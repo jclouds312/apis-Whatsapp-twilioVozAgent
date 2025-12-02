@@ -6,6 +6,7 @@ import { registerOpenSIPSRoutes } from "./routes-opensips";
 import { registerAsteriskRoutes } from "./routes-asterisk";
 import { registerMetaWhatsAppRoutes } from "./routes-meta-whatsapp";
 import { registerEmbedWidgetRoutes } from "./routes-embed-widgets";
+import { registerVoIPExtensionRoutes } from "./routes-voip-extensions";
 
 const app = express();
 const httpServer = createServer(app);
@@ -105,6 +106,13 @@ app.use((req, res, next) => {
   registerMetaWhatsAppRoutes(app);
 
   registerOpenSIPSRoutes(app);
+  registerVoIPExtensionRoutes(app);
+
+  // Start recurring call processor (runs every minute)
+  const { voipExtensionService } = await import('./services/VoIPExtensionService');
+  setInterval(() => {
+    voipExtensionService.processPendingRecurringCalls().catch(console.error);
+  }, 60000); // Check every minute
 
   app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
     const status = err.status || err.statusCode || 500;
