@@ -65,16 +65,6 @@ app.use((req, res, next) => {
 });
 
 (async () => {
-  // Initialize OpenSIPS server
-  try {
-    const { openSIPSService } = await import("./services/OpenSIPSService");
-    log("Starting OpenSIPS server...", "opensips");
-    await openSIPSService.startServer();
-    log("OpenSIPS server started successfully", "opensips");
-  } catch (error: any) {
-    log(`Failed to start OpenSIPS server: ${error.message}`, "opensips");
-  }
-
   await registerRoutes(httpServer, app);
 
   // Import and register API key generation routes
@@ -104,15 +94,6 @@ app.use((req, res, next) => {
   // Import and register Meta WhatsApp routes
   const { registerMetaWhatsAppRoutes } = await import("./routes-meta-whatsapp");
   registerMetaWhatsAppRoutes(app);
-
-  registerOpenSIPSRoutes(app);
-  registerVoIPExtensionRoutes(app);
-
-  // Start recurring call processor (runs every minute)
-  const { voipExtensionService } = await import('./services/VoIPExtensionService');
-  setInterval(() => {
-    voipExtensionService.processPendingRecurringCalls().catch(console.error);
-  }, 60000); // Check every minute
 
   app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
     const status = err.status || err.statusCode || 500;
