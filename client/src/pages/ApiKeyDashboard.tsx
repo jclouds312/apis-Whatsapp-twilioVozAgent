@@ -8,17 +8,46 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Copy, Eye, EyeOff, Trash2, Plus, RotateCcw, BarChart3, Key, Lock, CheckCircle2, AlertCircle } from "lucide-react";
 import { toast } from "sonner";
 
-const API_KEYS = [
-  { id: "key_1", name: "Production API", key: "sk_prod_a1b2c3d4e5f6g7h8i9j0", service: "voip", status: "active", usage: 15234, limit: 50000, created: "2025-01-10", lastUsed: "2025-01-20 21:15" },
-  { id: "key_2", name: "Development", key: "sk_dev_x9y8z7w6v5u4t3s2r1q0", service: "retell", status: "active", usage: 2145, limit: 10000, created: "2025-01-15", lastUsed: "2025-01-20 19:30" },
-  { id: "key_3", name: "Legacy CRM", key: "sk_crm_1a2b3c4d5e6f7g8h9i0j", service: "crm", status: "limited", usage: 8900, limit: 10000, created: "2024-12-20", lastUsed: "2025-01-20 15:45" },
-];
+const DEMO_USER_ID = "demo-user-123";
 
 export default function ApiKeyDashboard() {
-  const [keys, setKeys] = useState(API_KEYS);
+  const [keys, setKeys] = useState<any[]>([]);
   const [showNewKeyForm, setShowNewKeyForm] = useState(false);
   const [visibleKeys, setVisibleKeys] = useState<Set<string>>(new Set());
   const [newKeyData, setNewKeyData] = useState({ name: "", service: "voip" });
+  const [isLoading, setIsLoading] = useState(false);
+
+  // Load API keys from server
+  const loadApiKeys = async () => {
+    setIsLoading(true);
+    try {
+      const response = await fetch(`/api/v1/keys?userId=${DEMO_USER_ID}`);
+      const data = await response.json();
+      if (data.success) {
+        // Transform to match UI format
+        const transformedKeys = data.keys.map((k: any) => ({
+          id: k.id,
+          name: k.metadata?.name || "Unnamed Key",
+          key: k.key,
+          service: k.service,
+          status: k.isActive ? "active" : "inactive",
+          usage: parseInt(k.metadata?.totalRequests || "0"),
+          limit: 50000,
+          created: new Date(k.createdAt).toLocaleDateString(),
+          lastUsed: k.lastUsed ? new Date(k.lastUsed).toLocaleString() : "Never"
+        }));
+        setKeys(transformedKeys);
+      }
+    } catch (error: any) {
+      toast.error("Error loading API keys: " + error.message);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    loadApiKeys();
+  }, []);
 
   const toggleKeyVisibility = (keyId: string) => {
     const newVisible = new Set(visibleKeys);
@@ -40,41 +69,82 @@ export default function ApiKeyDashboard() {
     return key.substring(0, 8) + "*".repeat(key.length - 16) + key.substring(key.length - 8);
   };
 
-  const deleteKey = (id: string) => {
-    setKeys(keys.filter(k => k.id !== id));
-    toast.success("API key eliminada");
+  const deleteKey = async (id: string) => {
+    try {
+      const response = await fetch(`/api/v1/keys/${id}`, {
+        method: 'DELETE'
+      });
+      const data = await response.json();
+      if (data.success) {
+        setKeys(keys.filter(k => k.id !== id));
+        toast.success("API key eliminada");
+      } else {
+        toast.error(data.error || "Error al eliminar");
+      }
+    } catch (error: any) {
+      toast.error("Error: " + error.message);
+    }
   };
 
-  const regenerateKey = (id: string) => {
-    const newKey = `sk_${Math.random().toString(36).substr(2, 9)}_${Date.now()}`;
-    setKeys(keys.map(k => k.id === id ? { ...k, key: newKey, lastUsed: new Date().toLocaleString() } : k));
-    toast.success("API key regenerada!");
+  const regenerateKey = async (id: string) => {
+    try {
+      // Delete old key and create new one
+      await deleteKey(id);
+      await loadApiKeys();
+      toast.success("API key regenerada!");
+    } catch (error: any) {
+      toast.error("Error: " + error.message);
+    }
   };
 
-  const createNewKey = () => {
+  const createNewKey = async () => {
     if (!newKeyData.name) {
       toast.error("Nombre requerido");
       return;
     }
-    const key = {
-      id: `key_${Date.now()}`,
-      name: newKeyData.name,
-      key: `sk_${newKeyData.service[0]}_${Math.random().toString(36).substr(2, 20)}`,
-      service: newKeyData.service,
-      status: "active",
-      usage: 0,
-      limit: 50000,
-      created: new Date().toLocaleDateString(),
-      lastUsed: "Never",
-    };
-    setKeys([...keys, key]);
-    setNewKeyData({ name: "", service: "voip" });
-    setShowNewKeyForm(false);
-    toast.success("API key creada!");
+    
+    setIsLoading(true);
+    try {
+      const endpoint = newKeyData.service === "voip" 
+        ? "/api/v1/keys/voip/generate" 
+        : "/api/v1/keys/create";
+        
+      const response = await fetch(endpoint, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          userId: DEMO_USER_ID,
+          service: newKeyData.service,
+          name: newKeyData.name
+        })
+      });
+      
+      const data = await response.json();
+      if (data.success) {
+        await loadApiKeys();
+        setNewKeyData({ name: "", service: "voip" });
+        setShowNewKeyForm(false);
+        toast.success("API key creada!");
+      } else {
+        toast.error(data.error || "Error al crear key");
+      }
+    } catch (error: any) {
+      toast.error("Error: " + error.message);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
     <div className="space-y-8">
+      {isLoading && (
+        <div className="fixed top-4 right-4 z-50">
+          <div className="bg-slate-900 border-2 border-cyan-500 rounded-2xl p-4">
+            <p className="text-cyan-300">Cargando...</p>
+          </div>
+        </div>
+      )}
+      
       {/* Header Stats */}
       <div className="grid gap-4 md:grid-cols-3">
         <Card className="rounded-3xl border-2 border-cyan-500/50 bg-gradient-to-br from-cyan-500/10 to-transparent">
