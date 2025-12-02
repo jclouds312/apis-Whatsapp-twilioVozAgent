@@ -1,6 +1,7 @@
 
 import type { Express, Request, Response } from "express";
 import { openSIPSService } from "./services/OpenSIPSService";
+import { openSIPSTwilioIntegration } from "./services/OpenSIPSTwilioIntegration";
 import { storage } from "./storage";
 
 export function registerOpenSIPSRoutes(app: Express) {
@@ -109,6 +110,87 @@ export function registerOpenSIPSRoutes(app: Express) {
       });
 
       res.json({ success: true, credentials });
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // POST /api/v1/opensips/call/initiate - Initiate integrated call
+  app.post("/api/v1/opensips/call/initiate", async (req: Request, res: Response) => {
+    try {
+      const { userId, fromNumber, toNumber, useTwilio = false } = req.body;
+      const apiKey = req.headers.authorization?.replace("Bearer ", "");
+
+      if (!apiKey) return res.status(401).json({ error: "API key required" });
+      if (!userId || !fromNumber || !toNumber) {
+        return res.status(400).json({ error: "Missing required fields" });
+      }
+
+      const session = await openSIPSTwilioIntegration.initiateCall(
+        userId,
+        fromNumber,
+        toNumber,
+        useTwilio
+      );
+
+      res.json({
+        success: true,
+        session: {
+          sessionId: session.sessionId,
+          status: session.status,
+          sipCredentials: session.sipCredentials,
+          twilioCallSid: session.twilioCallSid,
+        },
+      });
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // GET /api/v1/opensips/call/:sessionId - Get call session details
+  app.get("/api/v1/opensips/call/:sessionId", async (req: Request, res: Response) => {
+    try {
+      const { sessionId } = req.params;
+      const apiKey = req.headers.authorization?.replace("Bearer ", "");
+
+      if (!apiKey) return res.status(401).json({ error: "API key required" });
+
+      const session = openSIPSTwilioIntegration.getSession(sessionId);
+      
+      if (!session) {
+        return res.status(404).json({ error: "Session not found" });
+      }
+
+      res.json({ success: true, session });
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // POST /api/v1/opensips/call/:sessionId/end - End call session
+  app.post("/api/v1/opensips/call/:sessionId/end", async (req: Request, res: Response) => {
+    try {
+      const { sessionId } = req.params;
+      const apiKey = req.headers.authorization?.replace("Bearer ", "");
+
+      if (!apiKey) return res.status(401).json({ error: "API key required" });
+
+      await openSIPSTwilioIntegration.endCall(sessionId);
+
+      res.json({ success: true, message: "Call ended" });
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // GET /api/v1/opensips/health - Health check
+  app.get("/api/v1/opensips/health", async (req: Request, res: Response) => {
+    try {
+      const apiKey = req.headers.authorization?.replace("Bearer ", "");
+      if (!apiKey) return res.status(401).json({ error: "API key required" });
+
+      const health = await openSIPSTwilioIntegration.healthCheck();
+      res.json(health);
     } catch (error: any) {
       res.status(500).json({ error: error.message });
     }

@@ -1,6 +1,6 @@
 import type { Express, Request, Response } from "express";
 import { storage } from "./storage";
-import { voipService } from "./VoIPService"; // Assuming VoIPService is exported from VoIPService.ts
+import { voipService } from "./services/VoIPService";
 
 const ASTERISK_CONFIG = {
   host: process.env.ASTERISK_HOST || "localhost",
