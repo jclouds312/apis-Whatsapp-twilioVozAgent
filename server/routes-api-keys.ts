@@ -148,4 +148,55 @@ export function registerApiKeyRoutes(app: Express) {
       res.status(500).json({ error: error.message });
     }
   });
+
+  // POST /api/v1/keys/voip/generate - Generate VoIP-specific API key
+  app.post("/api/v1/keys/voip/generate", async (req: Request, res: Response) => {
+    try {
+      const { userId, name, permissions = ["call", "sip", "recording"] } = req.body;
+
+      if (!userId) {
+        return res.status(400).json({ error: "Missing userId" });
+      }
+
+      const crypto = await import("crypto");
+      const key = crypto.randomBytes(32).toString("hex");
+      const secret = crypto.randomBytes(32).toString("hex");
+
+      const newKey = await storage.createApiKey({
+        userId,
+        service: "voip",
+        key,
+        secret,
+        isActive: true,
+        metadata: {
+          name: name || "VoIP API Key",
+          createdBy: "voip_key_manager",
+          plan: "professional",
+          permissions,
+          opensips_enabled: true,
+          twilio_integration: true,
+        },
+      });
+
+      await storage.createSystemLog({
+        userId,
+        eventType: "voip_api_key_created",
+        service: "voip",
+        message: `VoIP API key created: ${name || "Unnamed"}`,
+        status: "success",
+        metadata: { keyId: newKey.id, permissions },
+      });
+
+      res.json({
+        success: true,
+        key: newKey,
+        message: "VoIP API key created successfully",
+        usage: {
+          example: `curl -H "Authorization: Bearer ${key}" https://your-domain.com/api/v1/opensips/status`,
+        },
+      });
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
 }
