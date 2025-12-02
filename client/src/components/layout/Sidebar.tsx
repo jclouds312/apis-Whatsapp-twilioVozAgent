@@ -22,7 +22,8 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
 const MENU_ITEMS = [
-  { icon: LayoutDashboard, label: "Dashboard", href: "/", section: "main" },
+  { icon: LayoutDashboard, label: "Overview", href: "/", section: "main" },
+  { icon: BarChart3, label: "Dashboard", href: "/dashboard", section: "main", color: "bg-blue-500/10 text-blue-500" },
   { icon: MessageSquare, label: "WhatsApp", href: "/whatsapp", section: "messaging", color: "bg-green-500/10 text-green-500" },
   { icon: Phone, label: "Twilio Voice", href: "/twilio", section: "communication", color: "bg-red-500/10 text-red-500" },
   { icon: Users, label: "CRM", href: "/crm", section: "business", color: "bg-blue-500/10 text-blue-500" },

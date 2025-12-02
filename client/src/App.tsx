@@ -6,6 +6,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import NotFound from "@/pages/not-found";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import OverviewPage from "@/pages/Overview";
+import DashboardPage from "@/pages/Dashboard"; // Import the new Dashboard page
 import { AuthProvider } from "@/context/AuthContext";
 
 import WhatsAppPage from "@/pages/WhatsApp";
@@ -40,6 +41,7 @@ function Router() {
     <DashboardLayout>
       <Switch>
         <Route path="/" component={OverviewPage} />
+        <Route path="/dashboard" component={DashboardPage} /> {/* New route for Dashboard */}
         <Route path="/whatsapp" component={WhatsAppPage} />
         <Route path="/twilio" component={TwilioPage} />
         <Route path="/twilio-voice" component={TwilioVoicePage} />

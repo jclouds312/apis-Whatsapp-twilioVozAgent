@@ -7,6 +7,7 @@ import { registerAsteriskRoutes } from "./routes-asterisk";
 import { registerMetaWhatsAppRoutes } from "./routes-meta-whatsapp";
 import { registerEmbedWidgetRoutes } from "./routes-embed-widgets";
 import { registerVoIPExtensionRoutes } from "./routes-voip-extensions";
+import { registerDashboardRoutes } from "./routes-dashboard";
 
 const app = express();
 const httpServer = createServer(app);
@@ -95,6 +96,10 @@ app.use((req, res, next) => {
   const { registerMetaWhatsAppRoutes } = await import("./routes-meta-whatsapp");
   registerMetaWhatsAppRoutes(app);
 
+  registerVoIPExtensionRoutes(app);
+  registerDashboardRoutes(app);
+
+  // Embed widgets routes
   app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
     const status = err.status || err.statusCode || 500;
     const message = err.message || "Internal Server Error";
