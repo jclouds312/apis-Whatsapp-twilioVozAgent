@@ -25,6 +25,7 @@ const MENU_ITEMS = [
   { icon: MessageSquare, label: "WhatsApp", href: "/whatsapp", section: "messaging", color: "bg-green-500/10 text-green-500" },
   { icon: Phone, label: "Twilio Voice", href: "/twilio", section: "communication", color: "bg-red-500/10 text-red-500" },
   { icon: Users, label: "CRM", href: "/crm", section: "business", color: "bg-blue-500/10 text-blue-500" },
+  { icon: Phone, label: "VoIP Admin", href: "/voip-admin", section: "voip", color: "bg-cyan-500/10 text-cyan-500" },
   { icon: Key, label: "API Keys", href: "/api-keys", section: "security", color: "bg-amber-500/10 text-amber-500" },
   { icon: Database, label: "API Console", href: "/api-console", section: "development", color: "bg-indigo-500/10 text-indigo-500" },
   { icon: ScrollText, label: "Logs", href: "/logs", section: "monitoring", color: "bg-slate-500/10 text-slate-500" },

@@ -1,23 +1,27 @@
 # Digital Future - Enterprise API Management Platform
 
-![Version](https://img.shields.io/badge/version-1.0.0-blue.svg)
+![Version](https://img.shields.io/badge/version-2.0.0-blue.svg)
 ![License](https://img.shields.io/badge/license-MIT-green.svg)
 ![Node](https://img.shields.io/badge/node-%3E%3D20.0.0-brightgreen.svg)
 
-**Plataforma empresarial unificada para gestión de APIs WhatsApp, Twilio Voice/SMS/VoIP y Facebook con integración Asterisk VoIP, PI Key generation, CRM completo, widgets embebibles y despliegue multi-cloud.**
+**Plataforma empresarial unificada para gestión de APIs WhatsApp, Twilio Voice/SMS/VoIP y Facebook con integración OpenSIPS + Asterisk VoIP, gestión de extensiones, llamadas recurrentes, PI Key generation, CRM completo, widgets embebibles y panel de administración gráfico.**
 
 ## 🚀 Características Principales
 
-### 📱 Módulos Empresariales (12+ Funcionales)
+### 📱 Módulos Empresariales (15+ Funcionales)
 - **API Key Manager Pro** - Gestión segura de claves, auditoría, estadísticas en tiempo real
 - **Twilio Voice Module** - SMS, Voice, IVR, grabación de llamadas  
 - **Twilio VoIP Pro** - PI Key generation, SIP credentials, integración Asterisk AMI
+- **OpenSIPS Server** - Servidor SIP completo integrado con Twilio
+- **VoIP Extensions Manager** - Creación y gestión de extensiones VoIP
+- **Recurring Calls System** - Programación de llamadas automáticas (daily/weekly/monthly)
 - **CRM Pro** - Gestión de contactos, workflow automation, lead tracking
 - **Embed Widgets v1.0** - SMS, Voice, WhatsApp, VoIP, CRM widgets (HTML/React)
 - **WhatsApp Business** - Mensajería integrada Meta WhatsApp API
 - **Facebook Integration** - Sincronización y estadísticas
+- **Admin Panel Gráfico** - Panel de control con widgets visuales
 - **Overview Dashboard** - Metrics en tiempo real, sincronización cada 5s
-- Y más... (60+ endpoints API total)
+- Y más... (80+ endpoints API total)
 
 ### 🎨 Diseño "Digital Future"
 - Gradientes azul → púrpura → rosa
@@ -33,13 +37,17 @@
 
 ### 📊 API REST v1
 ```
-50+ endpoints implementados:
+80+ endpoints implementados:
 - /api/v1/keys/* - Gestión de claves
 - /api/v1/crm/* - Operaciones CRM
 - /api/v1/twilio/* - Servicios Twilio
-- /api/v1/voip/* - VoIP y Asterisk
+- /api/v1/voip/extensions/* - Gestión de extensiones VoIP
+- /api/v1/voip/recurring-calls/* - Llamadas recurrentes
+- /api/v1/opensips/* - Control de servidor OpenSIPS
+- /api/v1/asterisk/* - Integración Asterisk AMI
 - /api/v1/widgets/* - Widget submissions
 - /embed/* - Widget scripts
+- /api/v1/admin/* - Panel de administración
 ```
 
 ---
