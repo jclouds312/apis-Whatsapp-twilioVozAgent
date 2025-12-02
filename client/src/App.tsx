@@ -32,6 +32,8 @@ import AdminPage from "@/pages/Admin";
 import DeploymentPage from "@/pages/Deployment";
 import ApiKeyGeneratorPage from "@/pages/ApiKeyGenerator";
 import VoIPAdminPage from "@/pages/VoIPAdmin";
+import SIPDashboard from "./pages/SIPDashboard";
+
 
 function Router() {
   return (
@@ -50,6 +52,7 @@ function Router() {
         <Route path="/retell" component={RetellPage} />
         <Route path="/crm" component={CrmPage} />
         <Route path="/voip-admin" component={VoIPAdminPage} />
+        <Route path="/sip-dashboard" component={SIPDashboard} />
         <Route path="/function-connect" component={FunctionConnectPage} />
         <Route path="/workflow-suggester" component={WorkflowSuggesterPage} />
         <Route path="/api-keys" component={ApiKeysPage} />

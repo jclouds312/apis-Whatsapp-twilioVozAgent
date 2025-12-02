@@ -1,4 +1,4 @@
-# Digital Future - Enterprise API Management Platform
+# Nexus Core - API Unificada con SIP Dashboard
 
 ![Version](https://img.shields.io/badge/version-2.0.0-blue.svg)
 ![License](https://img.shields.io/badge/license-MIT-green.svg)
@@ -10,7 +10,7 @@
 
 ### 📱 Módulos Empresariales (15+ Funcionales)
 - **API Key Manager Pro** - Gestión segura de claves, auditoría, estadísticas en tiempo real
-- **Twilio Voice Module** - SMS, Voice, IVR, grabación de llamadas  
+- **Twilio Voice Module** - SMS, Voice, IVR, grabación de llamadas
 - **Twilio VoIP Pro** - PI Key generation, SIP credentials, integración Asterisk AMI
 - **OpenSIPS Server** - Servidor SIP completo integrado con Twilio
 - **VoIP Extensions Manager** - Creación y gestión de extensiones VoIP
@@ -22,6 +22,16 @@
 - **Admin Panel Gráfico** - Panel de control con widgets visuales
 - **Overview Dashboard** - Metrics en tiempo real, sincronización cada 5s
 - Y más... (80+ endpoints API total)
+
+## 🎯 Nueva Funcionalidad: SIP Dashboard Completo
+
+Panel de control completo para administrar el servidor OpenSIPS con:
+- ✅ Control en tiempo real del servidor SIP
+- ✅ Monitoreo de llamadas activas y usuarios registrados
+- ✅ Configuración avanzada de protocolos (UDP/TCP/TLS)
+- ✅ Estadísticas y logs en vivo
+- ✅ Widget embebible para sitios web
+- ✅ Integración completa con Twilio
 
 ### 🎨 Diseño "Digital Future"
 - Gradientes azul → púrpura → rosa
