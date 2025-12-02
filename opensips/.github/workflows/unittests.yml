@@ -1,0 +1,128 @@
+# This is a basic workflow to help you get started with Actions
+
+name: Unit Tests
+
+# Controls when the action will run. 
+on:
+  # Triggers the workflow on all push or pull request events
+  push:
+  pull_request:
+
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
+
+# A workflow run is made up of one or more jobs that can run sequentially or in parallel
+jobs:
+  # This workflow contains a single job called "build"
+  build_and_test:
+    # The type of runner that the job will run on
+    runs-on: ubuntu-latest
+    container:
+      image: ubuntu:${{ matrix.os }}
+      options: >-
+        -v sources:/__w/${{ github.event.repository.name }}/${{ github.event.repository.name }}
+    env:
+      COMPILER: ${{ matrix.compiler }}
+      BUILD_OS: ubuntu:${{ matrix.os }}
+
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [22.04]
+        compiler: ['gcc', 'clang', 'gcc-11', 'gcc-12', 'clang-11', 'clang-12', 'clang-13', 'clang-14', 'clang-15', 'gcc-arm64-qemu-cross', 'gcc-arm32-qemu-cross', 'clang-arm64-qemu-cross', 'clang-arm32-qemu-cross']
+        include:
+          - os: 20.04
+            compiler: 'gcc'
+          - os: 20.04
+            compiler: 'clang'
+          - os: 20.04
+            compiler: 'gcc-9'
+          - os: 20.04
+            compiler: 'gcc-10'
+          - os: 20.04
+            compiler: 'clang-9'
+          - os: 20.04
+            compiler: 'clang-10'
+          - os: 24.04
+            compiler: 'gcc'
+          - os: 24.04
+            compiler: 'clang'
+          - os: 24.04
+            compiler: 'gcc-13'
+          - os: 24.04
+            compiler: 'gcc-14'
+          - os: 24.04
+            compiler: 'clang-16'
+          - os: 24.04
+            compiler: 'clang-17'
+          - os: 24.04
+            compiler: 'clang-18'
+          - os: 24.04
+            compiler: 'clang-19'
+
+    # Steps represent a sequence of tasks that will be executed as part of the job
+    steps:
+      - name: Install git
+        run: |
+          apt-get update
+          apt-get install -y git lsb-release gnupg2 wget
+
+      # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Cache the compiler cache
+        uses: actions/cache@v4
+        if: endsWith(matrix.compiler, '-qemu-cross')
+        with:
+          path: ccache
+          key: ccache-ut-${{ matrix.os }}-${{ matrix.compiler }}-${{ github.run_id }}
+          restore-keys: |
+            ccache-ut-${{ matrix.os }}-${{ matrix.compiler }}
+
+      - name: Start Docker container
+        if: endsWith(matrix.compiler, '-cross')
+        run: sh -x scripts/build/start_container.sh
+
+      - name: Install dependencies
+        run: |
+          sh -x scripts/build/reset_sources.sh
+          sh -x scripts/build/install_depends.sh
+
+      - name: Get libtap
+        run: git clone https://github.com/zorgnax/libtap.git lib/libtap
+
+      - name: Zero out compiler cache stats
+        if: endsWith(matrix.compiler, '-qemu-cross')
+        run: scripts/build/zero_ccache_stats.sh
+
+      - name: Build libtap
+        run: sh -x scripts/build/build_libtap.sh lib/libtap
+
+      - name: Build test harness
+        run: sh -x scripts/build/build_test_harness.sh lib/libtap
+
+      - name: Print compiler cache stats
+        if: endsWith(matrix.compiler, '-qemu-cross')
+        run: scripts/build/print_ccache_stats.sh
+
+      - name: Run tests
+        env:
+          MAKE_TGT: 'test'
+        run: script -e unit_tests.log -c 'sh -x scripts/build/do_build.sh DEFS_EXTRA_OPTS="-DUNIT_TESTS -fPIE -fPIC"'
+
+      - name: Collect test logs
+        uses: actions/upload-artifact@v4
+        with:
+          name: unit_tests-logs_${{ matrix.os }}_${{ matrix.compiler }}
+          path: |
+            unit_tests.log
+
+  all_done:
+    needs: build_and_test
+    uses: ./.github/workflows/.notify.yml
+    with:
+      job_name: "Unit Tests"
+      job_result: ${{ needs.build_and_test.result }}
+    if: ${{ always() }}
