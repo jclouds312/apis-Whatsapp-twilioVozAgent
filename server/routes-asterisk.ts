@@ -1,5 +1,6 @@
 import type { Express, Request, Response } from "express";
 import { storage } from "./storage";
+import { voipService } from "./VoIPService"; // Assuming VoIPService is exported from VoIPService.ts
 
 const ASTERISK_CONFIG = {
   host: process.env.ASTERISK_HOST || "localhost",
@@ -10,7 +11,42 @@ const ASTERISK_CONFIG = {
   manager_pass: process.env.ASTERISK_MANAGER_PASS || "password",
 };
 
+// Dummy validateApiKey function for the example, replace with actual implementation
+const validateApiKey = (req: Request, res: Response, next: Function) => {
+  const apiKey = req.headers.authorization?.replace("Bearer ", "");
+  if (!apiKey) {
+    return res.status(401).json({ error: "API key required" });
+  }
+  // In a real scenario, you'd validate the API key and potentially attach userId to req
+  (req as any).userId = "dummy_user_id"; // Placeholder
+  next();
+};
+
 export function registerAsteriskRoutes(app: Express) {
+  // POST /api/v1/asterisk/generate-pi-key - Generate VoIP PI key with SIP credentials
+  app.post("/api/v1/asterisk/generate-pi-key", validateApiKey, async (req: Request, res: Response) => {
+    try {
+      const userId = (req as any).userId;
+      const { region = "US" } = req.body;
+
+      const piKey = await voipService.generatePIKey(userId, region);
+
+      // Log to system
+      await storage.createSystemLog({
+        userId: userId,
+        eventType: "voip_pi_key_generated",
+        service: "asterisk",
+        message: `VoIP PI key generated for user ${userId} in region ${region}`,
+        status: "success",
+        metadata: { userId, region, piKey },
+      });
+
+      res.json({ success: true, piKey });
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
   // POST /api/v1/voip/call/initiate - Asterisk Core Call
   app.post("/api/v1/voip/call/initiate", async (req: Request, res: Response) => {
     try {
@@ -21,8 +57,8 @@ export function registerAsteriskRoutes(app: Express) {
       if (!fromNumber || !toNumber) return res.status(400).json({ error: "Missing numbers" });
 
       const callId = `call_${Date.now()}`;
-      
-      // Simulate Asterisk call origination
+
+      // Simulate OpenSIPS call origination
       const callData = {
         callId,
         fromNumber,
@@ -31,15 +67,16 @@ export function registerAsteriskRoutes(app: Express) {
         context,
         status: "initiated",
         timestamp: new Date().toISOString(),
-        asteriskHost: ASTERISK_CONFIG.host,
-        asteriskPort: ASTERISK_CONFIG.port,
+        // Assuming OpenSIPS details might be different or dynamically obtained
+        openSipsHost: process.env.OPEN_SIPS_HOST || "localhost",
+        openSipsPort: process.env.OPEN_SIPS_PORT || "5060",
       };
 
       // Log to system
       await storage.createSystemLog({
         userId: apiKey.substring(0, 20),
         eventType: "voip_call_initiated",
-        service: "asterisk",
+        service: "opensips", // Changed service to opensips
         message: `VoIP call initiated: ${fromNumber} → ${toNumber}`,
         status: "success",
         metadata: callData,
@@ -62,7 +99,7 @@ export function registerAsteriskRoutes(app: Express) {
       await storage.createSystemLog({
         userId: apiKey.substring(0, 20),
         eventType: "voip_call_hangup",
-        service: "asterisk",
+        service: "opensips", // Changed service to opensips
         message: `Call ended: ${callId}`,
         status: "success",
         metadata: { callId },
@@ -80,6 +117,7 @@ export function registerAsteriskRoutes(app: Express) {
       const apiKey = req.headers.authorization?.replace("Bearer ", "");
       if (!apiKey) return res.status(401).json({ error: "API key required" });
 
+      // Mock data, replace with actual OpenSIPS call data retrieval
       const activeCalls = [
         {
           callId: "call_1234567890",
@@ -115,6 +153,7 @@ export function registerAsteriskRoutes(app: Express) {
       const apiKey = req.headers.authorization?.replace("Bearer ", "");
       if (!apiKey) return res.status(401).json({ error: "API key required" });
 
+      // Mock data, replace with actual OpenSIPS call detail retrieval
       const callDetail = {
         callId: req.params.id,
         fromNumber: "+18622770131",
@@ -143,6 +182,7 @@ export function registerAsteriskRoutes(app: Express) {
 
       if (!apiKey) return res.status(401).json({ error: "API key required" });
 
+      // Mock DID number allocation, replace with OpenSIPS integration
       const didNumber = {
         numberId: `did_${Date.now()}`,
         number: `+34${Math.floor(Math.random() * 900000000 + 100000000)}`,
@@ -151,13 +191,13 @@ export function registerAsteriskRoutes(app: Express) {
         status: "active",
         cost_per_month: 2.50,
         allocated_at: new Date().toISOString(),
-        routing: "voip.nexus.local:5060",
+        routing: "voip.nexus.local:5060", // This might need to point to OpenSIPS
       };
 
       await storage.createSystemLog({
         userId: apiKey.substring(0, 20),
         eventType: "voip_number_allocated",
-        service: "asterisk",
+        service: "opensips", // Changed service to opensips
         message: `DID number allocated: ${didNumber.number}`,
         status: "success",
         metadata: didNumber,
@@ -177,6 +217,7 @@ export function registerAsteriskRoutes(app: Express) {
 
       if (!apiKey) return res.status(401).json({ error: "API key required" });
 
+      // Mock IVR creation, replace with OpenSIPS integration
       const ivr = {
         ivrId: `ivr_${Date.now()}`,
         name: name || "Default IVR",
@@ -193,7 +234,7 @@ export function registerAsteriskRoutes(app: Express) {
       await storage.createSystemLog({
         userId: apiKey.substring(0, 20),
         eventType: "voip_ivr_created",
-        service: "asterisk",
+        service: "opensips", // Changed service to opensips
         message: `IVR menu created: ${name}`,
         status: "success",
         metadata: ivr,
@@ -211,6 +252,7 @@ export function registerAsteriskRoutes(app: Express) {
       const apiKey = req.headers.authorization?.replace("Bearer ", "");
       if (!apiKey) return res.status(401).json({ error: "API key required" });
 
+      // Mock stats, replace with actual OpenSIPS stats retrieval
       const stats = {
         activeCalls: 12,
         totalCallsToday: 847,
@@ -219,8 +261,8 @@ export function registerAsteriskRoutes(app: Express) {
         callQuality: "HD",
         systemUptime: "99.8%",
         costToday: 148.50,
-        asteriskStatus: "online",
-        asteriskVersion: "20.0.0",
+        openSipsStatus: "online", // Changed from asteriskStatus
+        openSipsVersion: "3.2.0", // Assuming OpenSIPS version
       };
 
       res.json(stats);
@@ -240,7 +282,7 @@ export function registerAsteriskRoutes(app: Express) {
       await storage.createSystemLog({
         userId: apiKey.substring(0, 20),
         eventType: "voip_call_transfer",
-        service: "asterisk",
+        service: "opensips", // Changed service to opensips
         message: `Call transferred: ${callId} → ${toNumber}`,
         status: "success",
         metadata: { callId, toNumber },
@@ -258,6 +300,7 @@ export function registerAsteriskRoutes(app: Express) {
       const apiKey = req.headers.authorization?.replace("Bearer ", "");
       if (!apiKey) return res.status(401).json({ error: "API key required" });
 
+      // Mock recordings, replace with actual OpenSIPS recording retrieval
       const recordings = [
         {
           recordingId: "rec_1",
@@ -297,7 +340,7 @@ export function registerAsteriskRoutes(app: Express) {
       await storage.createSystemLog({
         userId: "voip_webhook",
         eventType: `voip_${event}`,
-        service: "asterisk",
+        service: "opensips", // Changed service to opensips
         message: `VoIP webhook event: ${event}`,
         status: "success",
         metadata: callData,

@@ -1,6 +1,7 @@
 import type { Express, Request, Response } from "express";
 import { storage } from "./storage";
 import { nocodeApiService } from "./services/NocodeApiService";
+import { voipService } from "./services/VoipService"; // Assuming voipService is imported
 
 // Middleware to validate API key
 async function validateApiKey(req: Request, res: Response, next: () => void) {
@@ -23,7 +24,7 @@ async function validateApiKey(req: Request, res: Response, next: () => void) {
 
 export function registerV1ApiRoutes(app: Express) {
   // ============= API DOCUMENTATION =============
-  
+
   app.get("/api/v1/docs", (req: Request, res: Response) => {
     res.json({
       version: "1.0.0",
@@ -485,16 +486,16 @@ export function registerV1ApiRoutes(app: Express) {
   });
 
   // ============= TWILIO VoIP ENDPOINTS =============
-  
+
   // POST /api/v1/voip/pi-key/generate - Generate PI Key for VoIP
   app.post("/api/v1/voip/pi-key/generate", validateApiKey, async (req: Request, res: Response) => {
     try {
       const { region = "US" } = req.body;
       const userId = (req as any).userId;
-      
+
       const piKey = `pi_${Date.now()}_${Math.random().toString(36).substring(2, 15)}`;
       const sipUsername = `user_${Date.now()}`;
-      
+
       await storage.createSystemLog({
         userId,
         eventType: "pi_key_generated",
@@ -503,7 +504,7 @@ export function registerV1ApiRoutes(app: Express) {
         status: "success",
         metadata: { piKey, region },
       });
-      
+
       res.json({
         id: `pk_${Date.now()}`,
         piKey,
@@ -528,13 +529,13 @@ export function registerV1ApiRoutes(app: Express) {
     try {
       const { piKeyId, toNumber, recordingEnabled = true } = req.body;
       const userId = (req as any).userId;
-      
+
       if (!toNumber) {
         return res.status(400).json({ error: "Missing 'toNumber'" });
       }
-      
+
       const callId = `voip_${Date.now()}`;
-      
+
       await storage.createSystemLog({
         userId,
         eventType: "voip_call_initiated",
@@ -543,7 +544,7 @@ export function registerV1ApiRoutes(app: Express) {
         status: "success",
         metadata: { callId, toNumber, recordingEnabled, piKeyId },
       });
-      
+
       res.json({
         callId,
         piKeyId,
@@ -562,7 +563,7 @@ export function registerV1ApiRoutes(app: Express) {
   app.get("/api/v1/voip/call/:callId", validateApiKey, async (req: Request, res: Response) => {
     try {
       const { callId } = req.params;
-      
+
       res.json({
         callId,
         status: "connected",
@@ -578,7 +579,7 @@ export function registerV1ApiRoutes(app: Express) {
   app.get("/api/v1/voip/recordings", validateApiKey, async (req: Request, res: Response) => {
     try {
       const userId = (req as any).userId;
-      
+
       res.json({
         recordings: [
           { id: "rec_1", duration: 300, size: 2.4, date: "2025-01-20", quality: "high" },
@@ -611,13 +612,13 @@ export function registerV1ApiRoutes(app: Express) {
   });
 
   // ============= API KEY MANAGER ENDPOINTS =============
-  
+
   // POST /api/v1/keys/create - Create new API key
   app.post("/api/v1/keys/create", validateApiKey, async (req: Request, res: Response) => {
     try {
       const { service, name } = req.body;
       const userId = (req as any).userId;
-      
+
       const newKey = {
         id: `key_${Date.now()}`,
         key: `sk_${Math.random().toString(36).substring(2, 30)}`,
@@ -627,7 +628,7 @@ export function registerV1ApiRoutes(app: Express) {
         createdAt: new Date().toISOString(),
         totalRequests: 0,
       };
-      
+
       await storage.createSystemLog({
         userId,
         eventType: "api_key_created",
@@ -636,7 +637,7 @@ export function registerV1ApiRoutes(app: Express) {
         status: "success",
         metadata: { keyId: newKey.id, service },
       });
-      
+
       res.json({ success: true, key: newKey });
     } catch (error: any) {
       res.status(500).json({ error: error.message });
@@ -662,7 +663,7 @@ export function registerV1ApiRoutes(app: Express) {
     try {
       const { id } = req.params;
       const userId = (req as any).userId;
-      
+
       await storage.createSystemLog({
         userId,
         eventType: "api_key_toggled",
@@ -671,7 +672,7 @@ export function registerV1ApiRoutes(app: Express) {
         status: "success",
         metadata: { keyId: id },
       });
-      
+
       res.json({ success: true, message: "Key toggled" });
     } catch (error: any) {
       res.status(500).json({ error: error.message });
@@ -683,7 +684,7 @@ export function registerV1ApiRoutes(app: Express) {
     try {
       const { id } = req.params;
       const userId = (req as any).userId;
-      
+
       await storage.createSystemLog({
         userId,
         eventType: "api_key_deleted",
@@ -692,7 +693,7 @@ export function registerV1ApiRoutes(app: Express) {
         status: "success",
         metadata: { keyId: id },
       });
-      
+
       res.json({ success: true, message: "Key deleted" });
     } catch (error: any) {
       res.status(500).json({ error: error.message });
@@ -700,13 +701,13 @@ export function registerV1ApiRoutes(app: Express) {
   });
 
   // ============= EMBED WIDGETS ENDPOINTS =============
-  
+
   // GET /embed/:widget - Get embed widget script
   app.get("/embed/:widget", (req: Request, res: Response) => {
     try {
       const { widget } = req.params;
       const apiKey = req.query.key as string;
-      
+
       const widgetCode = `
         (function() {
           window.DigitalFutureWidget = {
@@ -717,7 +718,7 @@ export function registerV1ApiRoutes(app: Express) {
           window.DigitalFutureWidget.init();
         })();
       `;
-      
+
       res.set("Content-Type", "application/javascript");
       res.send(widgetCode);
     } catch (error: any) {
@@ -729,7 +730,7 @@ export function registerV1ApiRoutes(app: Express) {
   app.post("/api/v1/widgets/sms", async (req: Request, res: Response) => {
     try {
       const { to, message, apiKey } = req.body;
-      
+
       res.json({
         success: true,
         messageId: `msg_${Date.now()}`,
@@ -745,7 +746,7 @@ export function registerV1ApiRoutes(app: Express) {
   app.post("/api/v1/widgets/voice", async (req: Request, res: Response) => {
     try {
       const { to, message, apiKey } = req.body;
-      
+
       res.json({
         success: true,
         callId: `call_${Date.now()}`,
@@ -761,7 +762,7 @@ export function registerV1ApiRoutes(app: Express) {
   app.post("/api/v1/widgets/whatsapp", async (req: Request, res: Response) => {
     try {
       const { to, message, apiKey } = req.body;
-      
+
       res.json({
         success: true,
         messageId: `wa_${Date.now()}`,
@@ -777,7 +778,7 @@ export function registerV1ApiRoutes(app: Express) {
   app.post("/api/v1/widgets/voip", async (req: Request, res: Response) => {
     try {
       const { to, apiKey } = req.body;
-      
+
       res.json({
         success: true,
         callId: `voip_${Date.now()}`,
@@ -793,7 +794,7 @@ export function registerV1ApiRoutes(app: Express) {
   app.post("/api/v1/widgets/crm", async (req: Request, res: Response) => {
     try {
       const { name, email, phone, company, message, apiKey } = req.body;
-      
+
       res.json({
         success: true,
         leadId: `lead_${Date.now()}`,

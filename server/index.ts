@@ -64,6 +64,16 @@ app.use((req, res, next) => {
 });
 
 (async () => {
+  // Initialize OpenSIPS server
+  try {
+    const { openSIPSService } = await import("./services/OpenSIPSService");
+    log("Starting OpenSIPS server...", "opensips");
+    await openSIPSService.startServer();
+    log("OpenSIPS server started successfully", "opensips");
+  } catch (error: any) {
+    log(`Failed to start OpenSIPS server: ${error.message}`, "opensips");
+  }
+
   await registerRoutes(httpServer, app);
 
   // Import and register API key generation routes

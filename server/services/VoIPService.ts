@@ -47,6 +47,7 @@ export interface AsteriskConfig {
 export class VoIPService {
   private asteriskConfig: AsteriskConfig;
   private useSIPServer: boolean;
+  private openSIPSService: any;
 
   constructor(asteriskConfig?: AsteriskConfig, useSIPServer: boolean = true) {
     this.asteriskConfig = asteriskConfig || {
@@ -58,27 +59,43 @@ export class VoIPService {
       allowedCountries: ["US", "CA", "MX", "ES", "AR"],
     };
     this.useSIPServer = useSIPServer;
+    
+    // Import OpenSIPS service
+    if (this.useSIPServer) {
+      import('./OpenSIPSService').then(module => {
+        this.openSIPSService = module.openSIPSService;
+      });
+    }
   }
 
   // ============= PI KEY MANAGEMENT =============
-  generatePIKey(userId: string, region: string = "US"): PIKey {
+  async generatePIKey(userId: string, region: string = "US"): Promise<PIKey> {
     const piKey = `pi_${Date.now()}_${Math.random().toString(36).substring(2, 15)}`;
-    const sipUsername = `user_${Date.now()}`;
-    const sipPassword = this.generateSecurePassword();
-
+    
+    let sipCredentials;
+    
     // Use OpenSIPS server if enabled, otherwise use Asterisk
-    const sipServer = this.useSIPServer 
-      ? `sip.nexus-core.com` 
-      : `sip.asterisk.${region.toLowerCase()}.voip.twilio.com`;
+    if (this.useSIPServer && this.openSIPSService) {
+      sipCredentials = this.openSIPSService.generateSIPCredentials(userId);
+    } else {
+      const sipUsername = `user_${Date.now()}`;
+      const sipPassword = this.generateSecurePassword();
+      sipCredentials = {
+        username: sipUsername,
+        password: sipPassword,
+        sipServer: `sip.asterisk.${region.toLowerCase()}.voip.twilio.com`,
+        sipPort: 5060,
+      };
+    }
 
     return {
       id: `pk_${Date.now()}`,
       userId,
       piKey,
       sipCredentials: {
-        username: sipUsername,
-        password: sipPassword,
-        sipServer,
+        username: sipCredentials.username,
+        password: sipCredentials.password,
+        sipServer: sipCredentials.domain || sipCredentials.sipServer,
         sipPort: 5060,
       },
       region,
