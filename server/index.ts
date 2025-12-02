@@ -2,6 +2,10 @@ import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
 import { serveStatic } from "./static";
 import { createServer } from "http";
+import { registerOpenSIPSRoutes } from "./routes-opensips";
+import { registerAsteriskRoutes } from "./routes-asterisk";
+import { registerMetaWhatsAppRoutes } from "./routes-meta-whatsapp";
+import { registerEmbedWidgetRoutes } from "./routes-embed-widgets";
 
 const app = express();
 const httpServer = createServer(app);
@@ -61,7 +65,7 @@ app.use((req, res, next) => {
 
 (async () => {
   await registerRoutes(httpServer, app);
-  
+
   // Import and register API key generation routes
   const { registerApiKeyGenerationRoutes } = await import("./routes-api-keygen");
   registerApiKeyGenerationRoutes(app);
@@ -89,6 +93,8 @@ app.use((req, res, next) => {
   // Import and register Meta WhatsApp routes
   const { registerMetaWhatsAppRoutes } = await import("./routes-meta-whatsapp");
   registerMetaWhatsAppRoutes(app);
+
+  registerOpenSIPSRoutes(app);
 
   app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
     const status = err.status || err.statusCode || 500;

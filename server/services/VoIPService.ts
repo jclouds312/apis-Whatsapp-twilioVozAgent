@@ -46,16 +46,18 @@ export interface AsteriskConfig {
 
 export class VoIPService {
   private asteriskConfig: AsteriskConfig;
+  private useSIPServer: boolean;
 
-  constructor(asteriskConfig?: AsteriskConfig) {
+  constructor(asteriskConfig?: AsteriskConfig, useSIPServer: boolean = true) {
     this.asteriskConfig = asteriskConfig || {
-      hostname: "localhost",
+      hostname: "0.0.0.0",
       port: 5060,
       username: "admin",
       password: "admin",
       context: "from-internal",
       allowedCountries: ["US", "CA", "MX", "ES", "AR"],
     };
+    this.useSIPServer = useSIPServer;
   }
 
   // ============= PI KEY MANAGEMENT =============
@@ -64,6 +66,11 @@ export class VoIPService {
     const sipUsername = `user_${Date.now()}`;
     const sipPassword = this.generateSecurePassword();
 
+    // Use OpenSIPS server if enabled, otherwise use Asterisk
+    const sipServer = this.useSIPServer 
+      ? `sip.nexus-core.com` 
+      : `sip.asterisk.${region.toLowerCase()}.voip.twilio.com`;
+
     return {
       id: `pk_${Date.now()}`,
       userId,
@@ -71,7 +78,7 @@ export class VoIPService {
       sipCredentials: {
         username: sipUsername,
         password: sipPassword,
-        sipServer: `sip.asterisk.${region.toLowerCase()}.voip.twilio.com`,
+        sipServer,
         sipPort: 5060,
       },
       region,
