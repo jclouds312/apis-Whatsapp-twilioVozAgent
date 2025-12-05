@@ -32,6 +32,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     { icon: LayoutDashboard, label: "Dashboard", path: "/", badge: "v2.4" },
     { icon: MessageSquare, label: "WhatsApp Manager", path: "/whatsapp", badge: "API" },
     { icon: Phone, label: "Twilio Voice", path: "/twilio", badge: "Voice" },
+    { icon: Server, label: "Twilio IaC", path: "/twilio-infrastructure", badge: "Terraform" },
     { icon: ShieldCheck, label: "Verify", path: "/verify", badge: "Auth" },
     { icon: Bot, label: "AI Agents", path: "/retell", badge: "Beta" },
     { icon: Users, label: "CRM", path: "/crm" },
