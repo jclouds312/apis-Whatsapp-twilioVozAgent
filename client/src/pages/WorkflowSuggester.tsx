@@ -1,0 +1,1 @@
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'; export default function WorkflowSuggesterPage() { return <div className='p-8'><Card><CardHeader><CardTitle>WorkflowSuggester</CardTitle></CardHeader><CardContent>Content for WorkflowSuggester is being implemented.</CardContent></Card></div>; }

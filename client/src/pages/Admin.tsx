@@ -1,0 +1,1 @@
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'; export default function AdminPage() { return <div className='p-8'><Card><CardHeader><CardTitle>Admin</CardTitle></CardHeader><CardContent>Content for Admin is being implemented.</CardContent></Card></div>; }

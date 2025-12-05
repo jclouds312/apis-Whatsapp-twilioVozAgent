@@ -1,0 +1,1 @@
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'; export default function SystemLogsPage() { return <div className='p-8'><Card><CardHeader><CardTitle>SystemLogs</CardTitle></CardHeader><CardContent>Content for SystemLogs is being implemented.</CardContent></Card></div>; }

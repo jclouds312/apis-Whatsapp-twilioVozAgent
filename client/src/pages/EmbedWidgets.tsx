@@ -1,0 +1,1 @@
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'; export default function EmbedWidgetsPage() { return <div className='p-8'><Card><CardHeader><CardTitle>EmbedWidgets</CardTitle></CardHeader><CardContent>Content for EmbedWidgets is being implemented.</CardContent></Card></div>; }

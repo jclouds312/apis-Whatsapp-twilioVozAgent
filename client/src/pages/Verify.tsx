@@ -1,0 +1,1 @@
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'; export default function VerifyPage() { return <div className='p-8'><Card><CardHeader><CardTitle>Verify</CardTitle></CardHeader><CardContent>Content for Verify is being implemented.</CardContent></Card></div>; }

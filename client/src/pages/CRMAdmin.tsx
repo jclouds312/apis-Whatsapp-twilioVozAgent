@@ -1,0 +1,1 @@
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'; export default function CRMAdminPage() { return <div className='p-8'><Card><CardHeader><CardTitle>CRMAdmin</CardTitle></CardHeader><CardContent>Content for CRMAdmin is being implemented.</CardContent></Card></div>; }

@@ -1,0 +1,1 @@
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'; export default function ApiDocumentationPage() { return <div className='p-8'><Card><CardHeader><CardTitle>ApiDocumentation</CardTitle></CardHeader><CardContent>Content for ApiDocumentation is being implemented.</CardContent></Card></div>; }

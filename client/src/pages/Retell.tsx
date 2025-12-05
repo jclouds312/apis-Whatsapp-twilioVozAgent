@@ -1,0 +1,1 @@
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'; export default function RetellPage() { return <div className='p-8'><Card><CardHeader><CardTitle>Retell</CardTitle></CardHeader><CardContent>Content for Retell is being implemented.</CardContent></Card></div>; }

@@ -1,0 +1,1 @@
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'; export default function TwilioVoicePage() { return <div className='p-8'><Card><CardHeader><CardTitle>TwilioVoice</CardTitle></CardHeader><CardContent>Content for TwilioVoice is being implemented.</CardContent></Card></div>; }

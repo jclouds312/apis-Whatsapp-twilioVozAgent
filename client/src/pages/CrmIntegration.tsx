@@ -1,0 +1,1 @@
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'; export default function CrmIntegrationPage() { return <div className='p-8'><Card><CardHeader><CardTitle>CrmIntegration</CardTitle></CardHeader><CardContent>Content for CrmIntegration is being implemented.</CardContent></Card></div>; }
