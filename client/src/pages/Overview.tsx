@@ -1,290 +1,216 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useLocation } from "wouter";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import {
-  Activity, MessageSquare, PhoneCall, Users, ArrowUpRight, ArrowDownRight,
-  Zap, Clock, BarChart3, TrendingUp, AlertCircle, CheckCircle2, Radio,
-  Target, Zap as Lightning, RefreshCw, Power, Settings, Globe, ArrowRight,
-  Briefcase, Send, Volume2, Network, LayoutGrid, ExternalLink
+  Activity, MessageSquare, PhoneCall, Users, Zap,
+  RefreshCw, Globe, ArrowRight, Briefcase, Send,
+  LayoutDashboard, FileText, Image as ImageIcon, Video,
+  Bot, Radio, Server, CloudLightning
 } from "lucide-react";
-import { Area, AreaChart, Bar, BarChart, ResponsiveContainer, Tooltip, XAxis, YAxis, CartesianGrid, Legend, LineChart, Line, PieChart, Pie, Cell } from "recharts";
+import { Area, AreaChart, ResponsiveContainer, Tooltip, XAxis, YAxis, CartesianGrid, Legend } from "recharts";
 
+// Enhanced Data for Version 4.0
 const trafficData = [
-  { time: "00:00", calls: 12, messages: 140, fb: 45 },
-  { time: "04:00", calls: 8, messages: 90, fb: 32 },
-  { time: "08:00", calls: 45, messages: 450, fb: 120 },
-  { time: "12:00", calls: 80, messages: 680, fb: 280 },
-  { time: "16:00", calls: 65, messages: 520, fb: 210 },
-  { time: "20:00", calls: 30, messages: 280, fb: 95 },
-  { time: "23:59", calls: 20, messages: 190, fb: 68 },
-];
-
-const apiUsageData = [
-  { api: "WhatsApp", requests: 4520, limit: 5000 },
-  { api: "Twilio Voice", requests: 2130, limit: 3000 },
-  { api: "Facebook SDK", requests: 1840, limit: 2000 },
-  { api: "CRM API", requests: 650, limit: 1000 },
-];
-
-const serviceMetrics = [
-  { requests: 2500, delivered: 2480, failed: 20, pending: 5 },
-  { requests: 1200, delivered: 1190, failed: 5, pending: 5 },
-  { requests: 980, delivered: 975, failed: 3, pending: 2 },
+  { time: "00:00", api_v3: 120, api_v4: 240, errors: 2 },
+  { time: "04:00", api_v3: 80, api_v4: 190, errors: 1 },
+  { time: "08:00", api_v3: 450, api_v4: 850, errors: 5 },
+  { time: "12:00", api_v3: 680, api_v4: 1200, errors: 8 },
+  { time: "16:00", api_v3: 520, api_v4: 980, errors: 4 },
+  { time: "20:00", api_v3: 280, api_v4: 560, errors: 3 },
+  { time: "23:59", api_v3: 190, api_v4: 340, errors: 2 },
 ];
 
 export default function OverviewPage() {
   const [, setLocation] = useLocation();
-  const [serviceStates, setServiceStates] = useState({
-    whatsapp: true,
-    twilio: true,
-    facebook: true,
-    crm: true,
-  });
-  const [systemHealth, setSystemHealth] = useState({
-    database: 98,
-    gateway: 100,
-    webhooks: 85,
-  });
-  const [recentActivities, setRecentActivities] = useState([
-    { id: 1, type: "sms", service: "Twilio", message: "SMS enviado a +34912345678", time: "hace 2m", status: "success" },
-    { id: 2, type: "call", service: "Twilio", message: "Llamada iniciada - 3min 45s", time: "hace 5m", status: "success" },
-    { id: 3, type: "message", service: "WhatsApp", message: "Mensaje entregado a +1234567890", time: "hace 8m", status: "success" },
-    { id: 4, type: "webhook", service: "Facebook", message: "Webhook recibido", time: "hace 12m", status: "pending" },
-  ]);
-
-  const toggleService = (service: keyof typeof serviceStates) => {
-    setServiceStates(prev => ({ ...prev, [service]: !prev[service] }));
-  };
-
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setSystemHealth(prev => ({
-        ...prev,
-        database: Math.min(100, prev.database + Math.random() * 2 - 0.5),
-        gateway: Math.min(100, prev.gateway + Math.random() * 1 - 0.3),
-        webhooks: Math.min(100, prev.webhooks + Math.random() * 3 - 1),
-      }));
-    }, 5000);
-    return () => clearInterval(interval);
-  }, []);
+  const [autoRefresh, setAutoRefresh] = useState(true);
 
   const navigateTo = (path: string) => {
     setLocation(`/${path}`);
   };
 
-  const quickActions = [
-    { label: "Enviar SMS", icon: Send, color: "from-yellow-600 to-amber-600", action: () => navigateTo("twilio-voice") },
-    { label: "Hacer Llamada", icon: PhoneCall, color: "from-red-600 to-orange-600", action: () => navigateTo("twilio-voice") },
-    { label: "WhatsApp", icon: MessageSquare, color: "from-green-600 to-emerald-600", action: () => navigateTo("whatsapp") },
-    { label: "Facebook SDK", icon: Globe, color: "from-blue-600 to-cyan-600", action: () => navigateTo("facebook") },
-  ];
-
   return (
     <div className="space-y-6">
-      {/* Header Hero */}
-      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-slate-800/80 via-slate-900 to-slate-950 border border-primary/30 p-8">
-        <div className="absolute inset-0 opacity-30">
-          <div className="absolute top-0 left-1/4 w-96 h-96 bg-primary/20 rounded-full blur-3xl" />
-          <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-purple-500/10 rounded-full blur-3xl" />
+      {/* Version 4.0 Hero */}
+      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-slate-950 via-slate-900 to-indigo-950 border border-indigo-500/30 p-8 shadow-2xl">
+        <div className="absolute inset-0 opacity-20">
+          <div className="absolute top-0 left-0 w-full h-full bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20"></div>
+          <div className="absolute top-[-50%] left-[-10%] w-[500px] h-[500px] bg-indigo-600/30 rounded-full blur-[100px]" />
+          <div className="absolute bottom-[-50%] right-[-10%] w-[500px] h-[500px] bg-emerald-600/30 rounded-full blur-[100px]" />
         </div>
-        <div className="relative space-y-4">
-          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-            <div>
-              <h1 className="text-5xl font-bold bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400 bg-clip-text text-transparent">
-                Enterprise Command Center v3.0
-              </h1>
-              <p className="text-muted-foreground mt-2 text-lg">
-                WhatsApp • Twilio • Facebook • CRM - Control total en tiempo real
-              </p>
+        
+        <div className="relative z-10 flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
+          <div>
+            <div className="flex items-center gap-3 mb-2">
+              <Badge variant="outline" className="bg-indigo-500/10 text-indigo-400 border-indigo-500/30 px-3 py-1">
+                v4.0 Release
+              </Badge>
+              <Badge variant="outline" className="bg-emerald-500/10 text-emerald-400 border-emerald-500/30 px-3 py-1 flex items-center gap-1">
+                <div className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+                Systems Nominal
+              </Badge>
             </div>
+            <h1 className="text-5xl font-extrabold tracking-tight text-white mb-2">
+              NexusCore <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-cyan-400">Ultra</span>
+            </h1>
+            <p className="text-slate-400 text-lg max-w-2xl">
+              Plataforma unificada de orquestación para WhatsApp Cloud API, Twilio Voice, y Agentes IA.
+              Procesamiento en tiempo real con latencia sub-50ms.
+            </p>
+          </div>
+          
+          <div className="flex flex-col gap-3 min-w-[200px]">
+            <Card className="bg-black/40 border-indigo-500/30 backdrop-blur-sm">
+              <CardContent className="p-4 flex items-center justify-between">
+                <div>
+                  <p className="text-xs text-slate-400">API Requests</p>
+                  <p className="text-2xl font-mono font-bold text-indigo-400">2.4M</p>
+                </div>
+                <Activity className="h-8 w-8 text-indigo-500/50" />
+              </CardContent>
+            </Card>
             <div className="flex gap-2">
-              <Button variant="outline" className="border-primary/50 hover:bg-primary/10">
-                <RefreshCw className="h-4 w-4 mr-2" />
-                Actualizar
+              <Button className="flex-1 bg-indigo-600 hover:bg-indigo-700" onClick={() => navigateTo("whatsapp")}>
+                <MessageSquare className="mr-2 h-4 w-4" /> WhatsApp
               </Button>
-              <Button className="bg-gradient-to-r from-primary to-purple-600">
-                <Zap className="h-4 w-4 mr-2" />
-                Exportar
+              <Button variant="outline" className="flex-1 border-slate-700 hover:bg-slate-800" onClick={() => navigateTo("logs")}>
+                <Server className="mr-2 h-4 w-4" /> Logs
               </Button>
             </div>
           </div>
         </div>
       </div>
 
-      {/* Quick Actions Bar */}
-      <div className="grid gap-3 md:grid-cols-4">
-        {quickActions.map((action) => (
-          <Button
-            key={action.label}
-            onClick={action.action}
-            className={`h-16 bg-gradient-to-br ${action.color} text-white shadow-lg hover:shadow-xl transition-all`}
-          >
-            <action.icon className="h-5 w-5 mr-2" />
-            {action.label}
-          </Button>
+      {/* Quick Stats */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        {[
+          { label: "WhatsApp Cloud", value: "99.9%", sub: "Uptime", icon: CloudLightning, color: "text-green-400", bg: "bg-green-500/10", border: "border-green-500/20" },
+          { label: "Active Agents", value: "12", sub: "AI Workers", icon: Bot, color: "text-purple-400", bg: "bg-purple-500/10", border: "border-purple-500/20" },
+          { label: "Twilio Voice", value: "45ms", sub: "Latency", icon: PhoneCall, color: "text-red-400", bg: "bg-red-500/10", border: "border-red-500/20" },
+          { label: "Throughput", value: "1.2k/s", sub: "Messages", icon: Zap, color: "text-yellow-400", bg: "bg-yellow-500/10", border: "border-yellow-500/20" },
+        ].map((stat, i) => (
+          <Card key={i} className={`border ${stat.border} ${stat.bg} backdrop-blur-sm transition-all hover:scale-[1.02] cursor-pointer`}>
+            <CardContent className="p-6">
+              <div className="flex justify-between items-start">
+                <div>
+                  <p className="text-sm text-muted-foreground font-medium">{stat.label}</p>
+                  <h3 className={`text-3xl font-bold mt-2 ${stat.color}`}>{stat.value}</h3>
+                  <p className="text-xs text-muted-foreground mt-1">{stat.sub}</p>
+                </div>
+                <stat.icon className={`h-6 w-6 ${stat.color} opacity-70`} />
+              </div>
+            </CardContent>
+          </Card>
         ))}
       </div>
 
-      {/* Main KPI Grid */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <Card className="bg-gradient-to-br from-blue-500/10 to-transparent border-blue-500/30 hover:border-blue-500/50 transition-all cursor-pointer group" onClick={() => navigateTo("whatsapp")}>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">WhatsApp</CardTitle>
-            <MessageSquare className="h-5 w-5 text-blue-500 group-hover:scale-110 transition-transform" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-3xl font-bold text-blue-400">12,234</div>
-            <p className="text-xs text-muted-foreground mt-1 flex gap-1">
-              <span className="text-emerald-400">✓ Conectado</span>
-            </p>
-            <Button size="sm" variant="ghost" className="mt-2 text-xs">Ver más <ArrowRight className="h-3 w-3 ml-1" /></Button>
-          </CardContent>
-        </Card>
-
-        <Card className="bg-gradient-to-br from-red-500/10 to-transparent border-red-500/30 hover:border-red-500/50 transition-all cursor-pointer group" onClick={() => navigateTo("twilio-voice")}>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Twilio Voice</CardTitle>
-            <PhoneCall className="h-5 w-5 text-red-500 group-hover:scale-110 transition-transform" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-3xl font-bold text-red-400">843m</div>
-            <p className="text-xs text-muted-foreground mt-1">+4.5% vs ayer</p>
-            <Button size="sm" variant="ghost" className="mt-2 text-xs">Ver más <ArrowRight className="h-3 w-3 ml-1" /></Button>
-          </CardContent>
-        </Card>
-
-        <Card className="bg-gradient-to-br from-purple-500/10 to-transparent border-purple-500/30 hover:border-purple-500/50 transition-all cursor-pointer group" onClick={() => navigateTo("facebook")}>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Facebook SDK</CardTitle>
-            <Globe className="h-5 w-5 text-purple-500 group-hover:scale-110 transition-transform" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-3xl font-bold text-purple-400">4,520</div>
-            <p className="text-xs text-muted-foreground mt-1">SDK v2.18</p>
-            <Button size="sm" variant="ghost" className="mt-2 text-xs">Ver más <ArrowRight className="h-3 w-3 ml-1" /></Button>
-          </CardContent>
-        </Card>
-
-        <Card className="bg-gradient-to-br from-cyan-500/10 to-transparent border-cyan-500/30 hover:border-cyan-500/50 transition-all">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Latencia API</CardTitle>
-            <Activity className="h-5 w-5 text-cyan-500" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-3xl font-bold text-cyan-400">45ms</div>
-            <p className="text-xs text-muted-foreground mt-1">Excelente rendimiento</p>
-            <div className="mt-2 flex gap-1">
-              {[...Array(5)].map((_, i) => (
-                <div key={i} className="h-1 flex-1 bg-cyan-500/30 rounded-full" />
-              ))}
+      {/* Main Content Grid */}
+      <div className="grid lg:grid-cols-3 gap-6">
+        {/* Interactive Chart */}
+        <Card className="lg:col-span-2 border-slate-800 bg-slate-950/50">
+          <CardHeader className="flex flex-row items-center justify-between">
+            <div>
+              <CardTitle>Rendimiento de API v4.0</CardTitle>
+              <CardDescription>Comparativa de tráfico vs versión anterior</CardDescription>
             </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Services Control Panel */}
-      <Card className="bg-gradient-to-br from-slate-800/50 to-slate-900/50 border-primary/20">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Briefcase className="h-5 w-5 text-primary" />
-            Control de Servicios
-          </CardTitle>
-          <CardDescription>Activa/Desactiva servicios y monitorea su estado</CardDescription>
-        </CardHeader>
-        <CardContent className="grid gap-4 md:grid-cols-4">
-          {[
-            { name: "WhatsApp", icon: MessageSquare, color: "text-green-500", key: "whatsapp" as const },
-            { name: "Twilio Voice", icon: PhoneCall, color: "text-red-500", key: "twilio" as const },
-            { name: "Facebook", icon: Globe, color: "text-blue-600", key: "facebook" as const },
-            { name: "CRM API", icon: Briefcase, color: "text-purple-500", key: "crm" as const },
-          ].map((service) => (
-            <div key={service.key} className="p-4 border border-primary/20 rounded-lg hover:bg-muted/30 transition-all space-y-3">
-              <div className="flex items-center justify-between">
-                <service.icon className={`h-5 w-5 ${service.color}`} />
-                <Badge className={serviceStates[service.key] ? "bg-green-500/20 text-green-400" : "bg-red-500/20 text-red-400"}>
-                  {serviceStates[service.key] ? "En línea" : "Desactivado"}
-                </Badge>
-              </div>
-              <p className="font-medium text-sm">{service.name}</p>
-              <div className="flex items-center gap-3">
-                <Switch checked={serviceStates[service.key]} onCheckedChange={() => toggleService(service.key)} />
-                <span className="text-xs text-muted-foreground">
-                  {serviceStates[service.key] ? "Activo" : "Inactivo"}
-                </span>
-              </div>
+            <div className="flex items-center gap-2">
+              <Switch checked={autoRefresh} onCheckedChange={setAutoRefresh} />
+              <span className="text-xs text-muted-foreground">Auto-refresh</span>
             </div>
-          ))}
-        </CardContent>
-      </Card>
-
-      {/* Analytics Row */}
-      <div className="grid gap-4 md:grid-cols-3">
-        {/* Traffic Chart */}
-        <Card className="col-span-2 bg-gradient-to-br from-slate-800/50 to-slate-900/50 border-primary/20">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <BarChart3 className="h-5 w-5 text-primary" />
-              Tráfico 24 horas
-            </CardTitle>
           </CardHeader>
-          <CardContent className="h-80">
+          <CardContent className="h-[400px]">
             <ResponsiveContainer width="100%" height="100%">
               <AreaChart data={trafficData}>
                 <defs>
-                  <linearGradient id="colorMessages" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="hsl(59, 100%, 50%)" stopOpacity={0.3} />
-                    <stop offset="95%" stopColor="hsl(59, 100%, 50%)" stopOpacity={0} />
+                  <linearGradient id="colorV4" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="#6366f1" stopOpacity={0.3}/>
+                    <stop offset="95%" stopColor="#6366f1" stopOpacity={0}/>
+                  </linearGradient>
+                  <linearGradient id="colorV3" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="#94a3b8" stopOpacity={0.3}/>
+                    <stop offset="95%" stopColor="#94a3b8" stopOpacity={0}/>
                   </linearGradient>
                 </defs>
-                <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.1)" />
-                <XAxis dataKey="time" stroke="rgba(255,255,255,0.5)" />
-                <YAxis stroke="rgba(255,255,255,0.5)" />
-                <Tooltip contentStyle={{ backgroundColor: "rgba(15, 23, 42, 0.9)", border: "1px solid rgba(59, 130, 246, 0.5)" }} />
+                <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
+                <XAxis dataKey="time" stroke="#475569" />
+                <YAxis stroke="#475569" />
+                <Tooltip 
+                  contentStyle={{ backgroundColor: "#0f172a", borderColor: "#1e293b", color: "#f8fafc" }}
+                  itemStyle={{ color: "#f8fafc" }}
+                />
                 <Legend />
-                <Area type="monotone" dataKey="messages" stroke="hsl(59, 100%, 50%)" fillOpacity={1} fill="url(#colorMessages)" />
-                <Area type="monotone" dataKey="calls" stroke="hsl(0, 100%, 50%)" fillOpacity={0.2} />
-                <Area type="monotone" dataKey="fb" stroke="hsl(240, 100%, 50%)" fillOpacity={0.2} />
+                <Area type="monotone" dataKey="api_v4" stroke="#6366f1" fillOpacity={1} fill="url(#colorV4)" strokeWidth={3} name="API v4.0 (Cloud)" />
+                <Area type="monotone" dataKey="api_v3" stroke="#94a3b8" fillOpacity={1} fill="url(#colorV3)" strokeDasharray="5 5" name="API v3.0 (Legacy)" />
               </AreaChart>
             </ResponsiveContainer>
           </CardContent>
         </Card>
 
-        {/* System Health */}
-        <Card className="bg-gradient-to-br from-slate-800/50 to-slate-900/50 border-primary/20">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Activity className="h-5 w-5 text-green-500" />
-              Salud del Sistema
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            {[
-              { name: "Database", value: systemHealth.database, color: "from-green-500 to-emerald-400" },
-              { name: "API Gateway", value: systemHealth.gateway, color: "from-blue-500 to-cyan-400" },
-              { name: "Webhooks", value: systemHealth.webhooks, color: "from-yellow-500 to-amber-400" },
-            ].map((item) => (
-              <div key={item.name} className="space-y-2">
-                <div className="flex justify-between text-sm">
-                  <span className="text-muted-foreground">{item.name}</span>
-                  <Badge className={item.value > 90 ? "bg-green-500/20 text-green-400" : item.value > 70 ? "bg-yellow-500/20 text-yellow-400" : "bg-red-500/20 text-red-400"}>
-                    {item.value}%
-                  </Badge>
-                </div>
-                <div className="h-2 bg-muted rounded-full overflow-hidden">
-                  <div
-                    className={`h-full bg-gradient-to-r ${item.color} transition-all duration-500`}
-                    style={{ width: `${item.value}%` }}
-                  />
+        {/* Action Hub */}
+        <div className="space-y-6">
+          <Card className="border-slate-800 bg-slate-950/50 h-full">
+            <CardHeader>
+              <CardTitle>Centro de Acciones</CardTitle>
+              <CardDescription>Operaciones Rápidas</CardDescription>
+            </CardHeader>
+            <CardContent className="grid gap-3">
+              <Button 
+                variant="secondary" 
+                className="w-full justify-between group hover:bg-indigo-600 hover:text-white transition-all"
+                onClick={() => navigateTo("whatsapp")}
+              >
+                <span className="flex items-center gap-2">
+                  <Send className="h-4 w-4 text-indigo-400 group-hover:text-white" /> Nuevo Mensaje Masivo
+                </span>
+                <ArrowRight className="h-4 w-4 opacity-0 group-hover:opacity-100 transition-opacity" />
+              </Button>
+              
+              <Button 
+                variant="secondary" 
+                className="w-full justify-between group hover:bg-emerald-600 hover:text-white transition-all"
+                onClick={() => navigateTo("whatsapp")}
+              >
+                <span className="flex items-center gap-2">
+                  <FileText className="h-4 w-4 text-emerald-400 group-hover:text-white" /> Crear Plantilla v4
+                </span>
+                <ArrowRight className="h-4 w-4 opacity-0 group-hover:opacity-100 transition-opacity" />
+              </Button>
+
+              <Button 
+                variant="secondary" 
+                className="w-full justify-between group hover:bg-purple-600 hover:text-white transition-all"
+                onClick={() => navigateTo("retell")}
+              >
+                <span className="flex items-center gap-2">
+                  <Bot className="h-4 w-4 text-purple-400 group-hover:text-white" /> Entrenar Agente IA
+                </span>
+                <ArrowRight className="h-4 w-4 opacity-0 group-hover:opacity-100 transition-opacity" />
+              </Button>
+
+              <div className="mt-6 pt-6 border-t border-slate-800">
+                <h4 className="text-sm font-semibold text-slate-400 mb-3">Estado de Servicios</h4>
+                <div className="space-y-3">
+                  {[
+                    { name: "Meta Graph API", status: "Online", color: "bg-green-500" },
+                    { name: "Webhook Listener", status: "Listening", color: "bg-emerald-500" },
+                    { name: "Media Storage", status: "98% Free", color: "bg-blue-500" },
+                    { name: "Rate Limiter", status: "Active", color: "bg-yellow-500" },
+                  ].map((s, i) => (
+                    <div key={i} className="flex items-center justify-between text-sm">
+                      <span className="text-slate-300">{s.name}</span>
+                      <div className="flex items-center gap-2">
+                        <div className={`w-2 h-2 rounded-full ${s.color} animate-pulse`} />
+                        <span className="text-slate-500 text-xs">{s.status}</span>
+                      </div>
+                    </div>
+                  ))}
                 </div>
               </div>
-            ))}
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
+        </div>
       </div>
     </div>
   );
