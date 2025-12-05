@@ -19,7 +19,8 @@ import {
   Zap,
   Sparkles,
   Globe,
-  Server
+  Server,
+  Bus
 } from "lucide-react";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
@@ -46,6 +47,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     { icon: Sparkles, label: "Workflows", path: "/workflow-suggester" },
     { icon: ScrollText, label: "System Logs", path: "/logs" },
     { icon: Settings, label: "Settings", path: "/settings" },
+    { icon: Bus, label: "SITP Transit", path: "/sitp-transit" },
   ];
 
   return (

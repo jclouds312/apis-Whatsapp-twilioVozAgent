@@ -32,6 +32,7 @@ import WorkflowSuggesterPage from "@/pages/WorkflowSuggester";
 import AdminPage from "@/pages/Admin";
 import DeploymentPage from "@/pages/Deployment";
 import ApiKeyGeneratorPage from "@/pages/ApiKeyGenerator";
+import SitpTransit from "@/pages/SitpTransit";
 
 function Router() {
   return (
@@ -43,6 +44,7 @@ function Router() {
         <Route path="/twilio-voice" component={TwilioVoicePage} />
         <Route path="/twilio-voip" component={TwilioVoIPPage} />
         <Route path="/twilio-infrastructure" component={TwilioInfrastructurePage} />
+          <Route path="/sitp-transit" component={SitpTransit} />
         <Route path="/crm-integration" component={CrmIntegrationPage} />
         <Route path="/embed-widgets" component={EmbedWidgetsPage} />
         <Route path="/api-key-manager" component={ApiKeyManagerPage} />
