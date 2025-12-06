@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<phpunit xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" backupGlobals="false"
+  beStrictAboutTestsThatDoNotTestAnything="false" bootstrap="vendor/autoload.php" colors="true"
+  processIsolation="false" stopOnFailure="false"
+  xsi:noNamespaceSchemaLocation="https://schema.phpunit.de/10.4/phpunit.xsd"
+  cacheDirectory=".phpunit.cache" backupStaticProperties="false">
+  <php>
+    <env name="APP_KEY" value="AckfSECXIvnK5r28GVIWUAxmbBSjTsmF"/>
+    <env name="META_WEBHOOK_TOKEN" value="23653244"/>
+    <env name="META_TOKEN" value="7FLZBhGJ1qYHB3mTB"/>
+    <env name="META_APP_ID" value="3243242451531464"/>
+    <env name="META_APP_SECRET" value="fv56asdjk9asf"/>
+  </php>
+  <coverage />
+  <testsuites>
+    <testsuite name="core">
+      <directory suffix=".php">./tests/</directory>
+      <exclude>./tests/TestCase.php</exclude>
+      <exclude>./tests/Fake/</exclude>
+    </testsuite>
+  </testsuites>
+  <source>
+    <include>
+      <directory suffix=".php">src</directory>
+    </include>
+  </source>
+</phpunit>

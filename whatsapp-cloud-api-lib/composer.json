@@ -1,0 +1,53 @@
+{
+    "name": "sdkconsultoria/whatsapp-cloud-api",
+    "type": "library",
+    "description": "Comunicacion rapida y segura con la API de Whatsapp Cloud",
+    "keywords": [
+        "laravel",
+        "package",
+        "whatsapp cloud api",
+        "whatsapp"
+    ],
+    "license": "MIT",
+    "authors": [{
+        "name": "Camilo Antonio Rodríguez Cruz",
+        "email": "camilo@sdkconsultoria.com",
+        "homepage": "https://sdkconsultoria.com",
+        "role": "Developer"
+    }],
+    "require": {
+        "php": "^8.0",
+        "guzzlehttp/guzzle": "^7.8",
+        "pusher/pusher-php-server": "^7.2",
+        "sdkconsultoria/open-ai-api": "dev-develop"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "^11.0.6",
+        "orchestra/testbench": "^9.0",
+        "fakerphp/faker": "^1.23",
+        "laravel/pint": "^1.14",
+        "php-coveralls/php-coveralls": "^0.1.0"
+    },
+    "autoload": {
+        "files": [],
+        "psr-4": {
+            "Sdkconsultoria\\WhatsappCloudApi\\": "src/",
+            "Sdkconsultoria\\WhatsappCloudApi\\Tests\\": "tests/"
+        }
+    },
+    "scripts": {
+        "format": "vendor/bin/pint --config pint.json",
+        "test": "vendor/bin/phpunit",
+        "coverage": "vendor/bin/phpunit --coverage-html html"
+    },
+    "extra": {
+        "laravel": {
+            "providers": ["Sdkconsultoria\\WhatsappCloudApi\\ServiceProvider"],
+            "aliases": {
+                "WhatsappCloudApi": "Sdkconsultoria\\WhatsappCloudApi\\Facade"
+            }
+        }
+    },
+    "minimum-stability": "dev",
+    "prefer-stable": true
+}
