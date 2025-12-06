@@ -1,0 +1,41 @@
+
+{
+  "expo": {
+    "name": "NexusCore",
+    "slug": "nexuscore-app",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./client/public/favicon.png",
+    "userInterfaceStyle": "automatic",
+    "splash": {
+      "image": "./client/public/favicon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#ffffff"
+    },
+    "assetBundlePatterns": [
+      "**/*"
+    ],
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.nexuscore.app"
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./client/public/favicon.png",
+        "backgroundColor": "#ffffff"
+      },
+      "package": "com.nexuscore.app"
+    },
+    "web": {
+      "favicon": "./client/public/favicon.png",
+      "bundler": "metro"
+    },
+    "plugins": [
+      "expo-router"
+    ],
+    "scheme": "nexuscore",
+    "experiments": {
+      "typedRoutes": true
+    }
+  }
+}

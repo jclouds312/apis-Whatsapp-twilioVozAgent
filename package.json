@@ -9,7 +9,11 @@
     "build": "tsx script/build.ts",
     "start": "NODE_ENV=production node dist/index.cjs",
     "check": "tsc",
-    "db:push": "drizzle-kit push"
+    "db:push": "drizzle-kit push",
+    "mobile": "expo start",
+    "mobile:android": "expo start --android",
+    "mobile:ios": "expo start --ios",
+    "mobile:web": "expo start --web"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.10.0",
