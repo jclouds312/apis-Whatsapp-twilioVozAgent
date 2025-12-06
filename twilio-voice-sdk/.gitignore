@@ -1,0 +1,14 @@
+*.sw*
+.env
+.idea
+.nyc_output/
+config.yaml
+coverage
+dist
+es5
+esm
+node_modules
+docs
+lib/twilio/constants.ts
+nodemon.json
+reports
