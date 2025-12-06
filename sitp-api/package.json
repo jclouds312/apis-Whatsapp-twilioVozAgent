@@ -1,0 +1,30 @@
+{
+  "name": "sitp-api",
+  "version": "0.0.0",
+  "description": "Rutas del SITP disponibles en una API RESTful",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "engines": {
+    "node": "0.10.x"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git@heroku.com:sheltered-oasis-7120.git"
+  },
+  "author": "Andrés Zorro <zorrodg@gmail.com>",
+  "license": "MIT",
+  "dependencies": {
+    "cheerio": "~0.18.0",
+    "colors": "^1.0.3",
+    "diacritic": "0.0.2",
+    "express": "~4.10.2",
+    "html-entities": "^1.1.1",
+    "iconv-lite": "^0.4.6",
+    "mongoose": "~5.7.6",
+    "q": "^1.1.2",
+    "request": "~2.47.0",
+    "underscore": "~1.7.0"
+  }
+}
