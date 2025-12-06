@@ -9,7 +9,11 @@ import {
   Activity,
   Bell,
   Menu,
-  X
+  X,
+  GitFork,
+  Users,
+  Database,
+  Workflow
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -28,6 +32,9 @@ export default function Layout({ children }: LayoutProps) {
   const navigation = [
     { name: "Dashboard", href: "/", icon: LayoutDashboard },
     { name: "Agent Control", href: "/agent", icon: Bot },
+    { name: "Flow Builder", href: "/workflows", icon: Workflow },
+    { name: "Contacts / CRM", href: "/contacts", icon: Users },
+    { name: "Knowledge Base", href: "/knowledge", icon: Database },
     { name: "Message Logs", href: "/logs", icon: MessageSquareText },
     { name: "Settings", href: "/settings", icon: Settings },
   ];
@@ -40,12 +47,33 @@ export default function Layout({ children }: LayoutProps) {
         </div>
         <div>
           <h1 className="font-bold text-lg tracking-tight">NEXUS</h1>
-          <p className="text-xs text-muted-foreground font-mono">v2.4.0-RC</p>
+          <p className="text-xs text-muted-foreground font-mono">v2.5.0-ENT</p>
         </div>
       </div>
 
       <nav className="flex-1 space-y-1 px-3">
-        {navigation.map((item) => {
+        <div className="px-3 mb-2 text-xs font-semibold text-muted-foreground/50 uppercase tracking-wider">Platform</div>
+        {navigation.slice(0, 5).map((item) => {
+          const isActive = location === item.href;
+          return (
+            <Link key={item.name} href={item.href}>
+              <div
+                className={cn(
+                  "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all duration-200 cursor-pointer",
+                  isActive
+                    ? "bg-primary/10 text-primary shadow-[0_0_10px_-3px_hsl(var(--primary)/0.2)] border border-primary/10"
+                    : "text-muted-foreground hover:bg-accent hover:text-foreground"
+                )}
+              >
+                <item.icon className={cn("h-4 w-4", isActive && "text-primary animate-pulse")} />
+                {item.name}
+              </div>
+            </Link>
+          );
+        })}
+        
+        <div className="px-3 mt-6 mb-2 text-xs font-semibold text-muted-foreground/50 uppercase tracking-wider">System</div>
+        {navigation.slice(5).map((item) => {
           const isActive = location === item.href;
           return (
             <Link key={item.name} href={item.href}>

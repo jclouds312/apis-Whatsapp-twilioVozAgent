@@ -9,6 +9,9 @@ import Dashboard from "@/pages/Dashboard";
 import AgentControl from "@/pages/AgentControl";
 import Logs from "@/pages/Logs";
 import Settings from "@/pages/Settings";
+import Workflows from "@/pages/Workflows";
+import Contacts from "@/pages/Contacts";
+import KnowledgeBase from "@/pages/KnowledgeBase";
 
 function Router() {
   return (
@@ -16,6 +19,9 @@ function Router() {
       <Switch>
         <Route path="/" component={Dashboard} />
         <Route path="/agent" component={AgentControl} />
+        <Route path="/workflows" component={Workflows} />
+        <Route path="/contacts" component={Contacts} />
+        <Route path="/knowledge" component={KnowledgeBase} />
         <Route path="/logs" component={Logs} />
         <Route path="/settings" component={Settings} />
         <Route component={NotFound} />
