@@ -8,10 +8,12 @@ import DashboardLayout from "@/components/layout/DashboardLayout";
 import OverviewPage from "@/pages/Overview";
 import { AuthProvider } from "@/context/AuthContext";
 
-import WhatsAppPage from "@/pages/WhatsApp";
+import WhatsAppPage from './pages/WhatsApp';
+import WhatsAppManagerPage from './pages/WhatsAppManager';
+import VoIPConsolePage from './pages/VoIPConsole';
 import TwilioPage from "@/pages/Twilio";
 import RetellPage from "@/pages/Retell";
-import VerifyPage from "@/pages/Verify";
+import VerifyPage from './pages/Verify';
 import ApiKeysPage from "@/pages/ApiKeys";
 import ApiConsolePage from "@/pages/ApiConsole";
 import ApiDocumentationPage from "@/pages/ApiDocumentation";
@@ -40,6 +42,8 @@ function Router() {
       <Switch>
         <Route path="/" component={OverviewPage} />
         <Route path="/whatsapp" component={WhatsAppPage} />
+        <Route path="/whatsapp-manager" component={WhatsAppManagerPage} />
+        <Route path="/voip-console" component={VoIPConsolePage} />
         <Route path="/twilio" component={TwilioPage} />
         <Route path="/twilio-voice" component={TwilioVoicePage} />
         <Route path="/twilio-voip" component={TwilioVoIPPage} />

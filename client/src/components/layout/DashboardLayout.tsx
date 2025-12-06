@@ -48,6 +48,21 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     { icon: ScrollText, label: "System Logs", path: "/logs" },
     { icon: Settings, label: "Settings", path: "/settings" },
     { icon: Bus, label: "SITP Transit", path: "/sitp-transit" },
+    {
+      title: 'WhatsApp',
+      url: '/whatsapp',
+      icon: MessageSquare,
+    },
+    {
+      title: 'WhatsApp Manager',
+      url: '/whatsapp-manager',
+      icon: MessageSquare,
+    },
+    {
+      title: 'VoIP Console',
+      url: '/voip-console',
+      icon: Phone,
+    },
   ];
 
   return (
