@@ -5,6 +5,7 @@ import sitpRoutes from "./routes/sitp";
 import voipRoutes from "./routes/voip";
 import whatsappRoutes from "./routes/whatsapp";
 import apiGeneratorRoutes from "./routes/api-generator";
+import integrationsRoutes from "./routes/integrations";
 
 export async function registerRoutes(
   httpServer: Server,
@@ -24,6 +25,9 @@ export async function registerRoutes(
 
   // API Generator routes
   app.use("/api/generator", apiGeneratorRoutes);
+
+  // Integrations routes (PyVoIP, DoorPi, WhatsApp Cloud, Terraform)
+  app.use("/api/integrations", integrationsRoutes);
 
   // use storage to perform CRUD operations on the storage interface
   // e.g. storage.insertUser(user) or storage.getUserByUsername(username)

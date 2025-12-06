@@ -35,12 +35,14 @@ import AdminPage from "@/pages/Admin";
 import DeploymentPage from "@/pages/Deployment";
 import ApiKeyGeneratorPage from "@/pages/ApiKeyGenerator";
 import SitpTransit from "@/pages/SitpTransit";
+import IntegrationsHubPage from "@/pages/IntegrationsHub";
 
 function Router() {
   return (
     <DashboardLayout>
       <Switch>
         <Route path="/" component={OverviewPage} />
+        <Route path="/integrations-hub" component={IntegrationsHubPage} />
         <Route path="/whatsapp" component={WhatsAppPage} />
         <Route path="/whatsapp-manager" component={WhatsAppManagerPage} />
         <Route path="/voip-console" component={VoIPConsolePage} />
