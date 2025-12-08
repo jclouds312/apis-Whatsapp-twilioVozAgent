@@ -41,6 +41,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     { icon: Zap, label: "Twilio SMS", path: "/twilio-voice" },
     { icon: Terminal, label: "Widgets", path: "/embed-widgets" },
     { icon: Users, label: "CRM Pro", path: "/crm-integration" },
+    { icon: ShieldCheck, label: "Admin: Phones", path: "/admin", badge: "Admin" },
     { icon: Sparkles, label: "Workflows", path: "/workflow-suggester" },
     { icon: ScrollText, label: "System Logs", path: "/logs" },
     { icon: Settings, label: "Settings", path: "/settings" },
