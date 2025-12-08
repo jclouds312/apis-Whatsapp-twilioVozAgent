@@ -10,11 +10,17 @@ import {
   MessageSquare, Send, Plus, MoreVertical, Search,
   Image as ImageIcon, Paperclip, Smile, Phone, Video,
   Check, CheckCheck, Clock, User, Settings, Bell,
-  FileText, Activity, AlertCircle, RefreshCw, Save
+  FileText, Activity, AlertCircle, RefreshCw, Save,
+  Code, Terminal, Copy, MapPin, List, LayoutTemplate
 } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Separator } from "@/components/ui/separator";
+import {
+  Select, SelectContent, SelectItem, SelectTrigger, SelectValue
+} from "@/components/ui/select";
+import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
+import { vscDarkPlus } from 'react-syntax-highlighter/dist/esm/styles/prism';
 
 const contacts = [
   { id: 1, name: "Alice Freeman", status: "online", lastMessage: "Thanks for the update!", time: "10:42 AM", unread: 2, avatar: "AF" },
@@ -46,10 +52,18 @@ const logs = [
     { id: 3, event: "Message Sent", recipient: "+1 (555) 000-1111", template: "welcome_msg", status: "Read", time: "1 hour ago" },
 ];
 
+const codeSnippets = {
+    text: `import { Text } from "whatsapp-api-js/messages";\n\nconst text_message = new Text("Hello World");\n// Send this message using the API client`,
+    interactive_buttons: `import { Interactive, ActionButtons, Button, Body } from "whatsapp-api-js/messages";\n\nconst buttons_message = new Interactive(\n    new ActionButtons(\n        new Button("reply_yes", "Yes"),\n        new Button("reply_no", "No")\n    ),\n    new Body("Are you satisfied with our service?")\n);`,
+    location: `import { Interactive, ActionLocation, Body } from "whatsapp-api-js/messages";\n\nconst location_request = new Interactive(\n    new ActionLocation(),\n    new Body("Please share your delivery location")\n);`,
+    template: `import { Template, HeaderComponent, HeaderParameter, BodyComponent, BodyParameter, Currency } from "whatsapp-api-js/messages";\n\nconst invoice_template = new Template(\n    "invoice_update",\n    "en_US",\n    new HeaderComponent(\n        new HeaderParameter("INV-2023-001")\n    ),\n    new BodyComponent(\n        new BodyParameter("John Doe"),\n        new BodyParameter(new Currency(150.00, "USD", "$150.00"))\n    )\n);`
+};
+
 export default function WhatsApp() {
   const [selectedContact, setSelectedContact] = useState(contacts[0]);
   const [messageInput, setMessageInput] = useState("");
   const [activeTab, setActiveTab] = useState("chat");
+  const [messageType, setMessageType] = useState("text");
 
   return (
     <div className="h-[calc(100vh-8rem)] flex flex-col gap-4">
@@ -62,6 +76,7 @@ export default function WhatsApp() {
          <Tabs value={activeTab} onValueChange={setActiveTab} className="w-auto">
             <TabsList>
                 <TabsTrigger value="chat" className="flex items-center gap-2"><MessageSquare className="h-4 w-4"/> Chat Console</TabsTrigger>
+                <TabsTrigger value="dev" className="flex items-center gap-2"><Code className="h-4 w-4"/> Developer API</TabsTrigger>
                 <TabsTrigger value="settings" className="flex items-center gap-2"><Settings className="h-4 w-4"/> WHMCS Settings</TabsTrigger>
                 <TabsTrigger value="logs" className="flex items-center gap-2"><FileText className="h-4 w-4"/> Logs</TabsTrigger>
             </TabsList>
@@ -201,6 +216,27 @@ export default function WhatsApp() {
 
             {/* Input Area */}
             <div className="p-4 bg-background/50 backdrop-blur border-t border-primary/10">
+                <div className="flex items-center gap-2 mb-2">
+                     <Select value={messageType} onValueChange={setMessageType}>
+                        <SelectTrigger className="w-[180px] h-8 text-xs">
+                            <SelectValue placeholder="Message Type" />
+                        </SelectTrigger>
+                        <SelectContent>
+                            <SelectItem value="text">Text Message</SelectItem>
+                            <SelectItem value="template">Template (HSM)</SelectItem>
+                            <SelectItem value="interactive">Interactive Buttons</SelectItem>
+                            <SelectItem value="location">Location Request</SelectItem>
+                            <SelectItem value="list">List Message</SelectItem>
+                        </SelectContent>
+                     </Select>
+                     {messageType !== 'text' && (
+                         <Badge variant="outline" className="text-xs bg-primary/10 text-primary border-primary/20">
+                             {messageType === 'template' && "Uses 'invoice_update' template"}
+                             {messageType === 'interactive' && "Adds Yes/No buttons"}
+                             {messageType === 'location' && "Requesting location"}
+                         </Badge>
+                     )}
+                </div>
             <div className="flex items-end gap-2">
                 <div className="flex gap-1 pb-2">
                 <Button size="icon" variant="ghost" className="h-8 w-8 text-muted-foreground hover:text-primary">
@@ -214,7 +250,7 @@ export default function WhatsApp() {
                 <textarea
                     value={messageInput}
                     onChange={(e) => setMessageInput(e.target.value)}
-                    placeholder="Type a message..."
+                    placeholder={messageType === 'text' ? "Type a message..." : `Configure ${messageType} parameters...`}
                     className="flex-1 bg-transparent border-none focus:outline-none resize-none max-h-24 text-sm"
                     rows={1}
                     style={{ minHeight: "24px" }}
@@ -236,6 +272,79 @@ export default function WhatsApp() {
             </div>
         </Card>
       </div>
+      )}
+
+      {activeTab === "dev" && (
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 h-full overflow-hidden">
+             <Card className="flex flex-col h-full overflow-hidden">
+                 <CardHeader>
+                     <CardTitle>Interactive API Builder</CardTitle>
+                     <CardDescription>Generate TypeScript code for the whatsapp-api-js library.</CardDescription>
+                 </CardHeader>
+                 <CardContent className="flex-1 overflow-auto space-y-6">
+                     <div className="space-y-4">
+                         <div className="space-y-2">
+                             <Label>Message Type</Label>
+                             <div className="grid grid-cols-2 gap-2">
+                                 <Button variant="outline" className="justify-start" onClick={() => {}}>
+                                     <LayoutTemplate className="h-4 w-4 mr-2" /> Templates
+                                 </Button>
+                                 <Button variant="outline" className="justify-start" onClick={() => {}}>
+                                     <List className="h-4 w-4 mr-2" /> Interactive Lists
+                                 </Button>
+                                 <Button variant="outline" className="justify-start" onClick={() => {}}>
+                                     <MapPin className="h-4 w-4 mr-2" /> Location
+                                 </Button>
+                                 <Button variant="outline" className="justify-start" onClick={() => {}}>
+                                     <Activity className="h-4 w-4 mr-2" /> Flows
+                                 </Button>
+                             </div>
+                         </div>
+                         <Separator />
+                         <div className="space-y-2">
+                             <Label>Library Features</Label>
+                             <ul className="list-disc list-inside text-sm text-muted-foreground space-y-1">
+                                 <li>Full TypeScript Support</li>
+                                 <li>Helper classes for all message types</li>
+                                 <li>Serverless compatible (Edge Runtime)</li>
+                                 <li>Zero dependencies</li>
+                             </ul>
+                         </div>
+                     </div>
+                 </CardContent>
+             </Card>
+
+             <Card className="flex flex-col h-full overflow-hidden bg-[#1e1e1e] border-none text-white">
+                 <div className="flex items-center justify-between px-4 py-2 bg-[#252526] border-b border-[#3e3e42]">
+                     <span className="text-xs font-mono text-muted-foreground">example.ts</span>
+                     <Button variant="ghost" size="icon" className="h-6 w-6 text-muted-foreground hover:text-white">
+                         <Copy className="h-3 w-3" />
+                     </Button>
+                 </div>
+                 <ScrollArea className="flex-1">
+                     <div className="p-4">
+                         <div className="mb-6">
+                             <h4 className="text-xs font-semibold text-muted-foreground mb-2 uppercase tracking-wider">Sending a Template</h4>
+                             <SyntaxHighlighter language="typescript" style={vscDarkPlus} customStyle={{ background: 'transparent', padding: 0 }}>
+                                 {codeSnippets.template}
+                             </SyntaxHighlighter>
+                         </div>
+                         <div className="mb-6">
+                             <h4 className="text-xs font-semibold text-muted-foreground mb-2 uppercase tracking-wider">Interactive Buttons</h4>
+                             <SyntaxHighlighter language="typescript" style={vscDarkPlus} customStyle={{ background: 'transparent', padding: 0 }}>
+                                 {codeSnippets.interactive_buttons}
+                             </SyntaxHighlighter>
+                         </div>
+                         <div>
+                             <h4 className="text-xs font-semibold text-muted-foreground mb-2 uppercase tracking-wider">Location Request</h4>
+                             <SyntaxHighlighter language="typescript" style={vscDarkPlus} customStyle={{ background: 'transparent', padding: 0 }}>
+                                 {codeSnippets.location}
+                             </SyntaxHighlighter>
+                         </div>
+                     </div>
+                 </ScrollArea>
+             </Card>
+          </div>
       )}
 
       {activeTab === "settings" && (
@@ -338,6 +447,27 @@ export default function WhatsApp() {
     </div>
   );
 }
+
+function LockIcon(props: any) {
+    return (
+        <svg
+      {...props}
+      xmlns="http://www.w3.org/2000/svg"
+      width="24"
+      height="24"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <rect width="18" height="11" x="3" y="11" rx="2" ry="2" />
+      <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+    </svg>
+    )
+}
+
 
 function LockIcon(props: any) {
     return (
