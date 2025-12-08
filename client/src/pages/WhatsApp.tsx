@@ -4,10 +4,13 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
 import {
   MessageSquare, Send, Plus, MoreVertical, Search,
   Image as ImageIcon, Paperclip, Smile, Phone, Video,
-  Check, CheckCheck, Clock, User
+  Check, CheckCheck, Clock, User, Settings, Bell,
+  FileText, Activity, AlertCircle, RefreshCw, Save
 } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -29,178 +32,309 @@ const messages = [
   { id: 6, sender: "them", text: "Thanks for the update!", time: "10:42 AM", status: "read" },
 ];
 
+const notificationSettings = [
+    { id: "new_invoice", label: "New Invoice Created", description: "Send notification when a new invoice is generated", enabled: true },
+    { id: "ticket_reply", label: "Support Ticket Reply", description: "Notify customer when agent replies to ticket", enabled: true },
+    { id: "service_activation", label: "Service Activation", description: "Send welcome message on service activation", enabled: true },
+    { id: "payment_received", label: "Payment Received", description: "Confirm payment receipt via WhatsApp", enabled: false },
+    { id: "domain_renewal", label: "Domain Renewal", description: "Remind customer about upcoming domain expiry", enabled: true },
+];
+
+const logs = [
+    { id: 1, event: "Message Sent", recipient: "+1 (555) 123-4567", template: "invoice_created", status: "Delivered", time: "2 min ago" },
+    { id: 2, event: "Message Failed", recipient: "+1 (555) 987-6543", template: "ticket_reply", status: "Failed", time: "15 min ago" },
+    { id: 3, event: "Message Sent", recipient: "+1 (555) 000-1111", template: "welcome_msg", status: "Read", time: "1 hour ago" },
+];
+
 export default function WhatsApp() {
   const [selectedContact, setSelectedContact] = useState(contacts[0]);
   const [messageInput, setMessageInput] = useState("");
+  const [activeTab, setActiveTab] = useState("chat");
 
   return (
-    <div className="h-[calc(100vh-8rem)] flex gap-4">
-      {/* Contacts Sidebar */}
-      <Card className="w-80 flex flex-col bg-card/50 backdrop-blur-sm border-primary/10">
-        <div className="p-4 border-b border-primary/10 space-y-4">
-          <div className="flex items-center justify-between">
-            <h2 className="font-semibold flex items-center gap-2">
-              <MessageSquare className="h-5 w-5 text-green-500" />
-              WhatsApp
-            </h2>
-            <div className="flex gap-2">
-              <Button size="icon" variant="ghost" className="h-8 w-8">
-                <Plus className="h-4 w-4" />
-              </Button>
-              <Button size="icon" variant="ghost" className="h-8 w-8">
-                <MoreVertical className="h-4 w-4" />
-              </Button>
-            </div>
-          </div>
-          <div className="relative">
-            <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
-            <Input placeholder="Search chats..." className="pl-8 bg-background/50" />
-          </div>
-        </div>
-        <ScrollArea className="flex-1">
-          <div className="p-2 space-y-1">
-            {contacts.map((contact) => (
-              <div
-                key={contact.id}
-                onClick={() => setSelectedContact(contact)}
-                className={`p-3 rounded-lg cursor-pointer flex gap-3 transition-colors ${
-                  selectedContact.id === contact.id
-                    ? "bg-primary/10 border border-primary/20"
-                    : "hover:bg-muted/50"
-                }`}
-              >
-                <div className="relative">
-                  <Avatar>
-                    <AvatarFallback className="bg-gradient-to-br from-primary/20 to-purple-500/20 text-primary font-medium">
-                      {contact.avatar}
-                    </AvatarFallback>
-                  </Avatar>
-                  {contact.status === "online" && (
-                    <span className="absolute bottom-0 right-0 w-3 h-3 border-2 border-background bg-green-500 rounded-full" />
-                  )}
-                </div>
-                <div className="flex-1 overflow-hidden">
-                  <div className="flex justify-between items-start">
-                    <span className="font-medium truncate">{contact.name}</span>
-                    <span className="text-xs text-muted-foreground whitespace-nowrap">{contact.time}</span>
-                  </div>
-                  <p className="text-xs text-muted-foreground truncate mt-1">
-                    {contact.lastMessage}
-                  </p>
-                </div>
-                {contact.unread > 0 && (
-                  <div className="flex flex-col justify-center">
-                    <Badge className="h-5 w-5 p-0 flex items-center justify-center rounded-full bg-green-500">
-                      {contact.unread}
-                    </Badge>
-                  </div>
-                )}
-              </div>
-            ))}
-          </div>
-        </ScrollArea>
-      </Card>
+    <div className="h-[calc(100vh-8rem)] flex flex-col gap-4">
+      {/* Module Header with Tabs */}
+      <div className="flex items-center justify-between">
+         <h1 className="text-2xl font-bold flex items-center gap-2">
+            <MessageSquare className="h-6 w-6 text-green-500" />
+            WhatsApp Manager
+         </h1>
+         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-auto">
+            <TabsList>
+                <TabsTrigger value="chat" className="flex items-center gap-2"><MessageSquare className="h-4 w-4"/> Chat Console</TabsTrigger>
+                <TabsTrigger value="settings" className="flex items-center gap-2"><Settings className="h-4 w-4"/> WHMCS Settings</TabsTrigger>
+                <TabsTrigger value="logs" className="flex items-center gap-2"><FileText className="h-4 w-4"/> Logs</TabsTrigger>
+            </TabsList>
+         </Tabs>
+      </div>
 
-      {/* Chat Area */}
-      <Card className="flex-1 flex flex-col bg-card/50 backdrop-blur-sm border-primary/10 overflow-hidden">
-        {/* Chat Header */}
-        <div className="p-4 border-b border-primary/10 flex justify-between items-center bg-background/30">
-          <div className="flex items-center gap-3">
-            <Avatar>
-              <AvatarFallback className="bg-gradient-to-br from-primary/20 to-purple-500/20 text-primary">
-                {selectedContact.avatar}
-              </AvatarFallback>
-            </Avatar>
-            <div>
-              <h3 className="font-semibold">{selectedContact.name}</h3>
-              <p className="text-xs text-green-500 flex items-center gap-1">
-                <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
-                Online via WhatsApp Business API
-              </p>
+      {activeTab === "chat" && (
+      <div className="flex-1 flex gap-4 overflow-hidden">
+        {/* Contacts Sidebar */}
+        <Card className="w-80 flex flex-col bg-card/50 backdrop-blur-sm border-primary/10">
+            <div className="p-4 border-b border-primary/10 space-y-4">
+            <div className="flex items-center justify-between">
+                <h2 className="font-semibold flex items-center gap-2">
+                Active Chats
+                </h2>
+                <div className="flex gap-2">
+                <Button size="icon" variant="ghost" className="h-8 w-8">
+                    <Plus className="h-4 w-4" />
+                </Button>
+                <Button size="icon" variant="ghost" className="h-8 w-8">
+                    <MoreVertical className="h-4 w-4" />
+                </Button>
+                </div>
             </div>
-          </div>
-          <div className="flex gap-2">
-            <Button size="icon" variant="ghost">
-              <Phone className="h-4 w-4" />
-            </Button>
-            <Button size="icon" variant="ghost">
-              <Video className="h-4 w-4" />
-            </Button>
-            <Button size="icon" variant="ghost">
-              <Search className="h-4 w-4" />
-            </Button>
-          </div>
-        </div>
-
-        {/* Messages */}
-        <ScrollArea className="flex-1 p-4 bg-[url('https://user-images.githubusercontent.com/15075759/28719144-86dc0f70-73b1-11e7-911d-60d70fcded21.png')] bg-repeat bg-opacity-5">
-          <div className="space-y-4">
-            <div className="flex justify-center my-4">
-              <Badge variant="outline" className="bg-background/50 backdrop-blur text-xs font-normal text-muted-foreground">
-                Today
-              </Badge>
+            <div className="relative">
+                <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+                <Input placeholder="Search chats..." className="pl-8 bg-background/50" />
             </div>
-            {messages.map((msg) => (
-              <div
-                key={msg.id}
-                className={`flex ${msg.sender === "me" ? "justify-end" : "justify-start"}`}
-              >
+            </div>
+            <ScrollArea className="flex-1">
+            <div className="p-2 space-y-1">
+                {contacts.map((contact) => (
                 <div
-                  className={`max-w-[70%] rounded-2xl px-4 py-2 shadow-sm ${
-                    msg.sender === "me"
-                      ? "bg-gradient-to-br from-green-600 to-emerald-600 text-white rounded-tr-none"
-                      : "bg-card border border-border rounded-tl-none"
-                  }`}
+                    key={contact.id}
+                    onClick={() => setSelectedContact(contact)}
+                    className={`p-3 rounded-lg cursor-pointer flex gap-3 transition-colors ${
+                    selectedContact.id === contact.id
+                        ? "bg-primary/10 border border-primary/20"
+                        : "hover:bg-muted/50"
+                    }`}
                 >
-                  <p className="text-sm">{msg.text}</p>
-                  <div className={`text-[10px] mt-1 flex items-center justify-end gap-1 ${
-                    msg.sender === "me" ? "text-white/70" : "text-muted-foreground"
-                  }`}>
-                    {msg.time}
-                    {msg.sender === "me" && <CheckCheck className="h-3 w-3" />}
-                  </div>
+                    <div className="relative">
+                    <Avatar>
+                        <AvatarFallback className="bg-gradient-to-br from-primary/20 to-purple-500/20 text-primary font-medium">
+                        {contact.avatar}
+                        </AvatarFallback>
+                    </Avatar>
+                    {contact.status === "online" && (
+                        <span className="absolute bottom-0 right-0 w-3 h-3 border-2 border-background bg-green-500 rounded-full" />
+                    )}
+                    </div>
+                    <div className="flex-1 overflow-hidden">
+                    <div className="flex justify-between items-start">
+                        <span className="font-medium truncate">{contact.name}</span>
+                        <span className="text-xs text-muted-foreground whitespace-nowrap">{contact.time}</span>
+                    </div>
+                    <p className="text-xs text-muted-foreground truncate mt-1">
+                        {contact.lastMessage}
+                    </p>
+                    </div>
+                    {contact.unread > 0 && (
+                    <div className="flex flex-col justify-center">
+                        <Badge className="h-5 w-5 p-0 flex items-center justify-center rounded-full bg-green-500">
+                        {contact.unread}
+                        </Badge>
+                    </div>
+                    )}
                 </div>
-              </div>
-            ))}
-          </div>
-        </ScrollArea>
+                ))}
+            </div>
+            </ScrollArea>
+        </Card>
 
-        {/* Input Area */}
-        <div className="p-4 bg-background/50 backdrop-blur border-t border-primary/10">
-          <div className="flex items-end gap-2">
-            <div className="flex gap-1 pb-2">
-              <Button size="icon" variant="ghost" className="h-8 w-8 text-muted-foreground hover:text-primary">
-                <Smile className="h-5 w-5" />
-              </Button>
-              <Button size="icon" variant="ghost" className="h-8 w-8 text-muted-foreground hover:text-primary">
-                <Paperclip className="h-5 w-5" />
-              </Button>
+        {/* Chat Area */}
+        <Card className="flex-1 flex flex-col bg-card/50 backdrop-blur-sm border-primary/10 overflow-hidden">
+            {/* Chat Header */}
+            <div className="p-4 border-b border-primary/10 flex justify-between items-center bg-background/30">
+            <div className="flex items-center gap-3">
+                <Avatar>
+                <AvatarFallback className="bg-gradient-to-br from-primary/20 to-purple-500/20 text-primary">
+                    {selectedContact.avatar}
+                </AvatarFallback>
+                </Avatar>
+                <div>
+                <h3 className="font-semibold">{selectedContact.name}</h3>
+                <p className="text-xs text-green-500 flex items-center gap-1">
+                    <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
+                    Online via WhatsApp Business API
+                </p>
+                </div>
             </div>
-            <div className="flex-1 bg-muted/30 rounded-2xl border border-input focus-within:ring-1 focus-within:ring-primary/50 transition-all flex items-center px-3 py-2">
-               <textarea
-                value={messageInput}
-                onChange={(e) => setMessageInput(e.target.value)}
-                placeholder="Type a message..."
-                className="flex-1 bg-transparent border-none focus:outline-none resize-none max-h-24 text-sm"
-                rows={1}
-                style={{ minHeight: "24px" }}
-              />
+            <div className="flex gap-2">
+                <Button size="icon" variant="ghost">
+                <Phone className="h-4 w-4" />
+                </Button>
+                <Button size="icon" variant="ghost">
+                <Video className="h-4 w-4" />
+                </Button>
+                <Button size="icon" variant="ghost">
+                <Search className="h-4 w-4" />
+                </Button>
             </div>
-            <Button
-              size="icon"
-              className="h-10 w-10 rounded-full bg-green-600 hover:bg-green-700 shadow-lg shadow-green-500/20 mb-1"
-            >
-              <Send className="h-4 w-4 text-white ml-0.5" />
-            </Button>
-          </div>
-          <div className="flex justify-center mt-2">
-            <span className="text-[10px] text-muted-foreground flex items-center gap-1">
-              <LockIcon className="h-3 w-3" />
-              End-to-end encrypted via WhatsApp Business API
-            </span>
-          </div>
+            </div>
+
+            {/* Messages */}
+            <ScrollArea className="flex-1 p-4 bg-[url('https://user-images.githubusercontent.com/15075759/28719144-86dc0f70-73b1-11e7-911d-60d70fcded21.png')] bg-repeat bg-opacity-5">
+            <div className="space-y-4">
+                <div className="flex justify-center my-4">
+                <Badge variant="outline" className="bg-background/50 backdrop-blur text-xs font-normal text-muted-foreground">
+                    Today
+                </Badge>
+                </div>
+                {messages.map((msg) => (
+                <div
+                    key={msg.id}
+                    className={`flex ${msg.sender === "me" ? "justify-end" : "justify-start"}`}
+                >
+                    <div
+                    className={`max-w-[70%] rounded-2xl px-4 py-2 shadow-sm ${
+                        msg.sender === "me"
+                        ? "bg-gradient-to-br from-green-600 to-emerald-600 text-white rounded-tr-none"
+                        : "bg-card border border-border rounded-tl-none"
+                    }`}
+                    >
+                    <p className="text-sm">{msg.text}</p>
+                    <div className={`text-[10px] mt-1 flex items-center justify-end gap-1 ${
+                        msg.sender === "me" ? "text-white/70" : "text-muted-foreground"
+                    }`}>
+                        {msg.time}
+                        {msg.sender === "me" && <CheckCheck className="h-3 w-3" />}
+                    </div>
+                    </div>
+                </div>
+                ))}
+            </div>
+            </ScrollArea>
+
+            {/* Input Area */}
+            <div className="p-4 bg-background/50 backdrop-blur border-t border-primary/10">
+            <div className="flex items-end gap-2">
+                <div className="flex gap-1 pb-2">
+                <Button size="icon" variant="ghost" className="h-8 w-8 text-muted-foreground hover:text-primary">
+                    <Smile className="h-5 w-5" />
+                </Button>
+                <Button size="icon" variant="ghost" className="h-8 w-8 text-muted-foreground hover:text-primary">
+                    <Paperclip className="h-5 w-5" />
+                </Button>
+                </div>
+                <div className="flex-1 bg-muted/30 rounded-2xl border border-input focus-within:ring-1 focus-within:ring-primary/50 transition-all flex items-center px-3 py-2">
+                <textarea
+                    value={messageInput}
+                    onChange={(e) => setMessageInput(e.target.value)}
+                    placeholder="Type a message..."
+                    className="flex-1 bg-transparent border-none focus:outline-none resize-none max-h-24 text-sm"
+                    rows={1}
+                    style={{ minHeight: "24px" }}
+                />
+                </div>
+                <Button
+                size="icon"
+                className="h-10 w-10 rounded-full bg-green-600 hover:bg-green-700 shadow-lg shadow-green-500/20 mb-1"
+                >
+                <Send className="h-4 w-4 text-white ml-0.5" />
+                </Button>
+            </div>
+            <div className="flex justify-center mt-2">
+                <span className="text-[10px] text-muted-foreground flex items-center gap-1">
+                <LockIcon className="h-3 w-3" />
+                End-to-end encrypted via WhatsApp Business API
+                </span>
+            </div>
+            </div>
+        </Card>
+      </div>
+      )}
+
+      {activeTab === "settings" && (
+        <div className="grid gap-6 md:grid-cols-2">
+            <Card>
+                <CardHeader>
+                    <CardTitle>Notification Triggers</CardTitle>
+                    <CardDescription>Configure which WHMCS events trigger a WhatsApp notification.</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-6">
+                    {notificationSettings.map((setting) => (
+                        <div key={setting.id} className="flex items-center justify-between space-x-2">
+                            <div className="space-y-0.5">
+                                <Label className="text-base">{setting.label}</Label>
+                                <p className="text-sm text-muted-foreground">{setting.description}</p>
+                            </div>
+                            <Switch checked={setting.enabled} />
+                        </div>
+                    ))}
+                    <div className="pt-4 flex justify-end">
+                        <Button className="w-full sm:w-auto">
+                            <Save className="h-4 w-4 mr-2" /> Save Changes
+                        </Button>
+                    </div>
+                </CardContent>
+            </Card>
+
+            <div className="space-y-6">
+                <Card>
+                    <CardHeader>
+                        <CardTitle>Gateway Configuration</CardTitle>
+                        <CardDescription>Connection settings for the WhatsApp API Provider.</CardDescription>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                        <div className="space-y-2">
+                            <Label>API Endpoint URL</Label>
+                            <Input defaultValue="https://api.whatsapp.com/v16.0" />
+                        </div>
+                        <div className="space-y-2">
+                            <Label>Access Token</Label>
+                            <Input type="password" value="********************************" />
+                        </div>
+                        <div className="space-y-2">
+                            <Label>Phone Number ID</Label>
+                            <Input defaultValue="1039482938492" />
+                        </div>
+                        <Button variant="outline" className="w-full">
+                            <RefreshCw className="h-4 w-4 mr-2" /> Test Connection
+                        </Button>
+                    </CardContent>
+                </Card>
+
+                <Card>
+                    <CardHeader>
+                        <CardTitle>Message Templates</CardTitle>
+                        <CardDescription>Manage verified templates for initiating conversations.</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                        <div className="p-4 border rounded-md bg-muted/20 text-center">
+                            <p className="text-sm text-muted-foreground mb-4">Templates are synced from Meta Business Manager.</p>
+                            <Button variant="outline" size="sm">Sync Templates</Button>
+                        </div>
+                    </CardContent>
+                </Card>
+            </div>
         </div>
-      </Card>
+      )}
+
+      {activeTab === "logs" && (
+        <Card>
+            <CardHeader>
+                <CardTitle>System Logs</CardTitle>
+                <CardDescription>Recent activity and API request history.</CardDescription>
+            </CardHeader>
+            <CardContent>
+                <div className="space-y-4">
+                    {logs.map((log) => (
+                        <div key={log.id} className="flex items-center justify-between p-4 border rounded-lg bg-card/50">
+                            <div className="flex items-center gap-4">
+                                <div className={`p-2 rounded-full ${
+                                    log.status === "Failed" ? "bg-red-500/10 text-red-500" : "bg-green-500/10 text-green-500"
+                                }`}>
+                                    {log.status === "Failed" ? <AlertCircle className="h-4 w-4"/> : <Check className="h-4 w-4"/>}
+                                </div>
+                                <div>
+                                    <p className="font-medium">{log.event}</p>
+                                    <p className="text-sm text-muted-foreground">To: {log.recipient} • Template: {log.template}</p>
+                                </div>
+                            </div>
+                            <div className="text-right">
+                                <Badge variant={log.status === "Failed" ? "destructive" : "outline"}>{log.status}</Badge>
+                                <p className="text-xs text-muted-foreground mt-1">{log.time}</p>
+                            </div>
+                        </div>
+                    ))}
+                </div>
+            </CardContent>
+        </Card>
+      )}
     </div>
   );
 }
@@ -224,3 +358,4 @@ function LockIcon(props: any) {
     </svg>
     )
 }
+
