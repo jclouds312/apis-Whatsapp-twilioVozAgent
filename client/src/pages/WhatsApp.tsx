@@ -11,7 +11,7 @@ import {
   Image as ImageIcon, Paperclip, Smile, Phone, Video,
   Check, CheckCheck, Clock, User, Settings, Bell,
   FileText, Activity, AlertCircle, RefreshCw, Save,
-  Code, Terminal, Copy, MapPin, List, LayoutTemplate
+  Code, Terminal, Copy, MapPin, List, LayoutTemplate, Building2, Key
 } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -79,7 +79,7 @@ export default function WhatsApp() {
       const response = await fetch('/api/whatsapp/status');
       const data = await response.json();
       setBotStatus(data.status);
-      
+
       if (data.status === 'qr_ready') {
         const qrResponse = await fetch('/api/whatsapp/qr');
         const qrData = await qrResponse.json();
@@ -127,6 +127,7 @@ export default function WhatsApp() {
                 <TabsTrigger value="dev" className="flex items-center gap-2"><Code className="h-4 w-4"/> Developer API</TabsTrigger>
                 <TabsTrigger value="settings" className="flex items-center gap-2"><Settings className="h-4 w-4"/> WHMCS Settings</TabsTrigger>
                 <TabsTrigger value="logs" className="flex items-center gap-2"><FileText className="h-4 w-4"/> Logs</TabsTrigger>
+                <TabsTrigger value="business" className="flex items-center gap-2"><Building2 className="h-4 w-4"/> Business API</TabsTrigger>
             </TabsList>
          </Tabs>
       </div>
@@ -393,6 +394,62 @@ export default function WhatsApp() {
                  </ScrollArea>
              </Card>
           </div>
+      )}
+
+      {/* Business API Tab */}
+      {activeTab === "business" && (
+        <Card className="h-full">
+          <div className="p-6">
+            <h2 className="text-xl font-semibold mb-4">WhatsApp Business Cloud API</h2>
+            <p className="text-sm text-muted-foreground mb-6">
+              Integración con la API oficial de WhatsApp Business Cloud para envío de mensajes empresariales.
+            </p>
+
+            <div className="space-y-4">
+              <div className="p-4 border rounded-lg bg-muted/50">
+                <h3 className="font-medium mb-2">Configuración Requerida</h3>
+                <div className="space-y-2 text-sm">
+                  <div className="flex items-center gap-2">
+                    <Key className="h-4 w-4" />
+                    <span>WA_PHONE_NUMBER_ID: ID del número de teléfono</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Key className="h-4 w-4" />
+                    <span>WA_ACCESS_TOKEN: Token de acceso de Meta</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Key className="h-4 w-4" />
+                    <span>WA_WEBHOOK_VERIFY_TOKEN: Token de verificación del webhook</span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="p-4 border rounded-lg">
+                <h3 className="font-medium mb-2">Endpoints Disponibles</h3>
+                <div className="space-y-2 text-sm font-mono">
+                  <div>POST /api/whatsapp-business/send-text</div>
+                  <div>POST /api/whatsapp-business/send-template</div>
+                  <div>POST /api/whatsapp-business/send-media</div>
+                  <div>GET /api/whatsapp-business/status</div>
+                </div>
+              </div>
+
+              <div className="p-4 border rounded-lg bg-blue-50 dark:bg-blue-950">
+                <h3 className="font-medium mb-2">Ejemplo de Uso</h3>
+                <pre className="text-xs overflow-x-auto">
+{`fetch('/api/whatsapp-business/send-text', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({
+    to: '521234567890',
+    message: 'Hola desde WhatsApp Business API'
+  })
+});`}
+                </pre>
+              </div>
+            </div>
+          </div>
+        </Card>
       )}
 
       {activeTab === "settings" && (
