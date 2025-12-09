@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -64,6 +64,54 @@ export default function WhatsApp() {
   const [messageInput, setMessageInput] = useState("");
   const [activeTab, setActiveTab] = useState("chat");
   const [messageType, setMessageType] = useState("text");
+  const [botStatus, setBotStatus] = useState<string>("disconnected");
+  const [qrCode, setQrCode] = useState<string>("");
+  const [isConnecting, setIsConnecting] = useState(false);
+
+  useEffect(() => {
+    checkBotStatus();
+    const interval = setInterval(checkBotStatus, 3000);
+    return () => clearInterval(interval);
+  }, []);
+
+  const checkBotStatus = async () => {
+    try {
+      const response = await fetch('/api/whatsapp/status');
+      const data = await response.json();
+      setBotStatus(data.status);
+      
+      if (data.status === 'qr_ready') {
+        const qrResponse = await fetch('/api/whatsapp/qr');
+        const qrData = await qrResponse.json();
+        setQrCode(qrData.qrCode);
+      } else if (data.status === 'connected') {
+        setQrCode('');
+      }
+    } catch (error) {
+      console.error('Error checking bot status:', error);
+    }
+  };
+
+  const connectBot = async () => {
+    setIsConnecting(true);
+    try {
+      await fetch('/api/whatsapp/connect', { method: 'POST' });
+    } catch (error) {
+      console.error('Error connecting bot:', error);
+    } finally {
+      setIsConnecting(false);
+    }
+  };
+
+  const disconnectBot = async () => {
+    try {
+      await fetch('/api/whatsapp/disconnect', { method: 'POST' });
+      setBotStatus('disconnected');
+      setQrCode('');
+    } catch (error) {
+      console.error('Error disconnecting bot:', error);
+    }
+  };
 
   return (
     <div className="h-[calc(100vh-8rem)] flex flex-col gap-4">
@@ -349,6 +397,43 @@ export default function WhatsApp() {
 
       {activeTab === "settings" && (
         <div className="grid gap-6 md:grid-cols-2">
+            <Card>
+                <CardHeader>
+                    <CardTitle className="flex items-center justify-between">
+                        Bot Connection
+                        <Badge variant={botStatus === 'connected' ? 'default' : 'secondary'} 
+                               className={botStatus === 'connected' ? 'bg-green-500' : ''}>
+                            {botStatus}
+                        </Badge>
+                    </CardTitle>
+                    <CardDescription>Connect your WhatsApp account via QR code</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                    {botStatus === 'disconnected' && (
+                        <Button onClick={connectBot} disabled={isConnecting} className="w-full">
+                            {isConnecting ? 'Connecting...' : 'Connect WhatsApp Bot'}
+                        </Button>
+                    )}
+                    {botStatus === 'qr_ready' && qrCode && (
+                        <div className="flex flex-col items-center gap-4">
+                            <p className="text-sm text-muted-foreground text-center">
+                                Scan this QR code with your WhatsApp mobile app
+                            </p>
+                            <img src={qrCode} alt="QR Code" className="w-64 h-64 border rounded-lg" />
+                        </div>
+                    )}
+                    {botStatus === 'connected' && (
+                        <div className="space-y-4">
+                            <div className="p-4 bg-green-500/10 border border-green-500/20 rounded-lg">
+                                <p className="text-sm text-green-500 font-medium">✓ WhatsApp Bot Connected</p>
+                            </div>
+                            <Button onClick={disconnectBot} variant="destructive" className="w-full">
+                                Disconnect Bot
+                            </Button>
+                        </div>
+                    )}
+                </CardContent>
+            </Card>
             <Card>
                 <CardHeader>
                     <CardTitle>Notification Triggers</CardTitle>
