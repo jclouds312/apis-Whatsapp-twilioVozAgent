@@ -368,18 +368,30 @@ export async function registerRoutes(
   
   app.post("/api/whatsapp/send-message", async (req, res) => {
     try {
-      const { clientId, to, message, type = "text" } = req.body;
+      const { clientId, to, message, type = "text", connectionId } = req.body;
       
-      // Get WhatsApp connection for client
-      const connections = await storage.getWhatsAppConnectionsByClient(clientId);
-      if (connections.length === 0) {
+      // Get WhatsApp connection - use specific one if provided, otherwise default
+      let connection;
+      if (connectionId) {
+        const allConnections = await storage.getWhatsAppConnectionsByClient(clientId);
+        connection = allConnections.find(c => c.id === connectionId);
+      } else {
+        const connections = await storage.getWhatsAppConnectionsByClient(clientId);
+        connection = connections[0];
+      }
+      
+      if (!connection) {
         return res.status(400).json({ error: "No WhatsApp connection found for client" });
       }
       
-      const connection = connections[0];
-      
       // TODO: Send actual message via WhatsApp Business Cloud API
-      // For now, mock the sending
+      // const whatsappResponse = await sendWhatsAppMessage({
+      //   phoneNumberId: connection.phoneNumberId,
+      //   accessToken: connection.accessToken,
+      //   to,
+      //   message,
+      //   type
+      // });
       
       const savedMessage = await storage.createMessage({
         clientId,
@@ -388,10 +400,66 @@ export async function registerRoutes(
         toNumber: to,
         messageType: type,
         content: message,
-        status: "sent"
+        status: "sent",
+        whatsappMessageId: `mock_${Date.now()}`
       });
       
       res.status(201).json(savedMessage);
+    } catch (error: any) {
+      res.status(400).json({ error: error.message });
+    }
+  });
+
+  // ==================== LAUNCH CAMPAIGN ====================
+  
+  app.post("/api/campaigns/:id/launch", async (req, res) => {
+    try {
+      const campaign = await storage.getCampaignById(req.params.id);
+      if (!campaign) {
+        return res.status(404).json({ error: "Campaign not found" });
+      }
+
+      // Get target contacts
+      const contacts = await storage.getContactsByClient(campaign.clientId);
+      const targetContacts = contacts.filter((c: any) => c.isOptedIn);
+
+      // Get WhatsApp connection
+      const connections = await storage.getWhatsAppConnectionsByClient(campaign.clientId);
+      if (connections.length === 0) {
+        return res.status(400).json({ error: "No WhatsApp connection configured" });
+      }
+      const connection = connections[0];
+
+      // TODO: Send messages in batch
+      let sentCount = 0;
+      let failedCount = 0;
+
+      for (const contact of targetContacts) {
+        try {
+          await storage.createMessage({
+            campaignId: campaign.id,
+            clientId: campaign.clientId,
+            direction: "outbound",
+            fromNumber: connection.phoneNumberId,
+            toNumber: contact.phoneNumber,
+            messageType: "text",
+            content: campaign.messageContent || "",
+            status: "sent"
+          });
+          sentCount++;
+        } catch (err) {
+          failedCount++;
+        }
+      }
+
+      // Update campaign stats
+      const updated = await storage.updateCampaign(campaign.id, {
+        status: "active",
+        sentCount: sentCount.toString(),
+        failedCount: failedCount.toString()
+      });
+
+      res.json(updated);
     } catch (error: any) {
       res.status(400).json({ error: error.message });
     }

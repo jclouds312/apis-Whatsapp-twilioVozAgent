@@ -52,7 +52,7 @@ const teamMembers = [
 export default function WhatsAppPage() {
   const [selectedClient, setSelectedClient] = useState<string>("all");
   const [activeTab, setActiveTab] = useState("dashboard");
-  
+
   const { data: clients = [], isLoading: loadingClients } = useClients();
   const { data: campaigns = [], isLoading: loadingCampaigns } = useCampaigns(selectedClient !== "all" ? selectedClient : undefined);
   const { data: contacts = [] } = useContacts(selectedClient !== "all" ? selectedClient : undefined);
@@ -71,7 +71,7 @@ export default function WhatsAppPage() {
             <p className="text-xs text-muted-foreground">Platform Administration & Client Management</p>
           </div>
         </div>
-        
+
         <div className="flex items-center gap-4 w-full md:w-auto">
           <div className="flex items-center gap-2 bg-muted/30 px-3 py-1.5 rounded-lg border border-primary/10">
             <Building2 className="h-4 w-4 text-muted-foreground" />
@@ -165,7 +165,7 @@ export default function WhatsAppPage() {
               </CardContent>
             </Card>
            </div>
-           
+
            <div className="grid md:grid-cols-2 gap-6">
              <Card className="border-primary/10">
                <CardHeader>
@@ -368,7 +368,7 @@ export default function WhatsAppPage() {
                      </div>
                      <Badge variant={member.status === 'active' ? 'default' : 'secondary'}>{member.role}</Badge>
                    </div>
-                   
+
                    <div className="space-y-3">
                      <div>
                        <div className="text-xs text-muted-foreground mb-1">Assigned Clients</div>
@@ -387,7 +387,7 @@ export default function WhatsAppPage() {
                  </CardContent>
                </Card>
              ))}
-             
+
              {/* Add New Card Placeholder */}
              <Card className="border-primary/10 border-dashed flex items-center justify-center cursor-pointer hover:bg-muted/10 transition-colors min-h-[200px]">
                <div className="text-center space-y-2">
@@ -399,7 +399,147 @@ export default function WhatsAppPage() {
              </Card>
           </div>
         </TabsContent>
-        
+
+        {/* CAMPAIGNS TAB */}
+        <TabsContent value="campaigns" className="space-y-6 animate-in fade-in zoom-in-95 duration-300">
+          <div className="flex justify-between items-center">
+            <div>
+              <h2 className="text-lg font-semibold">Campaign Management</h2>
+              <p className="text-sm text-muted-foreground">Create and manage WhatsApp marketing campaigns.</p>
+            </div>
+            <Dialog>
+              <DialogTrigger asChild>
+                <Button className="bg-green-600 hover:bg-green-700">
+                  <Plus className="mr-2 h-4 w-4" /> New Campaign
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="max-w-2xl">
+                <DialogHeader>
+                  <DialogTitle>Create Campaign</DialogTitle>
+                  <DialogDescription>Set up a new WhatsApp marketing campaign</DialogDescription>
+                </DialogHeader>
+                <div className="grid gap-4 py-4">
+                  <div className="grid grid-cols-4 items-center gap-4">
+                    <Label className="text-right">Campaign Name</Label>
+                    <Input id="campaignName" className="col-span-3" placeholder="Summer Sale 2024" />
+                  </div>
+                  <div className="grid grid-cols-4 items-center gap-4">
+                    <Label className="text-right">WhatsApp Number</Label>
+                    <Select>
+                      <SelectTrigger className="col-span-3">
+                        <SelectValue placeholder="Select work number" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="work1">+1 (555) 100-0001</SelectItem>
+                        <SelectItem value="work2">+1 (555) 100-0002</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="grid grid-cols-4 items-center gap-4">
+                    <Label className="text-right">Target Audience</Label>
+                    <Select defaultValue="all">
+                      <SelectTrigger className="col-span-3">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">All Contacts</SelectItem>
+                        <SelectItem value="opted">Opted-in Only</SelectItem>
+                        <SelectItem value="segment">Custom Segment</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="grid grid-cols-4 items-center gap-4">
+                    <Label className="text-right">Message</Label>
+                    <textarea 
+                      className="col-span-3 min-h-[100px] rounded-md border border-input bg-background px-3 py-2"
+                      placeholder="Your campaign message..."
+                    />
+                  </div>
+                  <div className="grid grid-cols-4 items-center gap-4">
+                    <Label className="text-right">Schedule</Label>
+                    <div className="col-span-3 flex gap-2">
+                      <Input type="datetime-local" className="flex-1" />
+                      <Button variant="outline">Send Now</Button>
+                    </div>
+                  </div>
+                </div>
+                <DialogFooter>
+                  <Button type="submit" className="bg-green-600 hover:bg-green-700">
+                    Create Campaign
+                  </Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
+          </div>
+
+          <div className="grid gap-4">
+            {loadingCampaigns ? (
+              <div className="text-center py-8 text-muted-foreground">Loading campaigns...</div>
+            ) : campaigns.length === 0 ? (
+              <Card className="border-dashed">
+                <CardContent className="flex flex-col items-center justify-center py-12">
+                  <MessageSquare className="h-12 w-12 text-muted-foreground mb-4" />
+                  <p className="text-lg font-medium">No campaigns yet</p>
+                  <p className="text-sm text-muted-foreground mb-4">Create your first WhatsApp campaign</p>
+                </CardContent>
+              </Card>
+            ) : (
+              campaigns.map((campaign) => (
+                <Card key={campaign.id} className="border-primary/10">
+                  <CardHeader>
+                    <div className="flex justify-between items-start">
+                      <div>
+                        <CardTitle className="flex items-center gap-2">
+                          {campaign.name}
+                          <Badge variant={campaign.status === 'active' ? 'default' : 'secondary'}>
+                            {campaign.status}
+                          </Badge>
+                        </CardTitle>
+                        <CardDescription>
+                          Created {new Date(campaign.createdAt).toLocaleDateString()}
+                        </CardDescription>
+                      </div>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="ghost" size="icon">
+                            <MoreVertical className="h-4 w-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuItem>Edit</DropdownMenuItem>
+                          <DropdownMenuItem>Duplicate</DropdownMenuItem>
+                          <DropdownMenuSeparator />
+                          <DropdownMenuItem className="text-red-500">Delete</DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </div>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="grid grid-cols-4 gap-4">
+                      <div>
+                        <div className="text-sm text-muted-foreground">Sent</div>
+                        <div className="text-2xl font-bold">{campaign.sentCount || 0}</div>
+                      </div>
+                      <div>
+                        <div className="text-sm text-muted-foreground">Delivered</div>
+                        <div className="text-2xl font-bold text-green-500">{campaign.deliveredCount || 0}</div>
+                      </div>
+                      <div>
+                        <div className="text-sm text-muted-foreground">Read</div>
+                        <div className="text-2xl font-bold text-blue-500">{campaign.readCount || 0}</div>
+                      </div>
+                      <div>
+                        <div className="text-sm text-muted-foreground">Failed</div>
+                        <div className="text-2xl font-bold text-red-500">{campaign.failedCount || 0}</div>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))
+            )}
+          </div>
+        </TabsContent>
+
         {/* INBOX TAB (Reused but context-aware) */}
         <TabsContent value="inbox" className="h-[600px] flex gap-4 animate-in fade-in zoom-in-95 duration-300">
            {/* Reusing existing inbox structure for simplicity, in a real app this would be more complex */}
@@ -424,7 +564,7 @@ export default function WhatsAppPage() {
                ))}
              </ScrollArea>
            </Card>
-           
+
            <Card className="flex-1 flex items-center justify-center border-primary/10 bg-muted/5">
              <div className="text-center text-muted-foreground">
                <MessageSquare className="h-12 w-12 mx-auto mb-4 opacity-20" />
@@ -528,9 +668,9 @@ export default function WhatsAppPage() {
                       <Label>Global Webhook Endpoint</Label>
                       <Input defaultValue="https://api.nexus.com/v1/webhooks/router" />
                     </div>
-                    
+
                     <Separator />
-                    
+
                     <div className="space-y-3">
                       <div className="flex items-center justify-between">
                         <Label>Allow Client API Keys</Label>

@@ -26,46 +26,47 @@ export interface IStorage {
   getUserByEmail(email: string): Promise<User | undefined>;
   createUser(user: InsertUser): Promise<User>;
   updateUser(id: string, updates: Partial<User>): Promise<User | undefined>;
-  
+
   // ===== CLIENTS =====
   getAllClients(): Promise<Client[]>;
   getClient(id: string): Promise<Client | undefined>;
   createClient(client: InsertClient): Promise<Client>;
   updateClient(id: string, updates: Partial<Client>): Promise<Client | undefined>;
   deleteClient(id: string): Promise<boolean>;
-  
+
   // ===== WHATSAPP CONNECTIONS =====
   getWhatsAppConnectionsByClient(clientId: string): Promise<WhatsAppConnection[]>;
   getWhatsAppConnection(id: string): Promise<WhatsAppConnection | undefined>;
   createWhatsAppConnection(connection: InsertWhatsAppConnection): Promise<WhatsAppConnection>;
   updateWhatsAppConnection(id: string, updates: Partial<WhatsAppConnection>): Promise<WhatsAppConnection | undefined>;
-  
+
   // ===== CONTACTS =====
   getContactsByClient(clientId: string): Promise<Contact[]>;
   getContact(id: string): Promise<Contact | undefined>;
   createContact(contact: InsertContact): Promise<Contact>;
   updateContact(id: string, updates: Partial<Contact>): Promise<Contact | undefined>;
   deleteContact(id: string): Promise<boolean>;
-  
+
   // ===== CAMPAIGNS =====
   getCampaignsByClient(clientId: string): Promise<Campaign[]>;
   getCampaign(id: string): Promise<Campaign | undefined>;
+  getCampaignById(id: string): Promise<Campaign | undefined>;
   createCampaign(campaign: InsertCampaign): Promise<Campaign>;
   updateCampaign(id: string, updates: Partial<Campaign>): Promise<Campaign | undefined>;
   deleteCampaign(id: string): Promise<boolean>;
-  
+
   // ===== CONVERSATIONS =====
   getConversationsByClient(clientId: string): Promise<Conversation[]>;
   getConversation(id: string): Promise<Conversation | undefined>;
   createConversation(conversation: InsertConversation): Promise<Conversation>;
   updateConversation(id: string, updates: Partial<Conversation>): Promise<Conversation | undefined>;
-  
+
   // ===== MESSAGES =====
   getMessagesByConversation(conversationId: string): Promise<Message[]>;
   getMessage(id: string): Promise<Message | undefined>;
   createMessage(message: InsertMessage): Promise<Message>;
   updateMessage(id: string, updates: Partial<Message>): Promise<Message | undefined>;
-  
+
   // ===== TEAM ASSIGNMENTS =====
   getTeamAssignmentsByClient(clientId: string): Promise<TeamAssignment[]>;
   getTeamAssignmentsByUser(userId: string): Promise<TeamAssignment[]>;
@@ -172,6 +173,11 @@ export class PostgresStorage implements IStorage {
 
   async getCampaign(id: string): Promise<Campaign | undefined> {
     const result = await db.select().from(campaigns).where(eq(campaigns.id, id)).limit(1);
+    return result[0];
+  }
+
+  async getCampaignById(id: string): Promise<Campaign | undefined> {
+    const result = await db.select().from(campaigns).where(eq(campaigns.id, id));
     return result[0];
   }
 
