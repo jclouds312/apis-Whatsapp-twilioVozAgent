@@ -27,7 +27,12 @@ Configura en `.env`:
 WA_PHONE_NUMBER_ID=tu_phone_number_id
 WA_ACCESS_TOKEN=tu_access_token
 WA_WEBHOOK_VERIFY_TOKEN=tu_verify_token
+WA_API_VERSION=v18.0
 ```
+
+Las mismas credenciales se utilizan para:
+- **WhatsApp Business Cloud API**: Envío de mensajes
+- **WhatsApp OTP Service**: Verificación de números mediante OTP
 
 ## 📞 Twilio Configuration
 
@@ -68,6 +73,19 @@ npm run build
 - `GET /api/whatsapp/status` - Estado del bot
 - `POST /api/whatsapp/send` - Enviar mensaje
 - `POST /api/whatsapp/disconnect` - Desconectar bot
+
+### WhatsApp OTP
+- `POST /api/whatsapp-otp/send` - Enviar código OTP
+- `POST /api/whatsapp-otp/verify` - Verificar código OTP
+- `POST /api/whatsapp-otp/resend` - Reenviar código OTP
+- `GET /api/whatsapp-otp/status/:sessionId` - Estado de sesión
+- `GET /api/whatsapp-otp/config-status` - Estado de configuración
+
+### WhatsApp Business
+- `POST /api/whatsapp-business/send` - Enviar mensaje
+- `POST /api/whatsapp-business/send-template` - Enviar plantilla
+- `POST /api/whatsapp-business/send-media` - Enviar multimedia
+- `POST /api/whatsapp-business/disconnect` - Desconectar bot
 
 ### WhatsApp Business API
 - `POST /api/whatsapp-business/send-text` - Enviar mensaje de texto

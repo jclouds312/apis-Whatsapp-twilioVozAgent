@@ -3,6 +3,7 @@ import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { whatsAppBot } from "./whatsapp-bot";
 import { whatsAppBusinessAPI } from "./whatsapp-business-api";
+import { whatsAppOTPService } from "./whatsapp-otp";
 
 export async function registerRoutes(
   httpServer: Server,
@@ -16,7 +17,8 @@ export async function registerRoutes(
       timestamp: new Date().toISOString(),
       services: {
         whatsappBot: whatsAppBot.getStatus(),
-        whatsappBusiness: whatsAppBusinessAPI.isConfigured()
+        whatsappBusiness: whatsAppBusinessAPI.isConfigured(),
+        whatsappOTP: whatsAppOTPService.isConfigured()
       }
     });
   });
@@ -117,6 +119,65 @@ export async function registerRoutes(
       success: true, 
       configured: isConfigured,
       message: isConfigured ? 'WhatsApp Business API is configured' : 'Missing credentials'
+    });
+  });
+
+  // WhatsApp OTP Routes
+  app.post("/api/whatsapp-otp/send", async (req, res) => {
+    try {
+      const { phoneNumber } = req.body;
+      if (!phoneNumber) {
+        return res.status(400).json({ success: false, error: "Phone number is required" });
+      }
+      const result = await whatsAppOTPService.sendOTP(phoneNumber);
+      res.json(result);
+    } catch (error: any) {
+      res.status(500).json({ success: false, error: error.message });
+    }
+  });
+
+  app.post("/api/whatsapp-otp/verify", async (req, res) => {
+    try {
+      const { sessionId, otp } = req.body;
+      if (!sessionId || !otp) {
+        return res.status(400).json({ success: false, error: "Session ID and OTP are required" });
+      }
+      const result = await whatsAppOTPService.verifyOTP(sessionId, otp);
+      res.json(result);
+    } catch (error: any) {
+      res.status(500).json({ success: false, error: error.message });
+    }
+  });
+
+  app.post("/api/whatsapp-otp/resend", async (req, res) => {
+    try {
+      const { sessionId } = req.body;
+      if (!sessionId) {
+        return res.status(400).json({ success: false, error: "Session ID is required" });
+      }
+      const result = await whatsAppOTPService.resendOTP(sessionId);
+      res.json(result);
+    } catch (error: any) {
+      res.status(500).json({ success: false, error: error.message });
+    }
+  });
+
+  app.get("/api/whatsapp-otp/status/:sessionId", async (req, res) => {
+    try {
+      const { sessionId } = req.params;
+      const status = whatsAppOTPService.getSessionStatus(sessionId);
+      res.json({ success: true, status });
+    } catch (error: any) {
+      res.status(500).json({ success: false, error: error.message });
+    }
+  });
+
+  app.get("/api/whatsapp-otp/config-status", (_req, res) => {
+    const isConfigured = whatsAppOTPService.isConfigured();
+    res.json({ 
+      success: true, 
+      configured: isConfigured,
+      message: isConfigured ? 'WhatsApp OTP service is configured' : 'Missing credentials'
     });
   });
 

@@ -18,12 +18,85 @@ import {
 export default function Verify() {
   const [verificationStep, setVerificationStep] = useState(0);
   const [otpValue, setOtpValue] = useState("");
+  const [phoneNumber, setPhoneNumber] = useState("");
+  const [sessionId, setSessionId] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState("");
 
-  const handleVerify = () => {
-    if (otpValue.length === 6) {
-      setVerificationStep(2);
+  const handleSendOTP = async () => {
+    setIsLoading(true);
+    setError("");
+    try {
+      const response = await fetch('/api/whatsapp-otp/send', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ phoneNumber })
+      });
+      const data = await response.json();
+      
+      if (data.success && data.sessionId) {
+        setSessionId(data.sessionId);
+        setVerificationStep(1);
+      } else {
+        setError(data.message || 'Failed to send OTP');
+      }
+    } catch (err: any) {
+      setError('Error sending OTP: ' + err.message);
+    } finally {
+      setIsLoading(false);
     }
   };
+
+  const handleVerifyOTP = async () => {
+    if (otpValue.length !== 6) return;
+    
+    setIsLoading(true);
+    setError("");
+    try {
+      const response = await fetch('/api/whatsapp-otp/verify', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ sessionId, otp: otpValue })
+      });
+      const data = await response.json();
+      
+      if (data.success) {
+        setVerificationStep(2);
+      } else {
+        setError(data.message || 'Invalid OTP');
+      }
+    } catch (err: any) {
+      setError('Error verifying OTP: ' + err.message);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleResendOTP = async () => {
+    setIsLoading(true);
+    setError("");
+    try {
+      const response = await fetch('/api/whatsapp-otp/resend', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ sessionId })
+      });
+      const data = await response.json();
+      
+      if (data.success && data.newSessionId) {
+        setSessionId(data.newSessionId);
+        setOtpValue("");
+      } else {
+        setError(data.message || 'Failed to resend OTP');
+      }
+    } catch (err: any) {
+      setError('Error resending OTP: ' + err.message);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  
 
   return (
     <div className="max-w-4xl mx-auto space-y-6">
@@ -53,10 +126,21 @@ export default function Verify() {
                 <div className="space-y-2">
                   <label className="text-sm font-medium">Phone Number</label>
                   <div className="flex gap-2">
-                    <Input placeholder="+1234567890" defaultValue="+1 (555) 000-0000" />
-                    <Button onClick={() => setVerificationStep(1)}>Send Code</Button>
+                    <Input 
+                      placeholder="+1234567890" 
+                      value={phoneNumber}
+                      onChange={(e) => setPhoneNumber(e.target.value)}
+                    />
+                    <Button onClick={handleSendOTP} disabled={isLoading || !phoneNumber}>
+                      {isLoading ? "Sending..." : "Send Code"}
+                    </Button>
                   </div>
                 </div>
+                {error && (
+                  <div className="p-3 bg-red-500/10 border border-red-500/20 rounded-lg text-sm text-red-400">
+                    {error}
+                  </div>
+                )}
                 <div className="p-3 bg-blue-500/10 border border-blue-500/20 rounded-lg text-sm text-blue-400 flex gap-2">
                   <InfoIcon className="h-4 w-4 shrink-0 mt-0.5" />
                   <p>This will simulate sending an OTP via SMS using Twilio Verify API.</p>
@@ -83,9 +167,21 @@ export default function Verify() {
                       </InputOTPGroup>
                     </InputOTP>
                   </div>
+                  {error && (
+                    <div className="p-3 bg-red-500/10 border border-red-500/20 rounded-lg text-sm text-red-400">
+                      {error}
+                    </div>
+                  )}
                   <div className="flex justify-center gap-4">
-                    <Button variant="ghost" size="sm" onClick={() => setVerificationStep(0)}>Change Number</Button>
-                    <Button onClick={handleVerify} disabled={otpValue.length !== 6}>Verify</Button>
+                    <Button variant="ghost" size="sm" onClick={() => { setVerificationStep(0); setOtpValue(""); setError(""); }}>
+                      Change Number
+                    </Button>
+                    <Button variant="ghost" size="sm" onClick={handleResendOTP} disabled={isLoading}>
+                      Resend Code
+                    </Button>
+                    <Button onClick={handleVerifyOTP} disabled={otpValue.length !== 6 || isLoading}>
+                      {isLoading ? "Verifying..." : "Verify"}
+                    </Button>
                   </div>
                 </div>
               </div>
@@ -100,8 +196,14 @@ export default function Verify() {
                   <h3 className="font-bold text-lg">Verification Successful!</h3>
                   <p className="text-muted-foreground text-sm">The phone number has been verified.</p>
                 </div>
-                <Button variant="outline" onClick={() => { setVerificationStep(0); setOtpValue(""); }}>
-                  Reset Demo
+                <Button variant="outline" onClick={() => { 
+                  setVerificationStep(0); 
+                  setOtpValue(""); 
+                  setPhoneNumber("");
+                  setSessionId("");
+                  setError("");
+                }}>
+                  Verify Another Number
                 </Button>
               </div>
             )}
