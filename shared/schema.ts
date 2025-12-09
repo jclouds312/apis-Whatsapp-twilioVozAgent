@@ -223,3 +223,174 @@ export const insertExposedApiSchema = createInsertSchema(exposedApis).omit({
 
 export type InsertExposedApi = z.infer<typeof insertExposedApiSchema>;
 export type ExposedApi = typeof exposedApis.$inferSelect;
+
+// ============= MULTI-TENANT WHATSAPP PLATFORM TABLES =============
+
+// ============= CLIENTS (Companies/Tenants) =============
+export const clients = pgTable("clients", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  name: text("name").notNull(),
+  plan: text("plan").default("starter"), // starter, pro, enterprise
+  status: text("status").default("active"), // active, suspended, inactive
+  credits: text("credits").default("0"), // Message credits
+  phoneNumber: text("phone_number"),
+  settings: jsonb("settings").default({}),
+  createdBy: varchar("created_by"), // Admin user who created this client
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const insertClientSchema = createInsertSchema(clients).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export type InsertClient = z.infer<typeof insertClientSchema>;
+export type Client = typeof clients.$inferSelect;
+
+// ============= WHATSAPP CONNECTIONS (Per Client) =============
+export const whatsappConnections = pgTable("whatsapp_connections", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  clientId: varchar("client_id").notNull(),
+  phoneNumberId: text("phone_number_id").notNull(), // Meta Phone Number ID
+  businessAccountId: text("business_account_id"),
+  accessToken: text("access_token").notNull(), // Encrypted
+  webhookVerifyToken: text("webhook_verify_token"),
+  displayName: text("display_name"),
+  status: text("status").default("connected"), // connected, disconnected, error
+  lastSyncAt: timestamp("last_sync_at"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const insertWhatsAppConnectionSchema = createInsertSchema(whatsappConnections).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export type InsertWhatsAppConnection = z.infer<typeof insertWhatsAppConnectionSchema>;
+export type WhatsAppConnection = typeof whatsappConnections.$inferSelect;
+
+// ============= CONTACTS (Marketing Recipients) =============
+export const contacts = pgTable("contacts", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  clientId: varchar("client_id").notNull(),
+  phoneNumber: text("phone_number").notNull(),
+  name: text("name"),
+  email: text("email"),
+  tags: jsonb("tags").default([]), // Array of tags
+  metadata: jsonb("metadata").default({}),
+  isOptedIn: boolean("is_opted_in").default(true),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const insertContactSchema = createInsertSchema(contacts).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export type InsertContact = z.infer<typeof insertContactSchema>;
+export type Contact = typeof contacts.$inferSelect;
+
+// ============= CAMPAIGNS =============
+export const campaigns = pgTable("campaigns", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  clientId: varchar("client_id").notNull(),
+  name: text("name").notNull(),
+  type: text("type").default("marketing"), // marketing, utility, transactional
+  status: text("status").default("draft"), // draft, scheduled, active, paused, completed
+  templateName: text("template_name"),
+  messageContent: text("message_content"),
+  targetSegment: jsonb("target_segment").default({}), // Filters for contacts
+  scheduledAt: timestamp("scheduled_at"),
+  sentCount: text("sent_count").default("0"),
+  deliveredCount: text("delivered_count").default("0"),
+  readCount: text("read_count").default("0"),
+  failedCount: text("failed_count").default("0"),
+  createdBy: varchar("created_by").notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const insertCampaignSchema = createInsertSchema(campaigns).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export type InsertCampaign = z.infer<typeof insertCampaignSchema>;
+export type Campaign = typeof campaigns.$inferSelect;
+
+// ============= CONVERSATIONS =============
+export const conversations = pgTable("conversations", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  clientId: varchar("client_id").notNull(),
+  contactId: varchar("contact_id").notNull(),
+  assignedTo: varchar("assigned_to"), // User ID of agent
+  status: text("status").default("open"), // open, resolved, closed
+  lastMessageAt: timestamp("last_message_at"),
+  unreadCount: text("unread_count").default("0"),
+  metadata: jsonb("metadata").default({}),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const insertConversationSchema = createInsertSchema(conversations).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export type InsertConversation = z.infer<typeof insertConversationSchema>;
+export type Conversation = typeof conversations.$inferSelect;
+
+// ============= MESSAGES (Enhanced for Multi-Tenant) =============
+export const messages = pgTable("messages", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  conversationId: varchar("conversation_id"),
+  campaignId: varchar("campaign_id"), // null for 1:1 messages
+  clientId: varchar("client_id").notNull(),
+  direction: text("direction").notNull(), // inbound, outbound
+  whatsappMessageId: text("whatsapp_message_id"),
+  fromNumber: text("from_number").notNull(),
+  toNumber: text("to_number").notNull(),
+  messageType: text("message_type").default("text"), // text, image, video, document, template
+  content: text("content"),
+  mediaUrl: text("media_url"),
+  status: text("status").default("pending"), // pending, sent, delivered, read, failed
+  errorMessage: text("error_message"),
+  sentBy: varchar("sent_by"), // User ID if sent by agent
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const insertMessageSchema = createInsertSchema(messages).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export type InsertMessage = z.infer<typeof insertMessageSchema>;
+export type Message = typeof messages.$inferSelect;
+
+// ============= TEAM ASSIGNMENTS =============
+export const teamAssignments = pgTable("team_assignments", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull(),
+  clientId: varchar("client_id").notNull(),
+  role: text("role").default("agent"), // manager, agent
+  permissions: jsonb("permissions").default([]),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const insertTeamAssignmentSchema = createInsertSchema(teamAssignments).omit({
+  id: true,
+  createdAt: true,
+});
+
+export type InsertTeamAssignment = z.infer<typeof insertTeamAssignmentSchema>;
+export type TeamAssignment = typeof teamAssignments.$inferSelect;
