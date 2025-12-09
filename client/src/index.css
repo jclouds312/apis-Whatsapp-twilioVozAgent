@@ -1,6 +1,8 @@
 @import "tailwindcss";
 @import "tw-animate-css";
 
+@plugin "tailwindcss-animate";
+
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {
@@ -51,40 +53,39 @@
   --color-sidebar-accent-foreground: hsl(var(--sidebar-accent-foreground));
   --color-sidebar-border: hsl(var(--sidebar-border));
   --color-sidebar-ring: hsl(var(--sidebar-ring));
-
-  --font-sans: 'Inter', sans-serif;
-  --font-mono: 'JetBrains Mono', monospace;
 }
 
+/* DARK MODE DEFAULT - NEXUS FUTURE THEME */
 :root {
-  /* Dark Mode by Default - Technical/Developer Aesthetic */
-  --background: 240 10% 3.9%; /* #09090b */
-  --foreground: 0 0% 98%; /* #fafafa */
+  --background: 222 47% 11%;
+  --foreground: 210 40% 98%;
 
-  --card: 240 10% 3.9%;
-  --card-foreground: 0 0% 98%;
+  --card: 222 47% 11%;
+  --card-foreground: 210 40% 98%;
 
-  --popover: 240 10% 3.9%;
-  --popover-foreground: 0 0% 98%;
+  --popover: 222 47% 11%;
+  --popover-foreground: 210 40% 98%;
 
-  --primary: 217 91% 60%; /* Bright Blue for actions */
-  --primary-foreground: 0 0% 100%;
+  --primary: 217 91% 60%;
+  --primary-foreground: 222 47% 11%;
 
-  --secondary: 240 3.7% 15.9%; /* Dark Grey for secondary elements */
-  --secondary-foreground: 0 0% 98%;
+  --secondary: 217 32% 17%;
+  --secondary-foreground: 210 40% 98%;
 
-  --muted: 240 3.7% 15.9%;
-  --muted-foreground: 240 5% 64.9%;
+  --muted: 217 32% 17%;
+  --muted-foreground: 215 20% 65%;
 
-  --accent: 240 3.7% 15.9%;
-  --accent-foreground: 0 0% 98%;
+  --accent: 217 32% 17%;
+  --accent-foreground: 210 40% 98%;
 
-  --destructive: 0 62.8% 30.6%;
-  --destructive-foreground: 0 0% 98%;
+  --destructive: 0 62% 30%;
+  --destructive-foreground: 210 40% 98%;
 
-  --border: 240 3.7% 15.9%;
-  --input: 240 3.7% 15.9%;
-  --ring: 240 4.9% 83.9%;
+  --border: 217 32% 17%;
+  --input: 217 32% 17%;
+  --ring: 224 76% 48%;
+
+  --radius: 0.5rem;
 
   --chart-1: 220 70% 50%;
   --chart-2: 160 60% 45%;
@@ -92,16 +93,49 @@
   --chart-4: 280 65% 60%;
   --chart-5: 340 75% 55%;
 
-  --sidebar: 240 5.9% 10%;
-  --sidebar-foreground: 240 4.8% 95.9%;
-  --sidebar-primary: 224.3 76.3% 48%;
+  --sidebar: 222 47% 11%;
+  --sidebar-foreground: 210 40% 98%;
+  --sidebar-primary: 217 91% 60%;
   --sidebar-primary-foreground: 0 0% 100%;
-  --sidebar-accent: 240 3.7% 15.9%;
-  --sidebar-accent-foreground: 240 4.8% 95.9%;
-  --sidebar-border: 240 3.7% 15.9%;
-  --sidebar-ring: 217.2 91.2% 59.8%;
+  --sidebar-accent: 217 32% 17%;
+  --sidebar-accent-foreground: 210 40% 98%;
+  --sidebar-border: 217 32% 17%;
+  --sidebar-ring: 224 76% 48%;
+}
 
-  --radius: 0.5rem;
+.dark {
+  --background: 222 47% 11%;
+  --foreground: 210 40% 98%;
+  --card: 222 47% 11%;
+  --card-foreground: 210 40% 98%;
+  --popover: 222 47% 11%;
+  --popover-foreground: 210 40% 98%;
+  --primary: 217 91% 60%;
+  --primary-foreground: 222 47% 11%;
+  --secondary: 217 32% 17%;
+  --secondary-foreground: 210 40% 98%;
+  --muted: 217 32% 17%;
+  --muted-foreground: 215 20% 65%;
+  --accent: 217 32% 17%;
+  --accent-foreground: 210 40% 98%;
+  --destructive: 0 62% 30%;
+  --destructive-foreground: 210 40% 98%;
+  --border: 217 32% 17%;
+  --input: 217 32% 17%;
+  --ring: 224 76% 48%;
+  --chart-1: 220 70% 50%;
+  --chart-2: 160 60% 45%;
+  --chart-3: 30 80% 55%;
+  --chart-4: 280 65% 60%;
+  --chart-5: 340 75% 55%;
+  --sidebar: 222 47% 11%;
+  --sidebar-foreground: 210 40% 98%;
+  --sidebar-primary: 217 91% 60%;
+  --sidebar-primary-foreground: 0 0% 100%;
+  --sidebar-accent: 217 32% 17%;
+  --sidebar-accent-foreground: 210 40% 98%;
+  --sidebar-border: 217 32% 17%;
+  --sidebar-ring: 224 76% 48%;
 }
 
 @layer base {
@@ -111,40 +145,21 @@
   body {
     @apply font-sans antialiased bg-background text-foreground;
   }
-
-  /* Custom Scrollbar for Technical Feel */
-  ::-webkit-scrollbar {
-    width: 10px;
-    height: 10px;
-  }
-  ::-webkit-scrollbar-track {
-    background: hsl(var(--background));
-  }
-  ::-webkit-scrollbar-thumb {
-    background: hsl(var(--muted));
-    border-radius: 4px;
-    border: 2px solid hsl(var(--background));
-  }
-  ::-webkit-scrollbar-thumb:hover {
-    background: hsl(var(--muted-foreground));
-  }
 }
 
-@layer utilities {
-  .glass-panel {
-    @apply bg-background/80 backdrop-blur-md border border-border/50;
-  }
+/* Glassmorphism Utilities */
+.glass-panel {
+  @apply bg-background/60 backdrop-blur-xl border border-white/10 shadow-xl;
+}
 
-  .tech-border {
-    @apply border border-border/40 shadow-sm;
-  }
+.glass-card {
+  @apply bg-card/50 backdrop-blur-md border border-white/5 shadow-lg hover:bg-card/70 transition-all duration-300;
+}
 
-  .animate-in-fade {
-    animation: fadeIn 0.5s ease-out forwards;
-  }
+.text-gradient {
+  @apply bg-gradient-to-r from-blue-400 via-purple-400 to-emerald-400 bg-clip-text text-transparent;
+}
 
-  @keyframes fadeIn {
-    from { opacity: 0; transform: translateY(10px); }
-    to { opacity: 1; transform: translateY(0); }
-  }
+.animate-glow {
+  @apply shadow-[0_0_20px_rgba(59,130,246,0.5)];
 }

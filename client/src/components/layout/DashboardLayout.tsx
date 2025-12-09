@@ -18,7 +18,8 @@ import {
   Users,
   Zap,
   Sparkles,
-  Globe
+  Globe,
+  Rocket
 } from "lucide-react";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
@@ -36,6 +37,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     { icon: Bot, label: "AI Agents", path: "/retell", badge: "Beta" },
     { icon: Users, label: "CRM", path: "/crm" },
     { icon: Globe, label: "Facebook SDK", path: "/facebook-integration", badge: "v21" },
+    { icon: Rocket, label: "Generador APIs", path: "/api-key-generator", badge: "New" },
     { icon: Key, label: "API Key Manager", path: "/api-key-manager", badge: "Premium" },
     { icon: Terminal, label: "API Console", path: "/api-console" },
     { icon: Zap, label: "Twilio SMS", path: "/twilio-voice" },
