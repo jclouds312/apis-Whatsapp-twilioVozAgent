@@ -442,56 +442,126 @@ export default function WhatsAppPage() {
            </Card>
         </TabsContent>
 
-        {/* CAMPAIGNS TAB */}
-        <TabsContent value="campaigns" className="space-y-6 animate-in fade-in zoom-in-95 duration-300">
-          <Card className="border-primary/10">
-             <CardHeader className="flex flex-row items-center justify-between">
-               <div>
-                 <CardTitle>Campaign Management</CardTitle>
-                 <CardDescription>Global view of all marketing blasts</CardDescription>
-               </div>
-               <div className="flex gap-2">
-                  <Button variant="outline"><Filter className="h-4 w-4 mr-2" /> Filter</Button>
-                  <Button variant="outline"><Calendar className="h-4 w-4 mr-2" /> Schedule</Button>
-               </div>
-             </CardHeader>
-             <CardContent>
-               <div className="space-y-4">
-                 {campaigns.map((camp) => (
-                    <div key={camp.id} className="flex items-center justify-between p-4 border rounded-lg hover:bg-muted/50 transition-colors">
-                       <div className="flex items-center gap-4">
-                          <div className={`h-10 w-10 rounded-full flex items-center justify-center ${camp.status === 'active' ? 'bg-green-500/20 text-green-500' : 'bg-muted text-muted-foreground'}`}>
-                            <Send className="h-5 w-5" />
-                          </div>
-                          <div>
-                            <h4 className="font-medium">{camp.name}</h4>
-                            <p className="text-xs text-muted-foreground">{camp.type} • Created by Sarah Smith</p>
-                          </div>
-                       </div>
-                       
-                       <div className="flex gap-8 text-sm">
-                          <div className="text-center">
-                            <div className="font-bold">{camp.sent.toLocaleString()}</div>
-                            <div className="text-xs text-muted-foreground">Sent</div>
-                          </div>
-                          <div className="text-center">
-                            <div className="font-bold text-green-500">{camp.read.toLocaleString()}</div>
-                            <div className="text-xs text-muted-foreground">Read</div>
-                          </div>
-                          <div className="text-center">
-                            <div className="font-bold text-blue-500">{((camp.read / camp.sent) * 100 || 0).toFixed(1)}%</div>
-                            <div className="text-xs text-muted-foreground">Conv. Rate</div>
-                          </div>
-                       </div>
-                       
-                       <div>
-                         <Badge variant={camp.status === 'active' ? 'default' : 'secondary'}>{camp.status}</Badge>
-                       </div>
+        {/* SETTINGS TAB (SaaS Admin) */}
+        <TabsContent value="settings" className="space-y-6 animate-in fade-in zoom-in-95 duration-300">
+           <div className="grid gap-6 md:grid-cols-2">
+             <div className="space-y-6">
+                <Card className="border-primary/10">
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <Building2 className="h-5 w-5 text-primary" />
+                      Platform White-Labeling
+                    </CardTitle>
+                    <CardDescription>Customize the branding for your sub-clients.</CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div className="space-y-2">
+                      <Label>Platform Name</Label>
+                      <Input defaultValue="Nexus Marketing" />
                     </div>
-                 ))}
-               </div>
-             </CardContent>
-          </Card>
+                    <div className="space-y-2">
+                      <Label>Custom Domain (CNAME)</Label>
+                      <div className="flex gap-2">
+                        <Input defaultValue="app.nexus-marketing.com" />
+                        <Button variant="outline">Verify</Button>
+                      </div>
+                    </div>
+                    <div className="flex items-center justify-between p-3 border rounded-lg">
+                       <div className="space-y-0.5">
+                         <Label>Show "Powered by"</Label>
+                         <p className="text-xs text-muted-foreground">Remove footer branding</p>
+                       </div>
+                       <Switch />
+                    </div>
+                  </CardContent>
+                </Card>
+
+                <Card className="border-primary/10">
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <CreditCard className="h-5 w-5 text-green-500" />
+                      Reseller Pricing & Billing
+                    </CardTitle>
+                    <CardDescription>Set your margins and billing rules.</CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                     <div className="grid grid-cols-2 gap-4">
+                       <div className="space-y-2">
+                         <Label>Cost per Message (Base)</Label>
+                         <Input disabled value="$0.005" className="bg-muted" />
+                       </div>
+                       <div className="space-y-2">
+                         <Label>Your Markup (%)</Label>
+                         <Input defaultValue="150" type="number" />
+                       </div>
+                     </div>
+                     <div className="p-3 bg-muted/30 rounded-lg text-sm">
+                       <div className="flex justify-between mb-1">
+                         <span>Final Client Price:</span>
+                         <span className="font-bold text-green-500">$0.0125 / msg</span>
+                       </div>
+                       <div className="flex justify-between">
+                         <span>Estimated Profit/10k:</span>
+                         <span className="font-bold text-green-500">$75.00</span>
+                       </div>
+                     </div>
+                  </CardContent>
+                </Card>
+             </div>
+
+             <div className="space-y-6">
+                <Card className="border-primary/10">
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <Shield className="h-5 w-5 text-purple-500" />
+                      API Distribution Controls
+                    </CardTitle>
+                    <CardDescription>Manage global API access policies.</CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div className="space-y-2">
+                      <Label>Default Rate Limit (RPM)</Label>
+                      <Select defaultValue="1000">
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                           <SelectItem value="100">100 req/min (Starter)</SelectItem>
+                           <SelectItem value="1000">1,000 req/min (Pro)</SelectItem>
+                           <SelectItem value="10000">10,000 req/min (Enterprise)</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Global Webhook Endpoint</Label>
+                      <Input defaultValue="https://api.nexus.com/v1/webhooks/router" />
+                    </div>
+                    
+                    <Separator />
+                    
+                    <div className="space-y-3">
+                      <div className="flex items-center justify-between">
+                        <Label>Allow Client API Keys</Label>
+                        <Switch defaultChecked />
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <Label>Require IP Whitelisting</Label>
+                        <Switch defaultChecked />
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <Label>Sandbox Mode Access</Label>
+                        <Switch defaultChecked />
+                      </div>
+                    </div>
+                  </CardContent>
+                  <CardFooter>
+                    <Button className="w-full bg-primary/10 hover:bg-primary/20 text-primary border border-primary/20">
+                      <RefreshCw className="mr-2 h-4 w-4" /> Sync Policies
+                    </Button>
+                  </CardFooter>
+                </Card>
+             </div>
+           </div>
         </TabsContent>
       </Tabs>
     </div>
