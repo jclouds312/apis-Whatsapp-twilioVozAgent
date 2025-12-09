@@ -2,6 +2,7 @@ import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
 import { serveStatic } from "./static";
 import { createServer } from "http";
+import cors from "cors";
 
 const app = express();
 const httpServer = createServer(app);
@@ -11,6 +12,14 @@ declare module "http" {
     rawBody: unknown;
   }
 }
+
+// Enable CORS for all routes
+app.use(cors({
+  origin: process.env.NODE_ENV === "production" 
+    ? process.env.FRONTEND_URL 
+    : ["http://localhost:5000", "http://0.0.0.0:5000"],
+  credentials: true
+}));
 
 app.use(
   express.json({

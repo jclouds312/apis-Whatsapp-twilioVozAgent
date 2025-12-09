@@ -2,6 +2,7 @@
 import { Client, LocalAuth } from 'whatsapp-web.js';
 import qrcode from 'qrcode';
 import { EventEmitter } from 'events';
+import { logger } from './logger';
 
 class WhatsAppBotService extends EventEmitter {
   private client: Client | null = null;
@@ -37,33 +38,33 @@ class WhatsAppBotService extends EventEmitter {
     });
 
     this.client.on('qr', async (qr) => {
-      console.log('QR Code received');
+      logger.info('QR Code received', 'whatsapp-bot');
       this.qrCode = await qrcode.toDataURL(qr);
       this.connectionStatus = 'qr_ready';
       this.emit('qr', this.qrCode);
     });
 
     this.client.on('ready', () => {
-      console.log('WhatsApp Bot is ready!');
+      logger.info('WhatsApp Bot is ready!', 'whatsapp-bot');
       this.isReady = true;
       this.connectionStatus = 'connected';
       this.emit('ready');
     });
 
     this.client.on('authenticated', () => {
-      console.log('WhatsApp Bot authenticated');
+      logger.info('WhatsApp Bot authenticated', 'whatsapp-bot');
       this.connectionStatus = 'authenticated';
       this.emit('authenticated');
     });
 
     this.client.on('auth_failure', (msg) => {
-      console.error('WhatsApp authentication failed:', msg);
+      logger.error('WhatsApp authentication failed', 'whatsapp-bot', msg);
       this.connectionStatus = 'auth_failed';
       this.emit('auth_failure', msg);
     });
 
     this.client.on('disconnected', (reason) => {
-      console.log('WhatsApp Bot disconnected:', reason);
+      logger.info('WhatsApp Bot disconnected', 'whatsapp-bot', reason);
       this.isReady = false;
       this.connectionStatus = 'disconnected';
       this.emit('disconnected', reason);

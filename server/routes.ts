@@ -8,6 +8,18 @@ export async function registerRoutes(
   httpServer: Server,
   app: Express
 ): Promise<Server> {
+  
+  // Health check endpoint
+  app.get("/api/health", (_req, res) => {
+    res.json({ 
+      status: "healthy", 
+      timestamp: new Date().toISOString(),
+      services: {
+        whatsappBot: whatsAppBot.getStatus(),
+        whatsappBusiness: whatsAppBusinessAPI.isConfigured()
+      }
+    });
+  });
   // WhatsApp Bot Routes
   app.post("/api/whatsapp/connect", async (_req, res) => {
     try {
@@ -152,6 +164,37 @@ export async function registerRoutes(
       console.error('Webhook error:', error);
       res.status(500).json({ success: false, error: error.message });
     }
+  });
+
+  // Configuration endpoint
+  app.get("/api/config", (_req, res) => {
+    res.json({
+      services: {
+        whatsapp: {
+          bot: whatsAppBot.getStatus(),
+          business: {
+            configured: whatsAppBusinessAPI.isConfigured(),
+            apiVersion: 'v21.0'
+          }
+        },
+        twilio: {
+          configured: !!(process.env.TWILIO_ACCOUNT_SID && process.env.TWILIO_AUTH_TOKEN)
+        },
+        facebook: {
+          configured: !!(process.env.FACEBOOK_APP_ID && process.env.FACEBOOK_APP_SECRET)
+        }
+      }
+    });
+  });
+
+  // Generic error handler for API routes
+  app.use('/api/*', (err: any, _req: any, res: any, _next: any) => {
+    console.error('API Error:', err);
+    res.status(err.status || 500).json({
+      success: false,
+      error: err.message || 'Internal server error',
+      ...(process.env.NODE_ENV === 'development' && { stack: err.stack })
+    });
   });
 
   return httpServer;

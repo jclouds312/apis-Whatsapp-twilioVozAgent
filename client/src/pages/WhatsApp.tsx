@@ -459,8 +459,11 @@ export default function WhatsApp() {
                     <CardTitle className="flex items-center justify-between">
                         Bot Connection
                         <Badge variant={botStatus === 'connected' ? 'default' : 'secondary'} 
-                               className={botStatus === 'connected' ? 'bg-green-500' : ''}>
-                            {botStatus}
+                               className={botStatus === 'connected' ? 'bg-green-500/20 text-green-500 hover:bg-green-500/30' : ''}>
+                            {botStatus === 'disconnected' ? 'Disconnected' :
+                             botStatus === 'qr_ready' ? 'Awaiting QR Scan' :
+                             botStatus === 'authenticated' ? 'Authenticated' :
+                             botStatus === 'connected' ? 'Connected' : botStatus}
                         </Badge>
                     </CardTitle>
                     <CardDescription>Connect your WhatsApp account via QR code</CardDescription>

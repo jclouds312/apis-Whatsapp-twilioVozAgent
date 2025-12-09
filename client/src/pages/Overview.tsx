@@ -45,6 +45,15 @@ export default function OverviewPage() {
     facebook: true,
     crm: true,
   });
+  const [apiConfig, setApiConfig] = useState<any>(null);
+
+  useEffect(() => {
+    // Fetch API configuration status
+    fetch('/api/config')
+      .then(res => res.json())
+      .then(data => setApiConfig(data))
+      .catch(err => console.error('Error fetching config:', err));
+  }, []);
   const [systemHealth, setSystemHealth] = useState({
     database: 98,
     gateway: 100,
