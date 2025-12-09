@@ -41,14 +41,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-
-// Mock Data
-const clients = [
-  { id: 1, name: "Acme Corp", plan: "Enterprise", status: "active", credits: 50000, phone: "+1 555-0100", managers: 3 },
-  { id: 2, name: "Global Marketing Ltd", plan: "Pro", status: "active", credits: 12400, phone: "+1 555-0101", managers: 1 },
-  { id: 3, name: "TechStart Inc", plan: "Starter", status: "warning", credits: 150, phone: "+1 555-0102", managers: 1 },
-  { id: 4, name: "Local Shop", plan: "Starter", status: "inactive", credits: 0, phone: "+1 555-0103", managers: 0 },
-];
+import { useClients, useCampaigns, useContacts, useConversations } from "@/hooks/useWhatsAppData";
 
 const teamMembers = [
   { id: 1, name: "John Doe", role: "Admin", email: "john@nexus.com", status: "active", clients: ["All"] },
@@ -56,21 +49,14 @@ const teamMembers = [
   { id: 3, name: "Mike Johnson", role: "Agent", email: "mike@nexus.com", status: "offline", clients: ["Global Marketing"] },
 ];
 
-const campaigns = [
-  { id: 1, name: "Black Friday Sale", status: "active", sent: 12500, delivered: 12450, read: 9800, type: "Marketing" },
-  { id: 2, name: "Welcome Series", status: "paused", sent: 3400, delivered: 3390, read: 2800, type: "Utility" },
-  { id: 3, name: "Service Update", status: "scheduled", sent: 0, delivered: 0, read: 0, type: "Utility" },
-];
-
-const conversations = [
-  { id: 1, name: "Alice Freeman", phone: "+1 555-0123", lastMsg: "Interested in the Enterprise plan", time: "10:42 AM", unread: 2, status: "open", agent: "Bot" },
-  { id: 2, name: "Bob Smith", phone: "+1 555-0124", lastMsg: "Thanks for the help!", time: "Yesterday", unread: 0, status: "resolved", agent: "John D." },
-  { id: 3, name: "Carol White", phone: "+1 555-0125", lastMsg: "When is the next webinar?", time: "Mon", unread: 1, status: "open", agent: "Sarah M." },
-];
-
 export default function WhatsAppPage() {
-  const [selectedClient, setSelectedClient] = useState(clients[0].id.toString());
+  const [selectedClient, setSelectedClient] = useState<string>("all");
   const [activeTab, setActiveTab] = useState("dashboard");
+  
+  const { data: clients = [], isLoading: loadingClients } = useClients();
+  const { data: campaigns = [], isLoading: loadingCampaigns } = useCampaigns(selectedClient !== "all" ? selectedClient : undefined);
+  const { data: contacts = [] } = useContacts(selectedClient !== "all" ? selectedClient : undefined);
+  const { data: conversations = [] } = useConversations(selectedClient !== "all" ? selectedClient : undefined);
 
   return (
     <div className="space-y-6">
@@ -98,7 +84,7 @@ export default function WhatsAppPage() {
                 <SelectItem value="all">Global Admin View</SelectItem>
                 <DropdownMenuSeparator />
                 {clients.map(client => (
-                  <SelectItem key={client.id} value={client.id.toString()}>
+                  <SelectItem key={client.id} value={client.id}>
                     {client.name}
                   </SelectItem>
                 ))}
@@ -295,53 +281,59 @@ export default function WhatsAppPage() {
                 <div className="col-span-2 text-right">Actions</div>
               </div>
               <div className="max-h-[600px] overflow-auto">
-                {clients.map((client) => (
-                  <div key={client.id} className="grid grid-cols-12 gap-4 p-4 text-sm items-center hover:bg-muted/10 transition-colors border-b border-primary/5 last:border-0">
-                    <div className="col-span-3 font-medium flex items-center gap-3">
-                      <div className="h-8 w-8 rounded-lg bg-primary/10 flex items-center justify-center text-primary font-bold">
-                        {client.name.substring(0,2).toUpperCase()}
+                {loadingClients ? (
+                  <div className="p-8 text-center text-muted-foreground">Loading clients...</div>
+                ) : clients.length === 0 ? (
+                  <div className="p-8 text-center text-muted-foreground">No clients yet. Create your first client above.</div>
+                ) : (
+                  clients.map((client) => (
+                    <div key={client.id} className="grid grid-cols-12 gap-4 p-4 text-sm items-center hover:bg-muted/10 transition-colors border-b border-primary/5 last:border-0">
+                      <div className="col-span-3 font-medium flex items-center gap-3">
+                        <div className="h-8 w-8 rounded-lg bg-primary/10 flex items-center justify-center text-primary font-bold">
+                          {client.name.substring(0,2).toUpperCase()}
+                        </div>
+                        <div>
+                          {client.name}
+                          <div className="text-xs text-muted-foreground">Active</div>
+                        </div>
                       </div>
-                      <div>
-                        {client.name}
-                        <div className="text-xs text-muted-foreground">{client.managers} users</div>
+                      <div className="col-span-2">
+                        <Badge variant="outline" className="font-normal capitalize">{client.plan || 'starter'}</Badge>
+                      </div>
+                      <div className="col-span-2 text-muted-foreground font-mono text-xs">
+                        {client.phoneNumber || 'Not set'}
+                      </div>
+                      <div className="col-span-2">
+                         <span className={parseInt(client.credits || '0') < 500 ? "text-red-500 font-bold" : ""}>
+                           {parseInt(client.credits || '0').toLocaleString()}
+                         </span>
+                      </div>
+                      <div className="col-span-1">
+                        <Badge 
+                          variant={client.status === 'active' ? 'default' : client.status === 'inactive' ? 'secondary' : 'destructive'} 
+                          className="text-[10px]"
+                        >
+                          {client.status}
+                        </Badge>
+                      </div>
+                      <div className="col-span-2 text-right flex justify-end gap-2">
+                        <Button variant="ghost" size="icon" className="h-8 w-8"><Settings className="h-4 w-4" /></Button>
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" size="icon" className="h-8 w-8"><MoreVertical className="h-4 w-4" /></Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                            <DropdownMenuItem><UserPlus className="mr-2 h-4 w-4" /> Add User</DropdownMenuItem>
+                            <DropdownMenuItem><CreditCard className="mr-2 h-4 w-4" /> Add Credits</DropdownMenuItem>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem className="text-red-500"><LogOut className="mr-2 h-4 w-4" /> Suspend</DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
                       </div>
                     </div>
-                    <div className="col-span-2">
-                      <Badge variant="outline" className="font-normal">{client.plan}</Badge>
-                    </div>
-                    <div className="col-span-2 text-muted-foreground font-mono text-xs">
-                      {client.phone}
-                    </div>
-                    <div className="col-span-2">
-                       <span className={client.credits < 500 ? "text-red-500 font-bold" : ""}>
-                         {client.credits.toLocaleString()}
-                       </span>
-                    </div>
-                    <div className="col-span-1">
-                      <Badge 
-                        variant={client.status === 'active' ? 'default' : client.status === 'inactive' ? 'secondary' : 'destructive'} 
-                        className="text-[10px]"
-                      >
-                        {client.status}
-                      </Badge>
-                    </div>
-                    <div className="col-span-2 text-right flex justify-end gap-2">
-                      <Button variant="ghost" size="icon" className="h-8 w-8"><Settings className="h-4 w-4" /></Button>
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" size="icon" className="h-8 w-8"><MoreVertical className="h-4 w-4" /></Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                          <DropdownMenuItem><UserPlus className="mr-2 h-4 w-4" /> Add User</DropdownMenuItem>
-                          <DropdownMenuItem><CreditCard className="mr-2 h-4 w-4" /> Add Credits</DropdownMenuItem>
-                          <DropdownMenuSeparator />
-                          <DropdownMenuItem className="text-red-500"><LogOut className="mr-2 h-4 w-4" /> Suspend</DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    </div>
-                  </div>
-                ))}
+                  ))
+                )}
               </div>
             </div>
           </Card>
