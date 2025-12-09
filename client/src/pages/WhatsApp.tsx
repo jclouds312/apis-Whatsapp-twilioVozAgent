@@ -1146,18 +1146,36 @@ export default function WhatsAppPage() {
                 onChange={(e) => setNewConnection({ ...newConnection, displayName: e.target.value })}
               />
             </div>
-            <div className="p-4 bg-blue-500/10 border border-blue-500/20 rounded-lg">
-              <h4 className="font-semibold text-sm mb-2 flex items-center gap-2">
-                <QrCode className="h-4 w-4" />
-                Pasos para obtener credenciales:
-              </h4>
-              <ol className="text-xs space-y-1 list-decimal list-inside text-muted-foreground">
-                <li>Ve a business.facebook.com</li>
-                <li>Selecciona tu cuenta de WhatsApp Business</li>
-                <li>Ve a Configuración → WhatsApp Business API</li>
-                <li>Copia el Phone Number ID y Business Account ID</li>
-                <li>Genera un Access Token permanente en System Users</li>
-              </ol>
+            <div className="space-y-3">
+              <div className="p-4 bg-blue-500/10 border border-blue-500/20 rounded-lg">
+                <h4 className="font-semibold text-sm mb-2 flex items-center gap-2">
+                  <QrCode className="h-4 w-4" />
+                  Pasos para obtener credenciales:
+                </h4>
+                <ol className="text-xs space-y-1 list-decimal list-inside text-muted-foreground">
+                  <li>Ve a business.facebook.com</li>
+                  <li>Selecciona tu cuenta de WhatsApp Business</li>
+                  <li>Ve a Configuración → WhatsApp Business API</li>
+                  <li>Copia el Phone Number ID y Business Account ID</li>
+                  <li>Genera un Access Token permanente en System Users</li>
+                </ol>
+              </div>
+              
+              <div className="p-4 bg-green-500/10 border border-green-500/20 rounded-lg">
+                <h4 className="font-semibold text-sm mb-2 flex items-center gap-2">
+                  <CheckCircle2 className="h-4 w-4" />
+                  Compatibilidad con WhatsApp Business App:
+                </h4>
+                <p className="text-xs text-muted-foreground mb-2">
+                  ✅ Puedes usar el MISMO número en esta plataforma Y en la app WhatsApp Business simultáneamente.
+                </p>
+                <ul className="text-xs space-y-1 list-disc list-inside text-muted-foreground">
+                  <li>Los mensajes se sincronizan automáticamente</li>
+                  <li>Puedes responder desde cualquiera de las dos plataformas</li>
+                  <li>Las conversaciones se mantienen actualizadas en ambos lados</li>
+                  <li>Los webhooks capturan todos los mensajes (enviados/recibidos)</li>
+                </ul>
+              </div>
             </div>
           </div>
           <DialogFooter>

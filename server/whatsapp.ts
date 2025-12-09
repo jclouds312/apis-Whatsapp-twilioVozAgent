@@ -159,7 +159,7 @@ export class WhatsAppService {
       
       if (!value) return null;
 
-      // Handle incoming messages
+      // Handle incoming messages (tanto de clientes como mensajes enviados desde WhatsApp Business App)
       if (value.messages && value.messages.length > 0) {
         const message = value.messages[0];
         return {
@@ -170,11 +170,12 @@ export class WhatsAppService {
           messageType: message.type,
           text: message.text?.body,
           mediaUrl: message.image?.link || message.video?.link || message.document?.link,
-          contacts: value.contacts?.[0]
+          contacts: value.contacts?.[0],
+          context: message.context // Para respuestas a mensajes
         };
       }
 
-      // Handle status updates
+      // Handle status updates (incluye mensajes enviados desde la app)
       if (value.statuses && value.statuses.length > 0) {
         const status = value.statuses[0];
         return {
@@ -182,7 +183,9 @@ export class WhatsAppService {
           messageId: status.id,
           status: status.status, // sent, delivered, read, failed
           timestamp: status.timestamp,
-          recipientId: status.recipient_id
+          recipientId: status.recipient_id,
+          conversation: status.conversation,
+          pricing: status.pricing // Información de costos
         };
       }
 

@@ -347,17 +347,24 @@ export async function registerRoutes(
         // Find the connection by phone number
         const allClients = await storage.getAllClients();
         let targetClientId: string | null = null;
+        let isOutboundFromApp = false;
         
+        // Verificar si el mensaje fue enviado desde WhatsApp Business App
         for (const client of allClients) {
           const connections = await storage.getWhatsAppConnectionsByClient(client.id);
-          if (connections.some(c => c.phoneNumberId === webhookData.from)) {
+          const matchingConnection = connections.find(c => c.phoneNumberId === webhookData.from);
+          
+          if (matchingConnection) {
+            // Mensaje enviado DESDE la app (outbound)
             targetClientId = client.id;
+            isOutboundFromApp = true;
             break;
           }
         }
         
         if (!targetClientId) {
-          console.log("No client found for incoming message");
+          // Mensaje recibido (inbound normal)
+          console.log("Incoming message from customer");
           return res.sendStatus(200);
         }
 
