@@ -515,6 +515,213 @@ export async function registerRoutes(
     }
   });
 
+  // ==================== PHONE NUMBERS MANAGEMENT ====================
+  
+  app.get("/api/clients/:clientId/phone-numbers", async (req, res) => {
+    try {
+      const phoneNums = await storage.getPhoneNumbersByClient(req.params.clientId);
+      res.json(phoneNums);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.post("/api/phone-numbers", async (req, res) => {
+    try {
+      const newPhoneNumber = await storage.createPhoneNumber(req.body);
+      res.status(201).json(newPhoneNumber);
+    } catch (error: any) {
+      res.status(400).json({ error: error.message });
+    }
+  });
+
+  app.patch("/api/phone-numbers/:id", async (req, res) => {
+    try {
+      const updated = await storage.updatePhoneNumber(req.params.id, req.body);
+      res.json(updated);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // ==================== SMS MESSAGES ====================
+  
+  app.get("/api/clients/:clientId/sms", async (req, res) => {
+    try {
+      const messages = await storage.getSmsMessagesByClient(req.params.clientId);
+      res.json(messages);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.post("/api/sms/send", async (req, res) => {
+    try {
+      const { clientId, phoneNumberId, toNumber, content } = req.body;
+      
+      // Aquí integrarías con Twilio/otro proveedor
+      const smsRecord = await storage.createSmsMessage({
+        clientId,
+        phoneNumberId,
+        fromNumber: req.body.fromNumber,
+        toNumber,
+        content,
+        direction: "outbound",
+        status: "sent",
+        messageType: "sms"
+      });
+      
+      res.status(201).json(smsRecord);
+    } catch (error: any) {
+      res.status(400).json({ error: error.message });
+    }
+  });
+
+  // ==================== OTP VERIFICATION ====================
+  
+  app.post("/api/otp/send", async (req, res) => {
+    try {
+      const { clientId, phoneNumber, purpose } = req.body;
+      
+      // Generar código OTP
+      const code = Math.floor(100000 + Math.random() * 900000).toString();
+      const expiresAt = new Date(Date.now() + 10 * 60 * 1000); // 10 minutos
+      
+      const otpRecord = await storage.createOtpVerification({
+        clientId,
+        phoneNumber,
+        code,
+        purpose,
+        status: "pending",
+        expiresAt,
+        attempts: "0"
+      });
+      
+      // Enviar SMS con el código (integración con Twilio/WhatsApp)
+      await storage.createSmsMessage({
+        clientId,
+        phoneNumberId: req.body.phoneNumberId,
+        fromNumber: req.body.fromNumber,
+        toNumber: phoneNumber,
+        content: `Tu código de verificación es: ${code}`,
+        direction: "outbound",
+        status: "sent",
+        messageType: "otp"
+      });
+      
+      res.status(201).json({ success: true, id: otpRecord.id });
+    } catch (error: any) {
+      res.status(400).json({ error: error.message });
+    }
+  });
+
+  app.post("/api/otp/verify", async (req, res) => {
+    try {
+      const { phoneNumber, code } = req.body;
+      const verified = await storage.verifyOtp(phoneNumber, code);
+      
+      if (verified) {
+        res.json({ success: true, verified: true });
+      } else {
+        res.status(400).json({ success: false, error: "Invalid or expired code" });
+      }
+    } catch (error: any) {
+      res.status(400).json({ error: error.message });
+    }
+  });
+
+  // ==================== SALES ITINERARIES ====================
+  
+  app.get("/api/clients/:clientId/itineraries", async (req, res) => {
+    try {
+      const itineraries = await storage.getSalesItinerariesByClient(req.params.clientId);
+      res.json(itineraries);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.get("/api/users/:userId/itineraries", async (req, res) => {
+    try {
+      const itineraries = await storage.getSalesItinerariesByUser(req.params.userId);
+      res.json(itineraries);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.post("/api/itineraries", async (req, res) => {
+    try {
+      const newItinerary = await storage.createSalesItinerary(req.body);
+      res.status(201).json(newItinerary);
+    } catch (error: any) {
+      res.status(400).json({ error: error.message });
+    }
+  });
+
+  app.patch("/api/itineraries/:id", async (req, res) => {
+    try {
+      const updated = await storage.updateSalesItinerary(req.params.id, req.body);
+      res.json(updated);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // ==================== USER ROLES & PERMISSIONS ====================
+  
+  app.get("/api/clients/:clientId/roles", async (req, res) => {
+    try {
+      const roles = await storage.getUserRolesByClient(req.params.clientId);
+      res.json(roles);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.post("/api/roles", async (req, res) => {
+    try {
+      const newRole = await storage.createUserRole(req.body);
+      res.status(201).json(newRole);
+    } catch (error: any) {
+      res.status(400).json({ error: error.message });
+    }
+  });
+
+  app.patch("/api/roles/:id", async (req, res) => {
+    try {
+      const updated = await storage.updateUserRole(req.params.id, req.body);
+      res.json(updated);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // ==================== CONVERSATION HISTORY SYNC ====================
+  
+  app.get("/api/phone-numbers/:phoneNumberId/history", async (req, res) => {
+    try {
+      const history = await storage.getConversationHistory(req.params.phoneNumberId);
+      res.json(history);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.post("/api/phone-numbers/:phoneNumberId/sync", async (req, res) => {
+    try {
+      // Aquí implementarías la lógica de sincronización con WhatsApp Business API
+      const synced = await storage.syncConversationHistory({
+        phoneNumberId: req.params.phoneNumberId,
+        ...req.body,
+        lastSyncAt: new Date()
+      });
+      res.status(201).json(synced);
+    } catch (error: any) {
+      res.status(400).json({ error: error.message });
+    }
+  });
+
   // ==================== LAUNCH CAMPAIGN ====================
   
   app.post("/api/campaigns/:id/launch", async (req, res) => {

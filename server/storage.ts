@@ -7,7 +7,8 @@ import {
   type Conversation, type InsertConversation,
   type Message, type InsertMessage,
   type TeamAssignment, type InsertTeamAssignment,
-  users, clients, whatsappConnections, contacts, campaigns, conversations, messages, teamAssignments
+  users, clients, whatsappConnections, contacts, campaigns, conversations, messages, teamAssignments,
+  phoneNumbers, smsMessages, otpVerifications, salesItineraries, userRoles, conversationHistory
 } from "@shared/schema";
 import { drizzle } from "drizzle-orm/node-postgres";
 import pkg from "pg";
@@ -253,6 +254,104 @@ export class PostgresStorage implements IStorage {
   async deleteTeamAssignment(id: string): Promise<boolean> {
     const result = await db.delete(teamAssignments).where(eq(teamAssignments.id, id)).returning();
     return result.length > 0;
+  }
+
+  // ===== PHONE NUMBERS =====
+  async getPhoneNumbersByClient(clientId: string): Promise<any[]> {
+    return await db.select().from(phoneNumbers).where(eq(phoneNumbers.clientId, clientId));
+  }
+
+  async createPhoneNumber(phoneNumber: any): Promise<any> {
+    const result = await db.insert(phoneNumbers).values(phoneNumber).returning();
+    return result[0];
+  }
+
+  async updatePhoneNumber(id: string, updates: any): Promise<any> {
+    const result = await db.update(phoneNumbers).set(updates).where(eq(phoneNumbers.id, id)).returning();
+    return result[0];
+  }
+
+  // ===== SMS MESSAGES =====
+  async getSmsMessagesByClient(clientId: string): Promise<any[]> {
+    return await db.select().from(smsMessages).where(eq(smsMessages.clientId, clientId)).orderBy(desc(smsMessages.createdAt));
+  }
+
+  async createSmsMessage(message: any): Promise<any> {
+    const result = await db.insert(smsMessages).values(message).returning();
+    return result[0];
+  }
+
+  // ===== OTP VERIFICATIONS =====
+  async createOtpVerification(otp: any): Promise<any> {
+    const result = await db.insert(otpVerifications).values(otp).returning();
+    return result[0];
+  }
+
+  async verifyOtp(phoneNumber: string, code: string): Promise<any> {
+    const result = await db.select().from(otpVerifications)
+      .where(and(
+        eq(otpVerifications.phoneNumber, phoneNumber),
+        eq(otpVerifications.code, code),
+        eq(otpVerifications.status, "pending")
+      ))
+      .limit(1);
+    
+    if (result[0] && new Date(result[0].expiresAt) > new Date()) {
+      await db.update(otpVerifications)
+        .set({ status: "verified", verifiedAt: new Date() })
+        .where(eq(otpVerifications.id, result[0].id));
+      return result[0];
+    }
+    return null;
+  }
+
+  // ===== SALES ITINERARIES =====
+  async getSalesItinerariesByUser(userId: string): Promise<any[]> {
+    return await db.select().from(salesItineraries)
+      .where(eq(salesItineraries.assignedTo, userId))
+      .orderBy(salesItineraries.scheduledAt);
+  }
+
+  async getSalesItinerariesByClient(clientId: string): Promise<any[]> {
+    return await db.select().from(salesItineraries)
+      .where(eq(salesItineraries.clientId, clientId))
+      .orderBy(desc(salesItineraries.scheduledAt));
+  }
+
+  async createSalesItinerary(itinerary: any): Promise<any> {
+    const result = await db.insert(salesItineraries).values(itinerary).returning();
+    return result[0];
+  }
+
+  async updateSalesItinerary(id: string, updates: any): Promise<any> {
+    const result = await db.update(salesItineraries).set(updates).where(eq(salesItineraries.id, id)).returning();
+    return result[0];
+  }
+
+  // ===== USER ROLES =====
+  async getUserRolesByClient(clientId: string): Promise<any[]> {
+    return await db.select().from(userRoles).where(eq(userRoles.clientId, clientId));
+  }
+
+  async createUserRole(role: any): Promise<any> {
+    const result = await db.insert(userRoles).values(role).returning();
+    return result[0];
+  }
+
+  async updateUserRole(id: string, updates: any): Promise<any> {
+    const result = await db.update(userRoles).set(updates).where(eq(userRoles.id, id)).returning();
+    return result[0];
+  }
+
+  // ===== CONVERSATION HISTORY =====
+  async getConversationHistory(phoneNumberId: string): Promise<any[]> {
+    return await db.select().from(conversationHistory)
+      .where(eq(conversationHistory.phoneNumberId, phoneNumberId));
+  }
+
+  async syncConversationHistory(data: any): Promise<any> {
+    const result = await db.insert(conversationHistory).values(data).returning();
+    return result[0];
   }
 }
 

@@ -394,3 +394,150 @@ export const insertTeamAssignmentSchema = createInsertSchema(teamAssignments).om
 
 export type InsertTeamAssignment = z.infer<typeof insertTeamAssignmentSchema>;
 export type TeamAssignment = typeof teamAssignments.$inferSelect;
+
+
+
+// ============= PHONE NUMBERS (Números telefónicos administrados) =============
+export const phoneNumbers = pgTable("phone_numbers", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  clientId: varchar("client_id").notNull(),
+  phoneNumber: text("phone_number").notNull().unique(),
+  provider: text("provider").default("whatsapp"), // whatsapp, twilio, evolution
+  displayName: text("display_name"),
+  status: text("status").default("active"), // active, inactive, pending
+  capabilities: jsonb("capabilities").default(["sms", "voice", "whatsapp"]),
+  connectionType: text("connection_type").default("api"), // api, qr_code, direct
+  qrCodeUrl: text("qr_code_url"), // For QR-based connections
+  credentials: jsonb("credentials").default({}), // Encrypted credentials
+  metadata: jsonb("metadata").default({}),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const insertPhoneNumberSchema = createInsertSchema(phoneNumbers).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export type InsertPhoneNumber = z.infer<typeof insertPhoneNumberSchema>;
+export type PhoneNumber = typeof phoneNumbers.$inferSelect;
+
+// ============= SMS MESSAGES =============
+export const smsMessages = pgTable("sms_messages", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  clientId: varchar("client_id").notNull(),
+  phoneNumberId: varchar("phone_number_id").notNull(),
+  fromNumber: text("from_number").notNull(),
+  toNumber: text("to_number").notNull(),
+  content: text("content").notNull(),
+  direction: text("direction").notNull(), // inbound, outbound
+  status: text("status").default("pending"), // pending, sent, delivered, failed
+  messageType: text("message_type").default("sms"), // sms, otp
+  externalId: text("external_id"),
+  errorMessage: text("error_message"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const insertSmsMessageSchema = createInsertSchema(smsMessages).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export type InsertSmsMessage = z.infer<typeof insertSmsMessageSchema>;
+export type SmsMessage = typeof smsMessages.$inferSelect;
+
+// ============= OTP VERIFICATIONS =============
+export const otpVerifications = pgTable("otp_verifications", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  clientId: varchar("client_id").notNull(),
+  phoneNumber: text("phone_number").notNull(),
+  code: text("code").notNull(),
+  purpose: text("purpose").default("login"), // login, registration, verification
+  status: text("status").default("pending"), // pending, verified, expired, failed
+  expiresAt: timestamp("expires_at").notNull(),
+  verifiedAt: timestamp("verified_at"),
+  attempts: text("attempts").default("0"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const insertOtpVerificationSchema = createInsertSchema(otpVerifications).omit({
+  id: true,
+  createdAt: true,
+});
+
+export type InsertOtpVerification = z.infer<typeof insertOtpVerificationSchema>;
+export type OtpVerification = typeof otpVerifications.$inferSelect;
+
+// ============= SALES ITINERARIES =============
+export const salesItineraries = pgTable("sales_itineraries", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  clientId: varchar("client_id").notNull(),
+  assignedTo: varchar("assigned_to").notNull(), // User ID
+  title: text("title").notNull(),
+  description: text("description"),
+  contactId: varchar("contact_id"),
+  scheduledAt: timestamp("scheduled_at").notNull(),
+  completedAt: timestamp("completed_at"),
+  status: text("status").default("scheduled"), // scheduled, in_progress, completed, cancelled
+  notes: text("notes"),
+  outcome: text("outcome"), // successful, no_answer, rescheduled, etc.
+  metadata: jsonb("metadata").default({}),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const insertSalesItinerarySchema = createInsertSchema(salesItineraries).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export type InsertSalesItinerary = z.infer<typeof insertSalesItinerarySchema>;
+export type SalesItinerary = typeof salesItineraries.$inferSelect;
+
+// ============= USER ROLES & PERMISSIONS =============
+export const userRoles = pgTable("user_roles", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull(),
+  clientId: varchar("client_id").notNull(),
+  role: text("role").notNull(), // admin, manager, sales_agent, support_agent, viewer
+  permissions: jsonb("permissions").default([]), // Array of permission strings
+  departments: jsonb("departments").default([]), // sales, support, marketing
+  canAccessAllContacts: boolean("can_access_all_contacts").default(false),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const insertUserRoleSchema = createInsertSchema(userRoles).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export type InsertUserRole = z.infer<typeof insertUserRoleSchema>;
+export type UserRole = typeof userRoles.$inferSelect;
+
+// ============= CONVERSATION HISTORY (Para sincronización) =============
+export const conversationHistory = pgTable("conversation_history", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  phoneNumberId: varchar("phone_number_id").notNull(),
+  contactPhone: text("contact_phone").notNull(),
+  lastSyncAt: timestamp("last_sync_at"),
+  messageCount: text("message_count").default("0"),
+  firstMessageAt: timestamp("first_message_at"),
+  metadata: jsonb("metadata").default({}),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const insertConversationHistorySchema = createInsertSchema(conversationHistory).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export type InsertConversationHistory = z.infer<typeof insertConversationHistorySchema>;
+export type ConversationHistory = typeof conversationHistory.$inferSelect;
