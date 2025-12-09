@@ -1,6 +1,7 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
+import { whatsappService } from "./whatsapp";
 import { 
   insertClientSchema, insertContactSchema, insertCampaignSchema,
   insertWhatsAppConnectionSchema, insertConversationSchema, insertMessageSchema, insertTeamAssignmentSchema
@@ -336,22 +337,91 @@ export async function registerRoutes(
   // Webhook receiver (POST)
   app.post("/api/whatsapp/webhook", async (req, res) => {
     try {
-      const { entry } = req.body;
+      const webhookData = whatsappService.parseWebhookMessage(req.body);
       
-      if (entry && entry[0]?.changes) {
-        for (const change of entry[0].changes) {
-          if (change.value?.messages) {
-            for (const message of change.value.messages) {
-              // TODO: Process incoming WhatsApp message
-              // Save to database, create conversation, notify agents
-              console.log("Incoming message:", message);
-            }
+      if (!webhookData) {
+        return res.sendStatus(200);
+      }
+
+      if (webhookData.type === "message") {
+        // Find the connection by phone number
+        const allClients = await storage.getAllClients();
+        let targetClientId: string | null = null;
+        
+        for (const client of allClients) {
+          const connections = await storage.getWhatsAppConnectionsByClient(client.id);
+          if (connections.some(c => c.phoneNumberId === webhookData.from)) {
+            targetClientId = client.id;
+            break;
           }
-          
-          if (change.value?.statuses) {
-            for (const status of change.value.statuses) {
-              // TODO: Update message status (delivered, read, etc.)
-              console.log("Status update:", status);
+        }
+        
+        if (!targetClientId) {
+          console.log("No client found for incoming message");
+          return res.sendStatus(200);
+        }
+
+        // Find or create contact
+        let contacts = await storage.getContactsByClient(targetClientId);
+        let contact = contacts.find(c => c.phoneNumber === webhookData.from);
+        
+        if (!contact) {
+          contact = await storage.createContact({
+            clientId: targetClientId,
+            phoneNumber: webhookData.from,
+            name: webhookData.contacts?.name || "Unknown",
+            isOptedIn: true
+          });
+        }
+
+        // Find or create conversation
+        const conversations = await storage.getConversationsByClient(targetClientId);
+        let conversation = conversations.find(c => c.contactId === contact!.id);
+        
+        if (!conversation) {
+          conversation = await storage.createConversation({
+            clientId: targetClientId,
+            contactId: contact.id,
+            status: "open"
+          });
+        }
+
+        // Save the message
+        await storage.createMessage({
+          conversationId: conversation.id,
+          clientId: targetClientId,
+          direction: "inbound",
+          whatsappMessageId: webhookData.messageId,
+          fromNumber: webhookData.from,
+          toNumber: "", // Business number
+          messageType: webhookData.messageType,
+          content: webhookData.text || "",
+          mediaUrl: webhookData.mediaUrl,
+          status: "delivered"
+        });
+
+        // Update conversation
+        await storage.updateConversation(conversation.id, {
+          lastMessageAt: new Date(),
+          unreadCount: (parseInt(conversation.unreadCount || "0") + 1).toString()
+        });
+      }
+
+      if (webhookData.type === "status") {
+        // Update message status
+        const allClients = await storage.getAllClients();
+        
+        for (const client of allClients) {
+          const conversations = await storage.getConversationsByClient(client.id);
+          for (const conv of conversations) {
+            const messages = await storage.getMessagesByConversation(conv.id);
+            const message = messages.find(m => m.whatsappMessageId === webhookData.messageId);
+            
+            if (message) {
+              await storage.updateMessage(message.id, {
+                status: webhookData.status
+              });
+              break;
             }
           }
         }
@@ -368,7 +438,7 @@ export async function registerRoutes(
   
   app.post("/api/whatsapp/send-message", async (req, res) => {
     try {
-      const { clientId, to, message, type = "text", connectionId } = req.body;
+      const { clientId, to, message, type = "text", connectionId, mediaUrl } = req.body;
       
       // Get WhatsApp connection - use specific one if provided, otherwise default
       let connection;
@@ -384,14 +454,41 @@ export async function registerRoutes(
         return res.status(400).json({ error: "No WhatsApp connection found for client" });
       }
       
-      // TODO: Send actual message via WhatsApp Business Cloud API
-      // const whatsappResponse = await sendWhatsAppMessage({
-      //   phoneNumberId: connection.phoneNumberId,
-      //   accessToken: connection.accessToken,
-      //   to,
-      //   message,
-      //   type
-      // });
+      // Send actual message via WhatsApp Business Cloud API
+      let whatsappResponse;
+      try {
+        if (type === "text") {
+          whatsappResponse = await whatsappService.sendTextMessage({
+            phoneNumberId: connection.phoneNumberId,
+            accessToken: connection.accessToken,
+            to,
+            message
+          });
+        } else {
+          whatsappResponse = await whatsappService.sendMediaMessage({
+            phoneNumberId: connection.phoneNumberId,
+            accessToken: connection.accessToken,
+            to,
+            message,
+            mediaUrl,
+            type
+          });
+        }
+      } catch (whatsappError: any) {
+        // Save failed message
+        const failedMessage = await storage.createMessage({
+          clientId,
+          direction: "outbound",
+          fromNumber: connection.phoneNumberId,
+          toNumber: to,
+          messageType: type,
+          content: message,
+          mediaUrl,
+          status: "failed",
+          errorMessage: whatsappError.message
+        });
+        return res.status(500).json({ error: whatsappError.message, message: failedMessage });
+      }
       
       const savedMessage = await storage.createMessage({
         clientId,
@@ -400,8 +497,9 @@ export async function registerRoutes(
         toNumber: to,
         messageType: type,
         content: message,
+        mediaUrl,
         status: "sent",
-        whatsappMessageId: `mock_${Date.now()}`
+        whatsappMessageId: whatsappResponse.messages[0].id
       });
       
       res.status(201).json(savedMessage);
@@ -430,12 +528,45 @@ export async function registerRoutes(
       }
       const connection = connections[0];
 
-      // TODO: Send messages in batch
+      // Send messages in batch with rate limiting
       let sentCount = 0;
       let failedCount = 0;
+      let deliveredCount = 0;
 
       for (const contact of targetContacts) {
         try {
+          // Personalize message (replace variables)
+          let personalizedMessage = campaign.messageContent || "";
+          personalizedMessage = personalizedMessage.replace(/\{\{name\}\}/g, contact.name || "");
+          personalizedMessage = personalizedMessage.replace(/\{\{phone\}\}/g, contact.phoneNumber);
+          
+          // Send via WhatsApp API
+          const whatsappResponse = await whatsappService.sendTextMessage({
+            phoneNumberId: connection.phoneNumberId,
+            accessToken: connection.accessToken,
+            to: contact.phoneNumber,
+            message: personalizedMessage
+          });
+
+          await storage.createMessage({
+            campaignId: campaign.id,
+            clientId: campaign.clientId,
+            direction: "outbound",
+            fromNumber: connection.phoneNumberId,
+            toNumber: contact.phoneNumber,
+            messageType: "text",
+            content: personalizedMessage,
+            status: "sent",
+            whatsappMessageId: whatsappResponse.messages[0].id
+          });
+          
+          sentCount++;
+          
+          // Rate limiting: Wait 1 second between messages
+          await new Promise(resolve => setTimeout(resolve, 1000));
+        } catch (err: any) {
+          console.error(`Failed to send to ${contact.phoneNumber}:`, err.message);
+          
           await storage.createMessage({
             campaignId: campaign.id,
             clientId: campaign.clientId,
@@ -444,18 +575,19 @@ export async function registerRoutes(
             toNumber: contact.phoneNumber,
             messageType: "text",
             content: campaign.messageContent || "",
-            status: "sent"
+            status: "failed",
+            errorMessage: err.message
           });
-          sentCount++;
-        } catch (err) {
+          
           failedCount++;
         }
       }
 
       // Update campaign stats
       const updated = await storage.updateCampaign(campaign.id, {
-        status: "active",
+        status: "completed",
         sentCount: sentCount.toString(),
+        deliveredCount: deliveredCount.toString(),
         failedCount: failedCount.toString()
       });
 
