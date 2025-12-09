@@ -1,614 +1,350 @@
-import { useState, useEffect } from "react";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { useState } from "react";
+import { 
+  Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter 
+} from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Switch } from "@/components/ui/switch";
-import { Label } from "@/components/ui/label";
-import {
-  MessageSquare, Send, Plus, MoreVertical, Search,
-  Image as ImageIcon, Paperclip, Smile, Phone, Video,
-  Check, CheckCheck, Clock, User, Settings, Bell,
-  FileText, Activity, AlertCircle, RefreshCw, Save,
-  Code, Terminal, Copy, MapPin, List, LayoutTemplate, Building2, Key
+import { 
+  Select, SelectContent, SelectItem, SelectTrigger, SelectValue 
+} from "@/components/ui/select";
+import { 
+  MessageSquare, Users, Send, BarChart3, Settings, 
+  Plus, Search, Phone, MoreVertical, FileText, 
+  Image as ImageIcon, Paperclip, Smile,
+  Filter, Calendar, ArrowUpRight, TrendingUp,
+  LayoutGrid, List, CheckCircle2, AlertCircle, RefreshCw
 } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Separator } from "@/components/ui/separator";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
+import { Progress } from "@/components/ui/progress";
 import {
-  Select, SelectContent, SelectItem, SelectTrigger, SelectValue
-} from "@/components/ui/select";
-import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
-import { vscDarkPlus } from 'react-syntax-highlighter/dist/esm/styles/prism';
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
-const contacts = [
-  { id: 1, name: "Alice Freeman", status: "online", lastMessage: "Thanks for the update!", time: "10:42 AM", unread: 2, avatar: "AF" },
-  { id: 2, name: "Tech Support", status: "offline", lastMessage: "Ticket #4922 resolved", time: "Yesterday", unread: 0, avatar: "TS" },
-  { id: 3, name: "John Smith", status: "online", lastMessage: "Can we schedule a demo?", time: "Yesterday", unread: 0, avatar: "JS" },
-  { id: 4, name: "Marketing Team", status: "online", lastMessage: "New campaign assets ready", time: "Mon", unread: 5, avatar: "MT" },
+// Mock Data for Multi-Tenant Structure
+const clients = [
+  { id: 1, name: "Acme Corp", plan: "Enterprise", status: "active", credits: 50000 },
+  { id: 2, name: "Global Marketing Ltd", plan: "Pro", status: "active", credits: 12400 },
+  { id: 3, name: "TechStart Inc", plan: "Starter", status: "warning", credits: 150 },
 ];
 
-const messages = [
-  { id: 1, sender: "them", text: "Hi there! I'm interested in your enterprise plan.", time: "10:30 AM", status: "read" },
-  { id: 2, sender: "me", text: "Hello! Thanks for reaching out. I'd be happy to help with that.", time: "10:32 AM", status: "read" },
-  { id: 3, sender: "me", text: "What specific features are you looking for?", time: "10:32 AM", status: "read" },
-  { id: 4, sender: "them", text: "We need high-volume WhatsApp messaging and CRM integration.", time: "10:35 AM", status: "read" },
-  { id: 5, sender: "me", text: "Perfect, our Enterprise plan covers exactly that. Let me send you the brochure.", time: "10:36 AM", status: "read" },
-  { id: 6, sender: "them", text: "Thanks for the update!", time: "10:42 AM", status: "read" },
+const campaigns = [
+  { id: 1, name: "Black Friday Sale", status: "active", sent: 12500, delivered: 12450, read: 9800, type: "Marketing" },
+  { id: 2, name: "Welcome Series", status: "paused", sent: 3400, delivered: 3390, read: 2800, type: "Utility" },
+  { id: 3, name: "Service Update", status: "scheduled", sent: 0, delivered: 0, read: 0, type: "Utility" },
 ];
 
-const notificationSettings = [
-    { id: "new_invoice", label: "New Invoice Created", description: "Send notification when a new invoice is generated", enabled: true },
-    { id: "ticket_reply", label: "Support Ticket Reply", description: "Notify customer when agent replies to ticket", enabled: true },
-    { id: "service_activation", label: "Service Activation", description: "Send welcome message on service activation", enabled: true },
-    { id: "payment_received", label: "Payment Received", description: "Confirm payment receipt via WhatsApp", enabled: false },
-    { id: "domain_renewal", label: "Domain Renewal", description: "Remind customer about upcoming domain expiry", enabled: true },
+const conversations = [
+  { id: 1, name: "Alice Freeman", phone: "+1 555-0123", lastMsg: "Interested in the Enterprise plan", time: "10:42 AM", unread: 2, status: "open", agent: "Bot" },
+  { id: 2, name: "Bob Smith", phone: "+1 555-0124", lastMsg: "Thanks for the help!", time: "Yesterday", unread: 0, status: "resolved", agent: "John D." },
+  { id: 3, name: "Carol White", phone: "+1 555-0125", lastMsg: "When is the next webinar?", time: "Mon", unread: 1, status: "open", agent: "Sarah M." },
 ];
 
-const logs = [
-    { id: 1, event: "Message Sent", recipient: "+1 (555) 123-4567", template: "invoice_created", status: "Delivered", time: "2 min ago" },
-    { id: 2, event: "Message Failed", recipient: "+1 (555) 987-6543", template: "ticket_reply", status: "Failed", time: "15 min ago" },
-    { id: 3, event: "Message Sent", recipient: "+1 (555) 000-1111", template: "welcome_msg", status: "Read", time: "1 hour ago" },
-];
-
-const codeSnippets = {
-    text: `import { Text } from "whatsapp-api-js/messages";\n\nconst text_message = new Text("Hello World");\n// Send this message using the API client`,
-    interactive_buttons: `import { Interactive, ActionButtons, Button, Body } from "whatsapp-api-js/messages";\n\nconst buttons_message = new Interactive(\n    new ActionButtons(\n        new Button("reply_yes", "Yes"),\n        new Button("reply_no", "No")\n    ),\n    new Body("Are you satisfied with our service?")\n);`,
-    location: `import { Interactive, ActionLocation, Body } from "whatsapp-api-js/messages";\n\nconst location_request = new Interactive(\n    new ActionLocation(),\n    new Body("Please share your delivery location")\n);`,
-    template: `import { Template, HeaderComponent, HeaderParameter, BodyComponent, BodyParameter, Currency } from "whatsapp-api-js/messages";\n\nconst invoice_template = new Template(\n    "invoice_update",\n    "en_US",\n    new HeaderComponent(\n        new HeaderParameter("INV-2023-001")\n    ),\n    new BodyComponent(\n        new BodyParameter("John Doe"),\n        new BodyParameter(new Currency(150.00, "USD", "$150.00"))\n    )\n);`
-};
-
-export default function WhatsApp() {
-  const [selectedContact, setSelectedContact] = useState(contacts[0]);
-  const [messageInput, setMessageInput] = useState("");
-  const [activeTab, setActiveTab] = useState("chat");
-  const [messageType, setMessageType] = useState("text");
-  const [botStatus, setBotStatus] = useState<string>("disconnected");
-  const [qrCode, setQrCode] = useState<string>("");
-  const [isConnecting, setIsConnecting] = useState(false);
-
-  useEffect(() => {
-    checkBotStatus();
-    const interval = setInterval(checkBotStatus, 3000);
-    return () => clearInterval(interval);
-  }, []);
-
-  const checkBotStatus = async () => {
-    try {
-      const response = await fetch('/api/whatsapp/status');
-      const data = await response.json();
-      setBotStatus(data.status);
-
-      if (data.status === 'qr_ready') {
-        const qrResponse = await fetch('/api/whatsapp/qr');
-        const qrData = await qrResponse.json();
-        setQrCode(qrData.qrCode);
-      } else if (data.status === 'connected') {
-        setQrCode('');
-      }
-    } catch (error) {
-      console.error('Error checking bot status:', error);
-    }
-  };
-
-  const connectBot = async () => {
-    setIsConnecting(true);
-    try {
-      await fetch('/api/whatsapp/connect', { method: 'POST' });
-    } catch (error) {
-      console.error('Error connecting bot:', error);
-    } finally {
-      setIsConnecting(false);
-    }
-  };
-
-  const disconnectBot = async () => {
-    try {
-      await fetch('/api/whatsapp/disconnect', { method: 'POST' });
-      setBotStatus('disconnected');
-      setQrCode('');
-    } catch (error) {
-      console.error('Error disconnecting bot:', error);
-    }
-  };
+export default function WhatsAppPage() {
+  const [selectedClient, setSelectedClient] = useState(clients[0].id.toString());
+  const [activeTab, setActiveTab] = useState("dashboard");
 
   return (
-    <div className="h-[calc(100vh-8rem)] flex flex-col gap-4">
-      {/* Module Header with Tabs */}
-      <div className="flex items-center justify-between">
-         <h1 className="text-2xl font-bold flex items-center gap-2">
+    <div className="space-y-6">
+      {/* Top Bar: Client Selection & Global Stats */}
+      <div className="flex flex-col md:flex-row gap-4 justify-between items-start md:items-center bg-card/50 p-4 rounded-xl border border-primary/10 backdrop-blur-sm">
+        <div className="flex items-center gap-4">
+          <div className="h-10 w-10 rounded-lg bg-green-500/20 flex items-center justify-center">
             <MessageSquare className="h-6 w-6 text-green-500" />
-            WhatsApp Manager
-         </h1>
-         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-auto">
-            <TabsList>
-                <TabsTrigger value="chat" className="flex items-center gap-2"><MessageSquare className="h-4 w-4"/> Chat Console</TabsTrigger>
-                <TabsTrigger value="dev" className="flex items-center gap-2"><Code className="h-4 w-4"/> Developer API</TabsTrigger>
-                <TabsTrigger value="settings" className="flex items-center gap-2"><Settings className="h-4 w-4"/> WHMCS Settings</TabsTrigger>
-                <TabsTrigger value="logs" className="flex items-center gap-2"><FileText className="h-4 w-4"/> Logs</TabsTrigger>
-                <TabsTrigger value="business" className="flex items-center gap-2"><Building2 className="h-4 w-4"/> Business API</TabsTrigger>
-            </TabsList>
-         </Tabs>
+          </div>
+          <div>
+            <h1 className="text-xl font-bold">WhatsApp Marketing Hub</h1>
+            <p className="text-xs text-muted-foreground">Manage campaigns, templates, and support</p>
+          </div>
+        </div>
+        
+        <div className="flex items-center gap-4 w-full md:w-auto">
+          <div className="flex-1 md:w-64">
+             <Select value={selectedClient} onValueChange={setSelectedClient}>
+              <SelectTrigger className="bg-background/50">
+                <SelectValue placeholder="Select Client" />
+              </SelectTrigger>
+              <SelectContent>
+                {clients.map(client => (
+                  <SelectItem key={client.id} value={client.id.toString()}>
+                    <div className="flex justify-between items-center w-full gap-2">
+                      <span>{client.name}</span>
+                      <Badge variant={client.status === 'warning' ? 'destructive' : 'secondary'} className="text-[10px]">
+                        {client.plan}
+                      </Badge>
+                    </div>
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <Button className="bg-green-600 hover:bg-green-700 text-white shadow-lg shadow-green-900/20">
+            <Plus className="h-4 w-4 mr-2" /> New Campaign
+          </Button>
+        </div>
       </div>
 
-      {activeTab === "chat" && (
-      <div className="flex-1 flex gap-4 overflow-hidden">
-        {/* Contacts Sidebar */}
-        <Card className="w-80 flex flex-col bg-card/50 backdrop-blur-sm border-primary/10">
-            <div className="p-4 border-b border-primary/10 space-y-4">
-            <div className="flex items-center justify-between">
-                <h2 className="font-semibold flex items-center gap-2">
-                Active Chats
-                </h2>
-                <div className="flex gap-2">
-                <Button size="icon" variant="ghost" className="h-8 w-8">
-                    <Plus className="h-4 w-4" />
-                </Button>
-                <Button size="icon" variant="ghost" className="h-8 w-8">
-                    <MoreVertical className="h-4 w-4" />
-                </Button>
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
+        <TabsList className="bg-card/50 border border-primary/10 p-1 h-auto grid grid-cols-2 md:inline-flex md:grid-cols-none">
+          <TabsTrigger value="dashboard" className="data-[state=active]:bg-primary/20 data-[state=active]:text-primary">
+            <LayoutGrid className="h-4 w-4 mr-2" /> Dashboard
+          </TabsTrigger>
+          <TabsTrigger value="inbox" className="data-[state=active]:bg-primary/20 data-[state=active]:text-primary">
+            <MessageSquare className="h-4 w-4 mr-2" /> Team Inbox
+          </TabsTrigger>
+          <TabsTrigger value="campaigns" className="data-[state=active]:bg-primary/20 data-[state=active]:text-primary">
+            <Send className="h-4 w-4 mr-2" /> Campaigns
+          </TabsTrigger>
+          <TabsTrigger value="contacts" className="data-[state=active]:bg-primary/20 data-[state=active]:text-primary">
+            <Users className="h-4 w-4 mr-2" /> Audience
+          </TabsTrigger>
+          <TabsTrigger value="templates" className="data-[state=active]:bg-primary/20 data-[state=active]:text-primary">
+            <FileText className="h-4 w-4 mr-2" /> Templates
+          </TabsTrigger>
+          <TabsTrigger value="settings" className="data-[state=active]:bg-primary/20 data-[state=active]:text-primary">
+            <Settings className="h-4 w-4 mr-2" /> Configuration
+          </TabsTrigger>
+        </TabsList>
+
+        {/* DASHBOARD TAB */}
+        <TabsContent value="dashboard" className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+            <Card className="bg-gradient-to-br from-green-500/10 to-transparent border-green-500/20">
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Messages Sent</CardTitle>
+                <Send className="h-4 w-4 text-green-500" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold text-green-500">45,231</div>
+                <p className="text-xs text-muted-foreground">+20.1% from last month</p>
+              </CardContent>
+            </Card>
+            <Card className="bg-gradient-to-br from-blue-500/10 to-transparent border-blue-500/20">
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Delivery Rate</CardTitle>
+                <CheckCircle2 className="h-4 w-4 text-blue-500" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold text-blue-500">98.2%</div>
+                <p className="text-xs text-muted-foreground">+1.2% from last month</p>
+              </CardContent>
+            </Card>
+            <Card className="bg-gradient-to-br from-purple-500/10 to-transparent border-purple-500/20">
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Read Rate</CardTitle>
+                <ArrowUpRight className="h-4 w-4 text-purple-500" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold text-purple-500">84.5%</div>
+                <p className="text-xs text-muted-foreground">+4.3% from last month</p>
+              </CardContent>
+            </Card>
+            <Card className="bg-gradient-to-br from-orange-500/10 to-transparent border-orange-500/20">
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Conversations</CardTitle>
+                <MessageSquare className="h-4 w-4 text-orange-500" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold text-orange-500">1,203</div>
+                <p className="text-xs text-muted-foreground">342 active now</p>
+              </CardContent>
+            </Card>
+          </div>
+
+          <div className="grid gap-6 md:grid-cols-2">
+            <Card className="border-primary/10">
+              <CardHeader>
+                <CardTitle>Recent Campaigns</CardTitle>
+                <CardDescription>Performance overview of last 3 blasts</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-6">
+                  {campaigns.map(camp => (
+                    <div key={camp.id} className="space-y-2">
+                      <div className="flex items-center justify-between text-sm">
+                        <div className="font-medium">{camp.name}</div>
+                        <div className="text-muted-foreground">{((camp.read / camp.sent) * 100).toFixed(1)}% Read Rate</div>
+                      </div>
+                      <Progress value={(camp.delivered / camp.sent) * 100} className="h-2 bg-muted/50" />
+                      <div className="flex justify-between text-xs text-muted-foreground">
+                        <span>{camp.sent.toLocaleString()} Sent</span>
+                        <span>{camp.read.toLocaleString()} Read</span>
+                      </div>
+                    </div>
+                  ))}
                 </div>
-            </div>
-            <div className="relative">
-                <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
-                <Input placeholder="Search chats..." className="pl-8 bg-background/50" />
-            </div>
+              </CardContent>
+            </Card>
+
+            <Card className="border-primary/10">
+               <CardHeader>
+                <CardTitle>System Health</CardTitle>
+                <CardDescription>WhatsApp Business API Status</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="flex items-center justify-between p-3 border rounded-lg bg-green-500/5 border-green-500/20">
+                  <div className="flex items-center gap-3">
+                    <div className="h-2 w-2 rounded-full bg-green-500 animate-pulse" />
+                    <span className="font-medium">Meta API Gateway</span>
+                  </div>
+                  <Badge variant="outline" className="text-green-500 border-green-500/30">Operational</Badge>
+                </div>
+                <div className="flex items-center justify-between p-3 border rounded-lg bg-green-500/5 border-green-500/20">
+                  <div className="flex items-center gap-3">
+                    <div className="h-2 w-2 rounded-full bg-green-500 animate-pulse" />
+                    <span className="font-medium">Webhook Processor</span>
+                  </div>
+                  <Badge variant="outline" className="text-green-500 border-green-500/30">Operational</Badge>
+                </div>
+                <div className="flex items-center justify-between p-3 border rounded-lg bg-yellow-500/5 border-yellow-500/20">
+                  <div className="flex items-center gap-3">
+                    <div className="h-2 w-2 rounded-full bg-yellow-500" />
+                    <span className="font-medium">Media Upload Server</span>
+                  </div>
+                  <Badge variant="outline" className="text-yellow-500 border-yellow-500/30">High Latency</Badge>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </TabsContent>
+
+        {/* INBOX TAB */}
+        <TabsContent value="inbox" className="h-[600px] flex gap-4 animate-in fade-in slide-in-from-bottom-4 duration-500">
+          {/* Chat Sidebar */}
+          <Card className="w-80 flex flex-col border-primary/10">
+            <div className="p-4 border-b border-primary/10 space-y-4">
+               <div className="flex items-center justify-between">
+                 <h2 className="font-semibold">Inbox</h2>
+                 <div className="flex gap-2">
+                   <Button size="icon" variant="ghost" className="h-8 w-8"><Filter className="h-4 w-4" /></Button>
+                   <Button size="icon" variant="ghost" className="h-8 w-8"><Plus className="h-4 w-4" /></Button>
+                 </div>
+               </div>
+               <div className="relative">
+                 <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+                 <Input placeholder="Search messages..." className="pl-8 h-9" />
+               </div>
+               <div className="flex gap-2">
+                 <Badge variant="secondary" className="cursor-pointer">Open</Badge>
+                 <Badge variant="outline" className="cursor-pointer text-muted-foreground">Resolved</Badge>
+                 <Badge variant="outline" className="cursor-pointer text-muted-foreground">Bot</Badge>
+               </div>
             </div>
             <ScrollArea className="flex-1">
-            <div className="p-2 space-y-1">
-                {contacts.map((contact) => (
-                <div
-                    key={contact.id}
-                    onClick={() => setSelectedContact(contact)}
-                    className={`p-3 rounded-lg cursor-pointer flex gap-3 transition-colors ${
-                    selectedContact.id === contact.id
-                        ? "bg-primary/10 border border-primary/20"
-                        : "hover:bg-muted/50"
-                    }`}
-                >
-                    <div className="relative">
-                    <Avatar>
-                        <AvatarFallback className="bg-gradient-to-br from-primary/20 to-purple-500/20 text-primary font-medium">
-                        {contact.avatar}
-                        </AvatarFallback>
-                    </Avatar>
-                    {contact.status === "online" && (
-                        <span className="absolute bottom-0 right-0 w-3 h-3 border-2 border-background bg-green-500 rounded-full" />
-                    )}
+              <div className="flex flex-col gap-1 p-2">
+                {conversations.map(chat => (
+                  <div key={chat.id} className="p-3 rounded-lg hover:bg-muted/50 cursor-pointer transition-colors group">
+                    <div className="flex justify-between items-start mb-1">
+                      <span className="font-semibold text-sm group-hover:text-primary transition-colors">{chat.name}</span>
+                      <span className="text-[10px] text-muted-foreground">{chat.time}</span>
                     </div>
-                    <div className="flex-1 overflow-hidden">
-                    <div className="flex justify-between items-start">
-                        <span className="font-medium truncate">{contact.name}</span>
-                        <span className="text-xs text-muted-foreground whitespace-nowrap">{contact.time}</span>
+                    <p className="text-xs text-muted-foreground line-clamp-1 mb-2">{chat.lastMsg}</p>
+                    <div className="flex items-center justify-between">
+                       <Badge variant="outline" className="text-[10px] h-5 px-1.5 font-normal">{chat.status}</Badge>
+                       {chat.unread > 0 && <Badge className="h-5 w-5 rounded-full p-0 flex items-center justify-center bg-green-500">{chat.unread}</Badge>}
                     </div>
-                    <p className="text-xs text-muted-foreground truncate mt-1">
-                        {contact.lastMessage}
-                    </p>
-                    </div>
-                    {contact.unread > 0 && (
-                    <div className="flex flex-col justify-center">
-                        <Badge className="h-5 w-5 p-0 flex items-center justify-center rounded-full bg-green-500">
-                        {contact.unread}
-                        </Badge>
-                    </div>
-                    )}
-                </div>
+                  </div>
                 ))}
-            </div>
+              </div>
             </ScrollArea>
-        </Card>
-
-        {/* Chat Area */}
-        <Card className="flex-1 flex flex-col bg-card/50 backdrop-blur-sm border-primary/10 overflow-hidden">
-            {/* Chat Header */}
-            <div className="p-4 border-b border-primary/10 flex justify-between items-center bg-background/30">
-            <div className="flex items-center gap-3">
-                <Avatar>
-                <AvatarFallback className="bg-gradient-to-br from-primary/20 to-purple-500/20 text-primary">
-                    {selectedContact.avatar}
-                </AvatarFallback>
-                </Avatar>
-                <div>
-                <h3 className="font-semibold">{selectedContact.name}</h3>
-                <p className="text-xs text-green-500 flex items-center gap-1">
-                    <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
-                    Online via WhatsApp Business API
-                </p>
-                </div>
-            </div>
-            <div className="flex gap-2">
-                <Button size="icon" variant="ghost">
-                <Phone className="h-4 w-4" />
-                </Button>
-                <Button size="icon" variant="ghost">
-                <Video className="h-4 w-4" />
-                </Button>
-                <Button size="icon" variant="ghost">
-                <Search className="h-4 w-4" />
-                </Button>
-            </div>
-            </div>
-
-            {/* Messages */}
-            <ScrollArea className="flex-1 p-4 bg-[url('https://user-images.githubusercontent.com/15075759/28719144-86dc0f70-73b1-11e7-911d-60d70fcded21.png')] bg-repeat bg-opacity-5">
-            <div className="space-y-4">
-                <div className="flex justify-center my-4">
-                <Badge variant="outline" className="bg-background/50 backdrop-blur text-xs font-normal text-muted-foreground">
-                    Today
-                </Badge>
-                </div>
-                {messages.map((msg) => (
-                <div
-                    key={msg.id}
-                    className={`flex ${msg.sender === "me" ? "justify-end" : "justify-start"}`}
-                >
-                    <div
-                    className={`max-w-[70%] rounded-2xl px-4 py-2 shadow-sm ${
-                        msg.sender === "me"
-                        ? "bg-gradient-to-br from-green-600 to-emerald-600 text-white rounded-tr-none"
-                        : "bg-card border border-border rounded-tl-none"
-                    }`}
-                    >
-                    <p className="text-sm">{msg.text}</p>
-                    <div className={`text-[10px] mt-1 flex items-center justify-end gap-1 ${
-                        msg.sender === "me" ? "text-white/70" : "text-muted-foreground"
-                    }`}>
-                        {msg.time}
-                        {msg.sender === "me" && <CheckCheck className="h-3 w-3" />}
-                    </div>
-                    </div>
-                </div>
-                ))}
-            </div>
-            </ScrollArea>
-
-            {/* Input Area */}
-            <div className="p-4 bg-background/50 backdrop-blur border-t border-primary/10">
-                <div className="flex items-center gap-2 mb-2">
-                     <Select value={messageType} onValueChange={setMessageType}>
-                        <SelectTrigger className="w-[180px] h-8 text-xs">
-                            <SelectValue placeholder="Message Type" />
-                        </SelectTrigger>
-                        <SelectContent>
-                            <SelectItem value="text">Text Message</SelectItem>
-                            <SelectItem value="template">Template (HSM)</SelectItem>
-                            <SelectItem value="interactive">Interactive Buttons</SelectItem>
-                            <SelectItem value="location">Location Request</SelectItem>
-                            <SelectItem value="list">List Message</SelectItem>
-                        </SelectContent>
-                     </Select>
-                     {messageType !== 'text' && (
-                         <Badge variant="outline" className="text-xs bg-primary/10 text-primary border-primary/20">
-                             {messageType === 'template' && "Uses 'invoice_update' template"}
-                             {messageType === 'interactive' && "Adds Yes/No buttons"}
-                             {messageType === 'location' && "Requesting location"}
-                         </Badge>
-                     )}
-                </div>
-            <div className="flex items-end gap-2">
-                <div className="flex gap-1 pb-2">
-                <Button size="icon" variant="ghost" className="h-8 w-8 text-muted-foreground hover:text-primary">
-                    <Smile className="h-5 w-5" />
-                </Button>
-                <Button size="icon" variant="ghost" className="h-8 w-8 text-muted-foreground hover:text-primary">
-                    <Paperclip className="h-5 w-5" />
-                </Button>
-                </div>
-                <div className="flex-1 bg-muted/30 rounded-2xl border border-input focus-within:ring-1 focus-within:ring-primary/50 transition-all flex items-center px-3 py-2">
-                <textarea
-                    value={messageInput}
-                    onChange={(e) => setMessageInput(e.target.value)}
-                    placeholder={messageType === 'text' ? "Type a message..." : `Configure ${messageType} parameters...`}
-                    className="flex-1 bg-transparent border-none focus:outline-none resize-none max-h-24 text-sm"
-                    rows={1}
-                    style={{ minHeight: "24px" }}
-                />
-                </div>
-                <Button
-                size="icon"
-                className="h-10 w-10 rounded-full bg-green-600 hover:bg-green-700 shadow-lg shadow-green-500/20 mb-1"
-                >
-                <Send className="h-4 w-4 text-white ml-0.5" />
-                </Button>
-            </div>
-            <div className="flex justify-center mt-2">
-                <span className="text-[10px] text-muted-foreground flex items-center gap-1">
-                <LockIcon className="h-3 w-3" />
-                End-to-end encrypted via WhatsApp Business API
-                </span>
-            </div>
-            </div>
-        </Card>
-      </div>
-      )}
-
-      {activeTab === "dev" && (
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 h-full overflow-hidden">
-             <Card className="flex flex-col h-full overflow-hidden">
-                 <CardHeader>
-                     <CardTitle>Interactive API Builder</CardTitle>
-                     <CardDescription>Generate TypeScript code for the whatsapp-api-js library.</CardDescription>
-                 </CardHeader>
-                 <CardContent className="flex-1 overflow-auto space-y-6">
-                     <div className="space-y-4">
-                         <div className="space-y-2">
-                             <Label>Message Type</Label>
-                             <div className="grid grid-cols-2 gap-2">
-                                 <Button variant="outline" className="justify-start" onClick={() => {}}>
-                                     <LayoutTemplate className="h-4 w-4 mr-2" /> Templates
-                                 </Button>
-                                 <Button variant="outline" className="justify-start" onClick={() => {}}>
-                                     <List className="h-4 w-4 mr-2" /> Interactive Lists
-                                 </Button>
-                                 <Button variant="outline" className="justify-start" onClick={() => {}}>
-                                     <MapPin className="h-4 w-4 mr-2" /> Location
-                                 </Button>
-                                 <Button variant="outline" className="justify-start" onClick={() => {}}>
-                                     <Activity className="h-4 w-4 mr-2" /> Flows
-                                 </Button>
-                             </div>
-                         </div>
-                         <Separator />
-                         <div className="space-y-2">
-                             <Label>Library Features</Label>
-                             <ul className="list-disc list-inside text-sm text-muted-foreground space-y-1">
-                                 <li>Full TypeScript Support</li>
-                                 <li>Helper classes for all message types</li>
-                                 <li>Serverless compatible (Edge Runtime)</li>
-                                 <li>Zero dependencies</li>
-                             </ul>
-                         </div>
-                     </div>
-                 </CardContent>
-             </Card>
-
-             <Card className="flex flex-col h-full overflow-hidden bg-[#1e1e1e] border-none text-white">
-                 <div className="flex items-center justify-between px-4 py-2 bg-[#252526] border-b border-[#3e3e42]">
-                     <span className="text-xs font-mono text-muted-foreground">example.ts</span>
-                     <Button variant="ghost" size="icon" className="h-6 w-6 text-muted-foreground hover:text-white">
-                         <Copy className="h-3 w-3" />
-                     </Button>
+          </Card>
+          
+          {/* Chat Window */}
+          <Card className="flex-1 flex flex-col border-primary/10 bg-muted/10">
+             <div className="p-4 border-b border-primary/10 flex justify-between items-center bg-card/50">
+               <div className="flex items-center gap-3">
+                 <Avatar>
+                   <AvatarImage src="https://github.com/shadcn.png" />
+                   <AvatarFallback>AF</AvatarFallback>
+                 </Avatar>
+                 <div>
+                   <h3 className="font-semibold text-sm">Alice Freeman</h3>
+                   <p className="text-xs text-muted-foreground">+1 (555) 0123 • Active now</p>
                  </div>
-                 <ScrollArea className="flex-1">
-                     <div className="p-4">
-                         <div className="mb-6">
-                             <h4 className="text-xs font-semibold text-muted-foreground mb-2 uppercase tracking-wider">Sending a Template</h4>
-                             <SyntaxHighlighter language="typescript" style={vscDarkPlus} customStyle={{ background: 'transparent', padding: 0 }}>
-                                 {codeSnippets.template}
-                             </SyntaxHighlighter>
-                         </div>
-                         <div className="mb-6">
-                             <h4 className="text-xs font-semibold text-muted-foreground mb-2 uppercase tracking-wider">Interactive Buttons</h4>
-                             <SyntaxHighlighter language="typescript" style={vscDarkPlus} customStyle={{ background: 'transparent', padding: 0 }}>
-                                 {codeSnippets.interactive_buttons}
-                             </SyntaxHighlighter>
-                         </div>
-                         <div>
-                             <h4 className="text-xs font-semibold text-muted-foreground mb-2 uppercase tracking-wider">Location Request</h4>
-                             <SyntaxHighlighter language="typescript" style={vscDarkPlus} customStyle={{ background: 'transparent', padding: 0 }}>
-                                 {codeSnippets.location}
-                             </SyntaxHighlighter>
-                         </div>
-                     </div>
-                 </ScrollArea>
-             </Card>
-          </div>
-      )}
+               </div>
+               <div className="flex gap-2">
+                 <Button variant="ghost" size="icon"><Phone className="h-4 w-4" /></Button>
+                 <Button variant="ghost" size="icon"><MoreVertical className="h-4 w-4" /></Button>
+               </div>
+             </div>
 
-      {/* Business API Tab */}
-      {activeTab === "business" && (
-        <Card className="h-full">
-          <div className="p-6">
-            <h2 className="text-xl font-semibold mb-4">WhatsApp Business Cloud API</h2>
-            <p className="text-sm text-muted-foreground mb-6">
-              Integración con la API oficial de WhatsApp Business Cloud para envío de mensajes empresariales.
-            </p>
+             <div className="flex-1 p-4 overflow-y-auto space-y-4 bg-[url('https://user-images.githubusercontent.com/15075759/28719144-86dc0f70-73b1-11e7-911d-60d70fcded21.png')] bg-repeat bg-opacity-5">
+               {/* Messages Mockup */}
+               <div className="flex justify-start">
+                 <div className="bg-card border p-3 rounded-lg rounded-tl-none max-w-[70%] text-sm">
+                   Hi, I'm interested in the Enterprise plan. Can you tell me more?
+                   <span className="block text-[10px] text-muted-foreground mt-1">10:42 AM</span>
+                 </div>
+               </div>
+               <div className="flex justify-end">
+                 <div className="bg-green-600 text-white p-3 rounded-lg rounded-tr-none max-w-[70%] text-sm shadow-md">
+                   Hello Alice! Absolutely. Our Enterprise plan includes unlimited agents, custom workflows, and dedicated support.
+                   <span className="block text-[10px] text-white/70 mt-1 text-right">10:43 AM</span>
+                 </div>
+               </div>
+             </div>
 
-            <div className="space-y-4">
-              <div className="p-4 border rounded-lg bg-muted/50">
-                <h3 className="font-medium mb-2">Configuración Requerida</h3>
-                <div className="space-y-2 text-sm">
-                  <div className="flex items-center gap-2">
-                    <Key className="h-4 w-4" />
-                    <span>WA_PHONE_NUMBER_ID: ID del número de teléfono</span>
+             <div className="p-4 bg-card/50 border-t border-primary/10">
+               <div className="flex gap-2">
+                 <Button variant="ghost" size="icon"><Smile className="h-5 w-5 text-muted-foreground" /></Button>
+                 <Button variant="ghost" size="icon"><Paperclip className="h-5 w-5 text-muted-foreground" /></Button>
+                 <Input className="flex-1 bg-background" placeholder="Type a message..." />
+                 <Button className="bg-green-600 hover:bg-green-700 text-white"><Send className="h-4 w-4" /></Button>
+               </div>
+             </div>
+          </Card>
+        </TabsContent>
+        
+        {/* CAMPAIGNS TAB */}
+        <TabsContent value="campaigns" className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
+           <div className="flex justify-between items-center">
+             <div className="space-y-1">
+               <h2 className="text-lg font-semibold">Marketing Campaigns</h2>
+               <p className="text-sm text-muted-foreground">Manage your broadcast lists and scheduled messages.</p>
+             </div>
+             <Button><Plus className="h-4 w-4 mr-2" /> Create Campaign</Button>
+           </div>
+           
+           <Card className="border-primary/10">
+             <CardContent className="p-0">
+               <div className="rounded-md border border-primary/10">
+                  <div className="grid grid-cols-6 gap-4 p-4 font-medium text-sm bg-muted/30 border-b border-primary/10">
+                    <div className="col-span-2">Campaign Name</div>
+                    <div>Status</div>
+                    <div>Type</div>
+                    <div>Sent / Read</div>
+                    <div className="text-right">Actions</div>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <Key className="h-4 w-4" />
-                    <span>WA_ACCESS_TOKEN: Token de acceso de Meta</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Key className="h-4 w-4" />
-                    <span>WA_WEBHOOK_VERIFY_TOKEN: Token de verificación del webhook</span>
-                  </div>
-                </div>
-              </div>
-
-              <div className="p-4 border rounded-lg">
-                <h3 className="font-medium mb-2">Endpoints Disponibles</h3>
-                <div className="space-y-2 text-sm font-mono">
-                  <div>POST /api/whatsapp-business/send-text</div>
-                  <div>POST /api/whatsapp-business/send-template</div>
-                  <div>POST /api/whatsapp-business/send-media</div>
-                  <div>GET /api/whatsapp-business/status</div>
-                </div>
-              </div>
-
-              <div className="p-4 border rounded-lg bg-blue-50 dark:bg-blue-950">
-                <h3 className="font-medium mb-2">Ejemplo de Uso</h3>
-                <pre className="text-xs overflow-x-auto">
-{`fetch('/api/whatsapp-business/send-text', {
-  method: 'POST',
-  headers: { 'Content-Type': 'application/json' },
-  body: JSON.stringify({
-    to: '521234567890',
-    message: 'Hola desde WhatsApp Business API'
-  })
-});`}
-                </pre>
-              </div>
-            </div>
-          </div>
-        </Card>
-      )}
-
-      {activeTab === "settings" && (
-        <div className="grid gap-6 md:grid-cols-2">
-            <Card>
-                <CardHeader>
-                    <CardTitle className="flex items-center justify-between">
-                        Bot Connection
-                        <Badge variant={botStatus === 'connected' ? 'default' : 'secondary'} 
-                               className={botStatus === 'connected' ? 'bg-green-500/20 text-green-500 hover:bg-green-500/30' : ''}>
-                            {botStatus === 'disconnected' ? 'Disconnected' :
-                             botStatus === 'qr_ready' ? 'Awaiting QR Scan' :
-                             botStatus === 'authenticated' ? 'Authenticated' :
-                             botStatus === 'connected' ? 'Connected' : botStatus}
+                  {campaigns.map((camp) => (
+                    <div key={camp.id} className="grid grid-cols-6 gap-4 p-4 text-sm items-center hover:bg-muted/10 transition-colors border-b border-primary/5 last:border-0">
+                      <div className="col-span-2 font-medium">{camp.name}</div>
+                      <div>
+                        <Badge variant={camp.status === 'active' ? 'default' : 'secondary'} className={camp.status === 'active' ? 'bg-green-500/20 text-green-500 hover:bg-green-500/30' : ''}>
+                          {camp.status}
                         </Badge>
-                    </CardTitle>
-                    <CardDescription>Connect your WhatsApp account via QR code</CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                    {botStatus === 'disconnected' && (
-                        <Button onClick={connectBot} disabled={isConnecting} className="w-full">
-                            {isConnecting ? 'Connecting...' : 'Connect WhatsApp Bot'}
-                        </Button>
-                    )}
-                    {botStatus === 'qr_ready' && qrCode && (
-                        <div className="flex flex-col items-center gap-4">
-                            <p className="text-sm text-muted-foreground text-center">
-                                Scan this QR code with your WhatsApp mobile app
-                            </p>
-                            <img src={qrCode} alt="QR Code" className="w-64 h-64 border rounded-lg" />
-                        </div>
-                    )}
-                    {botStatus === 'connected' && (
-                        <div className="space-y-4">
-                            <div className="p-4 bg-green-500/10 border border-green-500/20 rounded-lg">
-                                <p className="text-sm text-green-500 font-medium">✓ WhatsApp Bot Connected</p>
-                            </div>
-                            <Button onClick={disconnectBot} variant="destructive" className="w-full">
-                                Disconnect Bot
-                            </Button>
-                        </div>
-                    )}
-                </CardContent>
-            </Card>
-            <Card>
-                <CardHeader>
-                    <CardTitle>Notification Triggers</CardTitle>
-                    <CardDescription>Configure which WHMCS events trigger a WhatsApp notification.</CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-6">
-                    {notificationSettings.map((setting) => (
-                        <div key={setting.id} className="flex items-center justify-between space-x-2">
-                            <div className="space-y-0.5">
-                                <Label className="text-base">{setting.label}</Label>
-                                <p className="text-sm text-muted-foreground">{setting.description}</p>
-                            </div>
-                            <Switch checked={setting.enabled} />
-                        </div>
-                    ))}
-                    <div className="pt-4 flex justify-end">
-                        <Button className="w-full sm:w-auto">
-                            <Save className="h-4 w-4 mr-2" /> Save Changes
-                        </Button>
+                      </div>
+                      <div className="text-muted-foreground">{camp.type}</div>
+                      <div className="text-muted-foreground">
+                        {camp.sent.toLocaleString()} <span className="text-xs mx-1">/</span> <span className="text-green-500">{camp.read.toLocaleString()}</span>
+                      </div>
+                      <div className="text-right">
+                        <Button variant="ghost" size="sm">Edit</Button>
+                      </div>
                     </div>
-                </CardContent>
-            </Card>
-
-            <div className="space-y-6">
-                <Card>
-                    <CardHeader>
-                        <CardTitle>Gateway Configuration</CardTitle>
-                        <CardDescription>Connection settings for the WhatsApp API Provider.</CardDescription>
-                    </CardHeader>
-                    <CardContent className="space-y-4">
-                        <div className="space-y-2">
-                            <Label>API Endpoint URL</Label>
-                            <Input defaultValue="https://api.whatsapp.com/v16.0" />
-                        </div>
-                        <div className="space-y-2">
-                            <Label>Access Token</Label>
-                            <Input type="password" value="********************************" />
-                        </div>
-                        <div className="space-y-2">
-                            <Label>Phone Number ID</Label>
-                            <Input defaultValue="1039482938492" />
-                        </div>
-                        <Button variant="outline" className="w-full">
-                            <RefreshCw className="h-4 w-4 mr-2" /> Test Connection
-                        </Button>
-                    </CardContent>
-                </Card>
-
-                <Card>
-                    <CardHeader>
-                        <CardTitle>Message Templates</CardTitle>
-                        <CardDescription>Manage verified templates for initiating conversations.</CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                        <div className="p-4 border rounded-md bg-muted/20 text-center">
-                            <p className="text-sm text-muted-foreground mb-4">Templates are synced from Meta Business Manager.</p>
-                            <Button variant="outline" size="sm">Sync Templates</Button>
-                        </div>
-                    </CardContent>
-                </Card>
-            </div>
-        </div>
-      )}
-
-      {activeTab === "logs" && (
-        <Card>
-            <CardHeader>
-                <CardTitle>System Logs</CardTitle>
-                <CardDescription>Recent activity and API request history.</CardDescription>
-            </CardHeader>
-            <CardContent>
-                <div className="space-y-4">
-                    {logs.map((log) => (
-                        <div key={log.id} className="flex items-center justify-between p-4 border rounded-lg bg-card/50">
-                            <div className="flex items-center gap-4">
-                                <div className={`p-2 rounded-full ${
-                                    log.status === "Failed" ? "bg-red-500/10 text-red-500" : "bg-green-500/10 text-green-500"
-                                }`}>
-                                    {log.status === "Failed" ? <AlertCircle className="h-4 w-4"/> : <Check className="h-4 w-4"/>}
-                                </div>
-                                <div>
-                                    <p className="font-medium">{log.event}</p>
-                                    <p className="text-sm text-muted-foreground">To: {log.recipient} • Template: {log.template}</p>
-                                </div>
-                            </div>
-                            <div className="text-right">
-                                <Badge variant={log.status === "Failed" ? "destructive" : "outline"}>{log.status}</Badge>
-                                <p className="text-xs text-muted-foreground mt-1">{log.time}</p>
-                            </div>
-                        </div>
-                    ))}
-                </div>
-            </CardContent>
-        </Card>
-      )}
+                  ))}
+               </div>
+             </CardContent>
+           </Card>
+        </TabsContent>
+      </Tabs>
     </div>
   );
-}
-
-function LockIcon(props: any) {
-    return (
-        <svg
-      {...props}
-      xmlns="http://www.w3.org/2000/svg"
-      width="24"
-      height="24"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <rect width="18" height="11" x="3" y="11" rx="2" ry="2" />
-      <path d="M7 11V7a5 5 0 0 1 10 0v4" />
-    </svg>
-    );
 }
