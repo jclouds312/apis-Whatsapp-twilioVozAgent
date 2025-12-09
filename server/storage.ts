@@ -1,4 +1,4 @@
-import { 
+import {
   type User, type InsertUser,
   type Client, type InsertClient,
   type WhatsAppConnection, type InsertWhatsAppConnection,
@@ -73,6 +73,34 @@ export interface IStorage {
   getTeamAssignmentsByUser(userId: string): Promise<TeamAssignment[]>;
   createTeamAssignment(assignment: InsertTeamAssignment): Promise<TeamAssignment>;
   deleteTeamAssignment(id: string): Promise<boolean>;
+
+  // ===== PHONE NUMBERS =====
+  getPhoneNumbersByClient(clientId: string): Promise<any[]>;
+  createPhoneNumber(phoneNumber: any): Promise<any>;
+  updatePhoneNumber(id: string, updates: any): Promise<any>;
+
+  // ===== SMS MESSAGES =====
+  getSmsMessagesByClient(clientId: string): Promise<any[]>;
+  createSmsMessage(message: any): Promise<any>;
+
+  // ===== OTP VERIFICATIONS =====
+  createOtpVerification(otp: any): Promise<any>;
+  verifyOtp(phoneNumber: string, code: string): Promise<any>;
+
+  // ===== SALES ITINERARIES =====
+  getSalesItinerariesByUser(userId: string): Promise<any[]>;
+  getSalesItinerariesByClient(clientId: string): Promise<any[]>;
+  createSalesItinerary(itinerary: any): Promise<any>;
+  updateSalesItinerary(id: string, updates: any): Promise<any>;
+
+  // ===== USER ROLES =====
+  getUserRolesByClient(clientId: string): Promise<any[]>;
+  createUserRole(role: any): Promise<any>;
+  updateUserRole(id: string, updates: any): Promise<any>;
+
+  // ===== CONVERSATION HISTORY =====
+  getConversationHistory(phoneNumberId: string): Promise<any[]>;
+  syncConversationHistory(data: any): Promise<any>;
 }
 
 export class PostgresStorage implements IStorage {
@@ -295,7 +323,7 @@ export class PostgresStorage implements IStorage {
         eq(otpVerifications.status, "pending")
       ))
       .limit(1);
-    
+
     if (result[0] && new Date(result[0].expiresAt) > new Date()) {
       await db.update(otpVerifications)
         .set({ status: "verified", verifiedAt: new Date() })

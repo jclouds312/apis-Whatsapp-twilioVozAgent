@@ -722,6 +722,56 @@ export async function registerRoutes(
     }
   });
 
+  // ==================== SMS SEND ====================
+  app.post("/api/sms/send", async (req, res) => {
+    try {
+      const { phoneNumberId, to, body } = req.body;
+      const message = await storage.createSmsMessage({
+        phoneNumberId,
+        to,
+        from: "", // Se llenará desde phoneNumberId
+        body,
+        type: "outbound",
+        status: "sent",
+        clientId: "24011ed8-2e27-4cf5-90e6-59cfc7045aac"
+      });
+      res.status(201).json(message);
+    } catch (error: any) {
+      res.status(400).json({ error: error.message });
+    }
+  });
+
+  // ==================== OTP ====================
+  app.post("/api/otp/send", async (req, res) => {
+    try {
+      const { phoneNumber, type } = req.body;
+      const code = Math.floor(100000 + Math.random() * 900000).toString();
+      
+      // Aquí enviarías el código por SMS/Email/WhatsApp
+      console.log(`OTP Code for ${phoneNumber}: ${code}`);
+      
+      res.status(200).json({ success: true, message: "OTP sent" });
+    } catch (error: any) {
+      res.status(400).json({ error: error.message });
+    }
+  });
+
+  app.post("/api/otp/verify", async (req, res) => {
+    try {
+      const { phoneNumber, code } = req.body;
+      // Aquí verificarías el código contra tu storage
+      const isValid = code === "123456"; // Mock validation
+      
+      if (isValid) {
+        res.status(200).json({ success: true, verified: true });
+      } else {
+        res.status(400).json({ success: false, error: "Invalid code" });
+      }
+    } catch (error: any) {
+      res.status(400).json({ error: error.message });
+    }
+  });
+
   // ==================== LAUNCH CAMPAIGN ====================
   
   app.post("/api/campaigns/:id/launch", async (req, res) => {

@@ -427,6 +427,52 @@ export type PhoneNumber = typeof phoneNumbers.$inferSelect;
 export const smsMessages = pgTable("sms_messages", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   clientId: varchar("client_id").notNull(),
+  phoneNumberId: varchar("phone_number_id"),
+  to: text("to").notNull(),
+  from: text("from").notNull(),
+  body: text("body").notNull(),
+  status: text("status").default("sent"), // sent, delivered, failed
+  type: text("type").default("outbound"), // inbound, outbound
+  metadata: jsonb("metadata").default({}),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const insertSmsMessageSchema = createInsertSchema(smsMessages).omit({
+  id: true,
+  createdAt: true,
+});
+
+export type InsertSmsMessage = z.infer<typeof insertSmsMessageSchema>;
+export type SmsMessage = typeof smsMessages.$inferSelect;
+
+// ============= ITINERARIES =============
+export const itineraries = pgTable("itineraries", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  clientId: varchar("client_id").notNull(),
+  title: text("title").notNull(),
+  description: text("description"),
+  assignedTo: text("assigned_to").notNull(),
+  contactId: varchar("contact_id"),
+  scheduledAt: timestamp("scheduled_at").notNull(),
+  status: text("status").default("scheduled"), // scheduled, in_progress, completed, cancelled
+  metadata: jsonb("metadata").default({}),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const insertItinerarySchema = createInsertSchema(itineraries).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export type InsertItinerary = z.infer<typeof insertItinerarySchema>;
+export type Itinerary = typeof itineraries.$inferSelect;
+
+// ============= SMS MESSAGES =============
+export const smsMessages = pgTable("sms_messages", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  clientId: varchar("client_id").notNull(),
   phoneNumberId: varchar("phone_number_id").notNull(),
   fromNumber: text("from_number").notNull(),
   toNumber: text("to_number").notNull(),
