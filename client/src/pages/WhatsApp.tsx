@@ -558,6 +558,109 @@ export default function WhatsApp() {
         </div>
       )}
 
+      {activeTab === "settings" && (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 h-full overflow-y-auto">
+            <Card>
+                <CardHeader>
+                    <CardTitle>Connection Status</CardTitle>
+                    <CardDescription>Manage your WhatsApp Web connection.</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-6">
+                    <div className="flex items-center justify-between p-4 border rounded-lg bg-muted/50">
+                        <div className="space-y-1">
+                            <h3 className="font-medium">Session Status</h3>
+                            <p className="text-sm text-muted-foreground">
+                                {botStatus === 'connected' ? 'Connected to WhatsApp' : 'Disconnected'}
+                            </p>
+                        </div>
+                        <Badge variant={botStatus === 'connected' ? 'default' : 'destructive'}>
+                            {botStatus}
+                        </Badge>
+                    </div>
+
+                    {botStatus !== 'connected' && (
+                        <div className="flex flex-col items-center justify-center p-6 border-2 border-dashed rounded-lg">
+                            {qrCode ? (
+                                <div className="space-y-4 text-center">
+                                    <div className="bg-white p-2 rounded-lg inline-block">
+                                        {/* Placeholder for QR Code since we don't have the qrcode.react lib installed in package.json yet, 
+                                            but we can just display the text string or a placeholder image */}
+                                        <div className="w-48 h-48 bg-gray-100 flex items-center justify-center text-xs text-black break-all p-2 overflow-hidden">
+                                            {qrCode}
+                                        </div>
+                                    </div>
+                                    <p className="text-sm text-muted-foreground">Scan this QR code with your WhatsApp mobile app</p>
+                                </div>
+                            ) : (
+                                <div className="text-center space-y-4">
+                                    <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center mx-auto">
+                                        <RefreshCw className={`h-8 w-8 text-muted-foreground ${isConnecting ? 'animate-spin' : ''}`} />
+                                    </div>
+                                    <p className="text-sm text-muted-foreground">Start a new session to generate a QR code</p>
+                                    <Button onClick={connectBot} disabled={isConnecting}>
+                                        {isConnecting ? 'Starting Session...' : 'Start Session'}
+                                    </Button>
+                                </div>
+                            )}
+                        </div>
+                    )}
+
+                    {botStatus === 'connected' && (
+                        <Button variant="destructive" className="w-full" onClick={disconnectBot}>
+                            Disconnect Session
+                        </Button>
+                    )}
+                </CardContent>
+            </Card>
+
+            <div className="space-y-6">
+                <Card>
+                    <CardHeader>
+                        <CardTitle>Notification Settings</CardTitle>
+                        <CardDescription>Configure when to send automated WhatsApp messages.</CardDescription>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                        {notificationSettings.map((setting) => (
+                            <div key={setting.id} className="flex items-center justify-between space-x-2">
+                                <div className="flex-1 space-y-1">
+                                    <Label htmlFor={setting.id} className="font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                                        {setting.label}
+                                    </Label>
+                                    <p className="text-xs text-muted-foreground">
+                                        {setting.description}
+                                    </p>
+                                </div>
+                                <Switch id={setting.id} defaultChecked={setting.enabled} />
+                            </div>
+                        ))}
+                    </CardContent>
+                </Card>
+
+                <Card>
+                    <CardHeader>
+                        <CardTitle>WHMCS Configuration</CardTitle>
+                        <CardDescription>Connect to your WHMCS installation.</CardDescription>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                        <div className="space-y-2">
+                            <Label>WHMCS URL</Label>
+                            <Input placeholder="https://your-whmcs-site.com" defaultValue="https://billing.example.com" />
+                        </div>
+                        <div className="space-y-2">
+                            <Label>API Identifier</Label>
+                            <Input placeholder="Enter API Identifier" type="password" value="••••••••••••" readOnly />
+                        </div>
+                        <div className="space-y-2">
+                            <Label>API Secret</Label>
+                            <Input placeholder="Enter API Secret" type="password" value="••••••••••••" readOnly />
+                        </div>
+                        <Button className="w-full">Save Configuration</Button>
+                    </CardContent>
+                </Card>
+            </div>
+        </div>
+      )}
+
       {activeTab === "logs" && (
         <Card>
             <CardHeader>
