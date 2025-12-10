@@ -9,6 +9,7 @@ import OverviewPage from "@/pages/Overview";
 import { AuthProvider } from "@/context/AuthContext";
 
 import AsteriskPage from "@/pages/Asterisk";
+import IntegrationsPage from "@/pages/Integrations";
 import WhatsAppPage from "@/pages/WhatsApp";
 import TwilioPage from "@/pages/Twilio";
 import RetellPage from "@/pages/Retell";
@@ -40,6 +41,7 @@ function Router() {
       <Switch>
         <Route path="/" component={OverviewPage} />
         <Route path="/asterisk" component={AsteriskPage} />
+        <Route path="/integrations" component={IntegrationsPage} />
         <Route path="/whatsapp" component={WhatsAppPage} />
         <Route path="/twilio" component={TwilioPage} />
         <Route path="/twilio-voice" component={TwilioVoicePage} />

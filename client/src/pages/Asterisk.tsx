@@ -23,7 +23,12 @@ import {
   Square,
   Volume2,
   PhoneForwarded,
-  Network
+  Network,
+  HardDrive,
+  FileAudio,
+  Search,
+  Download,
+  Filter
 } from "lucide-react";
 import {
   Table,
@@ -43,11 +48,11 @@ const activeCalls = [
 ];
 
 const extensions = [
-  { ext: "201", name: "Alice Johnson", dept: "Sales", status: "Online", ip: "192.168.1.101" },
-  { ext: "202", name: "Bob Smith", dept: "Management", status: "Busy", ip: "192.168.1.102" },
-  { ext: "203", name: "Charlie Brown", dept: "Support", status: "Offline", ip: "-" },
-  { ext: "204", name: "Reception", dept: "Front Desk", status: "Online", ip: "192.168.1.104" },
-  { ext: "205", name: "Tech Support", dept: "Support", status: "Online", ip: "192.168.1.105" },
+  { ext: "201", name: "Alice Johnson", dept: "Sales", status: "Online", ip: "192.168.1.101", followMe: true },
+  { ext: "202", name: "Bob Smith", dept: "Management", status: "Busy", ip: "192.168.1.102", followMe: false },
+  { ext: "203", name: "Charlie Brown", dept: "Support", status: "Offline", ip: "-", followMe: true },
+  { ext: "204", name: "Reception", dept: "Front Desk", status: "Online", ip: "192.168.1.104", followMe: false },
+  { ext: "205", name: "Tech Support", dept: "Support", status: "Online", ip: "192.168.1.105", followMe: true },
 ];
 
 const trunks = [
@@ -56,12 +61,22 @@ const trunks = [
   { name: "VoIP-Provider-B", type: "IAX2", status: "Registered", latency: "45ms" },
 ];
 
+const cdrLogs = [
+  { date: "2023-10-27 10:45", src: "201", dst: "95551234", duration: "5m 23s", status: "ANSWERED", recording: "rec_1045.wav" },
+  { date: "2023-10-27 10:30", src: "External", dst: "204", duration: "1m 12s", status: "ANSWERED", recording: "rec_1030.wav" },
+  { date: "2023-10-27 10:15", src: "203", dst: "205", duration: "0s", status: "NO ANSWER", recording: null },
+  { date: "2023-10-27 09:55", src: "202", dst: "External", duration: "12m 45s", status: "ANSWERED", recording: "rec_0955.wav" },
+  { date: "2023-10-27 09:40", src: "External", dst: "IVR", duration: "45s", status: "BUSY", recording: null },
+];
+
 const systemStatus = {
   uptime: "14 days, 3 hours",
   activeChannels: 5,
   callsProcessed: 14502,
   loadAverage: "0.14, 0.10, 0.05",
   asteriskVersion: "Asterisk 20.5.0",
+  diskUsage: 45, // %
+  ramUsage: 62, // %
 };
 
 export default function AsteriskPage() {
@@ -93,7 +108,7 @@ export default function AsteriskPage() {
             Asterisk PBX Manager
           </h1>
           <p className="text-muted-foreground mt-1">
-            Real-time control panel for Asterisk VoIP Server
+            Real-time control panel for Asterisk VoIP Server & Elastix API
           </p>
         </div>
         <div className="flex items-center gap-4">
@@ -114,9 +129,9 @@ export default function AsteriskPage() {
           <TabsList>
             <TabsTrigger value="dashboard" className="gap-2"><Activity className="h-4 w-4" /> Dashboard</TabsTrigger>
             <TabsTrigger value="extensions" className="gap-2"><Users className="h-4 w-4" /> Extensions</TabsTrigger>
+            <TabsTrigger value="cdr" className="gap-2"><History className="h-4 w-4" /> CDR Reports</TabsTrigger>
             <TabsTrigger value="trunks" className="gap-2"><Network className="h-4 w-4" /> Trunks</TabsTrigger>
-            <TabsTrigger value="dialplan" className="gap-2"><PhoneForwarded className="h-4 w-4" /> Dialplan</TabsTrigger>
-            <TabsTrigger value="settings" className="gap-2"><Settings className="h-4 w-4" /> Settings</TabsTrigger>
+            <TabsTrigger value="recordings" className="gap-2"><FileAudio className="h-4 w-4" /> Recordings</TabsTrigger>
           </TabsList>
         </div>
 
@@ -135,11 +150,19 @@ export default function AsteriskPage() {
             </Card>
             <Card>
               <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-medium text-muted-foreground">Extensions Online</CardTitle>
+                <CardTitle className="text-sm font-medium text-muted-foreground">System Load</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">{extensions.filter(e => e.status === "Online" || e.status === "Busy").length} / {extensions.length}</div>
-                <Progress value={80} className="h-1 mt-2" />
+                <div className="flex justify-between text-xs mb-1">
+                    <span>RAM Usage</span>
+                    <span>{systemStatus.ramUsage}%</span>
+                </div>
+                <Progress value={systemStatus.ramUsage} className="h-2 mb-3 bg-slate-100 dark:bg-slate-800" />
+                <div className="flex justify-between text-xs mb-1">
+                    <span>Disk Usage</span>
+                    <span>{systemStatus.diskUsage}%</span>
+                </div>
+                <Progress value={systemStatus.diskUsage} className="h-2 bg-slate-100 dark:bg-slate-800" />
               </CardContent>
             </Card>
             <Card>
@@ -244,7 +267,7 @@ export default function AsteriskPage() {
               <div className="flex items-center justify-between">
                 <div>
                   <CardTitle>SIP Extensions</CardTitle>
-                  <CardDescription>Manage PJSIP endpoints and users</CardDescription>
+                  <CardDescription>Manage PJSIP endpoints, users, and Follow Me settings</CardDescription>
                 </div>
                 <Button>
                   <Users className="mr-2 h-4 w-4" /> Add Extension
@@ -259,6 +282,7 @@ export default function AsteriskPage() {
                     <TableHead>Caller ID Name</TableHead>
                     <TableHead>Department</TableHead>
                     <TableHead>IP Address</TableHead>
+                    <TableHead>Follow Me</TableHead>
                     <TableHead>Status</TableHead>
                     <TableHead className="text-right">Actions</TableHead>
                   </TableRow>
@@ -270,6 +294,9 @@ export default function AsteriskPage() {
                       <TableCell>{ext.name}</TableCell>
                       <TableCell>{ext.dept}</TableCell>
                       <TableCell className="font-mono text-xs">{ext.ip}</TableCell>
+                      <TableCell>
+                          <Switch checked={ext.followMe} />
+                      </TableCell>
                       <TableCell>
                         <div className="flex items-center gap-2">
                           <div className={`w-2 h-2 rounded-full ${
@@ -288,6 +315,63 @@ export default function AsteriskPage() {
               </Table>
             </CardContent>
           </Card>
+        </TabsContent>
+
+        {/* CDR Tab */}
+        <TabsContent value="cdr" className="flex-1 overflow-auto">
+            <Card>
+                <CardHeader>
+                    <div className="flex items-center justify-between">
+                        <div>
+                            <CardTitle>Call Detail Records</CardTitle>
+                            <CardDescription>History of all incoming and outgoing calls</CardDescription>
+                        </div>
+                        <div className="flex gap-2">
+                            <Input placeholder="Search..." className="w-64" />
+                            <Button variant="outline"><Filter className="h-4 w-4 mr-2"/> Filter</Button>
+                            <Button variant="outline"><Download className="h-4 w-4 mr-2"/> Export</Button>
+                        </div>
+                    </div>
+                </CardHeader>
+                <CardContent>
+                    <Table>
+                        <TableHeader>
+                            <TableRow>
+                                <TableHead>Date/Time</TableHead>
+                                <TableHead>Source</TableHead>
+                                <TableHead>Destination</TableHead>
+                                <TableHead>Duration</TableHead>
+                                <TableHead>Status</TableHead>
+                                <TableHead>Recording</TableHead>
+                            </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                            {cdrLogs.map((log, i) => (
+                                <TableRow key={i}>
+                                    <TableCell className="font-mono text-xs">{log.date}</TableCell>
+                                    <TableCell>{log.src}</TableCell>
+                                    <TableCell>{log.dst}</TableCell>
+                                    <TableCell>{log.duration}</TableCell>
+                                    <TableCell>
+                                        <Badge variant={log.status === 'ANSWERED' ? 'outline' : 'destructive'} className={log.status === 'ANSWERED' ? 'text-green-600 border-green-200 bg-green-50' : ''}>
+                                            {log.status}
+                                        </Badge>
+                                    </TableCell>
+                                    <TableCell>
+                                        {log.recording ? (
+                                            <Button variant="ghost" size="sm" className="h-8 gap-2 text-blue-600">
+                                                <Play className="h-3 w-3" /> Play
+                                            </Button>
+                                        ) : (
+                                            <span className="text-muted-foreground text-xs">-</span>
+                                        )}
+                                    </TableCell>
+                                </TableRow>
+                            ))}
+                        </TableBody>
+                    </Table>
+                </CardContent>
+            </Card>
         </TabsContent>
 
         {/* Trunks Tab */}
@@ -333,6 +417,23 @@ export default function AsteriskPage() {
                     </div>
                 </Card>
             </div>
+        </TabsContent>
+
+        {/* Recordings Tab */}
+        <TabsContent value="recordings" className="flex-1 overflow-auto">
+            <Card>
+                <CardHeader>
+                    <CardTitle>System Recordings</CardTitle>
+                    <CardDescription>Manage IVR prompts and voicemail greetings.</CardDescription>
+                </CardHeader>
+                <CardContent>
+                    <div className="text-center py-10 text-muted-foreground">
+                        <HardDrive className="h-12 w-12 mx-auto mb-4 opacity-20" />
+                        <p>No custom recordings found. Upload .wav files to manage them here.</p>
+                        <Button className="mt-4" variant="outline">Upload .WAV</Button>
+                    </div>
+                </CardContent>
+            </Card>
         </TabsContent>
       </Tabs>
     </div>

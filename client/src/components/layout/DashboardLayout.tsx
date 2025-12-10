@@ -18,7 +18,8 @@ import {
   Users,
   Zap,
   Sparkles,
-  Globe
+  Globe,
+  Layers
 } from "lucide-react";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
@@ -31,6 +32,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const navItems = [
     { icon: LayoutDashboard, label: "Dashboard", path: "/", badge: "v2.4" },
     { icon: Phone, label: "Asterisk PBX", path: "/asterisk", badge: "Core" },
+    { icon: Layers, label: "Integrations", path: "/integrations" },
     { icon: MessageSquare, label: "WhatsApp Manager", path: "/whatsapp", badge: "API" },
     { icon: Phone, label: "Twilio Voice", path: "/twilio", badge: "Voice" },
     { icon: ShieldCheck, label: "Verify", path: "/verify", badge: "Auth" },
