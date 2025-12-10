@@ -349,6 +349,99 @@ export async function registerRoutes(
     }
   });
 
+  // VoIP Extensions Routes
+  app.get("/api/voip/extensions", async (req, res) => {
+    try {
+      const userId = req.user?.id || "default-user";
+      const extensions = await storage.getVoipExtensionsByUserId(userId);
+      res.json(extensions);
+    } catch (error) {
+      logger.error("Error fetching VoIP extensions", "api", error);
+      res.status(500).json({ error: "Failed to fetch extensions" });
+    }
+  });
+
+  app.post("/api/voip/extensions", async (req, res) => {
+    try {
+      const userId = req.user?.id || "default-user";
+      const extension = await storage.createVoipExtension({
+        ...req.body,
+        userId,
+      });
+      res.json(extension);
+    } catch (error) {
+      logger.error("Error creating VoIP extension", "api", error);
+      res.status(500).json({ error: "Failed to create extension" });
+    }
+  });
+
+  app.put("/api/voip/extensions/:id", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const extension = await storage.updateVoipExtension(id, req.body);
+      if (!extension) {
+        return res.status(404).json({ error: "Extension not found" });
+      }
+      res.json(extension);
+    } catch (error) {
+      logger.error("Error updating VoIP extension", "api", error);
+      res.status(500).json({ error: "Failed to update extension" });
+    }
+  });
+
+  app.delete("/api/voip/extensions/:id", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const deleted = await storage.deleteVoipExtension(id);
+      if (!deleted) {
+        return res.status(404).json({ error: "Extension not found" });
+      }
+      res.json({ success: true });
+    } catch (error) {
+      logger.error("Error deleting VoIP extension", "api", error);
+      res.status(500).json({ error: "Failed to delete extension" });
+    }
+  });
+
+  app.post("/api/voip/create-admin", async (req, res) => {
+    try {
+      const { phoneNumber, adminEmail } = req.body;
+      const userId = req.user?.id || "default-user";
+
+      // Crear extensión principal de admin
+      const adminExtension = await storage.createVoipExtension({
+        userId,
+        extensionNumber: "1000",
+        name: "Admin Principal",
+        phoneNumber: phoneNumber || "8622770131",
+        role: "admin",
+        status: "available",
+        permissions: {
+          fullAccess: true,
+          canManageExtensions: true,
+          canManageWhatsApp: true,
+          canExportData: true,
+          canManageUsers: true,
+          canViewAllCalls: true,
+          canViewAllMessages: true,
+        },
+        credentials: {
+          adminEmail: adminEmail || "alexander.medez931@outlook.com",
+        },
+        isActive: true,
+      });
+
+      res.json({
+        success: true,
+        extension: adminExtension,
+        message: "Admin principal creado con privilegios completos",
+      });
+    } catch (error) {
+      logger.error("Error creating admin extension", "api", error);
+      res.status(500).json({ error: "Failed to create admin extension" });
+    }
+  });
+
   // CRM Export Routes
   app.post("/api/crm/export/voice", async (req, res) => {
     try {

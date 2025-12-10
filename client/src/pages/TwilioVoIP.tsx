@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -18,6 +17,7 @@ interface Extension {
   number: string;
   name: string;
   status: 'available' | 'busy' | 'offline';
+  role?: 'admin'; // Added role property
 }
 
 const defaultExtensions: Extension[] = [
@@ -37,6 +37,11 @@ export default function TwilioVoIP() {
   const [callDuration, setCallDuration] = useState(0);
   const [callTimer, setCallTimer] = useState<NodeJS.Timeout | null>(null);
   const { toast } = useToast();
+
+  // Admin setup states
+  const [showAdminSetup, setShowAdminSetup] = useState(false);
+  const [adminPhone, setAdminPhone] = useState("");
+  const [adminEmail, setAdminEmail] = useState("");
 
   useEffect(() => {
     initializeDevice();
@@ -183,6 +188,61 @@ export default function TwilioVoIP() {
     }
   };
 
+  // Function to create admin extension
+  const createAdminExtension = async () => {
+    if (!adminPhone || !adminEmail) {
+      toast({
+        title: "Missing Information",
+        description: "Please provide phone number and email for the admin.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      // Assuming you have an API endpoint to create admin users
+      const response = await fetch('/api/admin/create', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          phone: adminPhone,
+          email: adminEmail,
+          role: 'admin', // Assign admin role
+          extensionNumber: '1000' // Assign extension 1000 to admin
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to create admin extension');
+      }
+
+      const newAdminExtension: Extension = {
+        id: 'admin-1000', // Unique ID for admin
+        number: '1000',
+        name: 'General Admin',
+        status: 'available', // Default status
+        role: 'admin',
+      };
+
+      setExtensions(prevExtensions => [...prevExtensions, newAdminExtension]);
+      toast({
+        title: "Admin Created",
+        description: "General admin extension created successfully.",
+      });
+      setShowAdminSetup(false);
+      setAdminPhone("");
+      setAdminEmail("");
+
+    } catch (error: any) {
+      toast({
+        title: "Error Creating Admin",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
+  };
+
   return (
     <div className="space-y-6">
       {/* Status Bar */}
@@ -287,34 +347,84 @@ export default function TwilioVoIP() {
         {/* Extensions */}
         <Card>
           <CardHeader>
-            <CardTitle>Quick Dial Extensions</CardTitle>
-            <CardDescription>Click to call internal extensions</CardDescription>
+            <CardTitle className="flex items-center justify-between">
+              <span className="flex items-center gap-2">
+                <Hash className="h-5 w-5" />
+                Extensions
+              </span>
+              <div className="flex gap-2">
+                <Button size="sm" variant="outline" onClick={() => setShowAdminSetup(true)}>
+                  <SettingsIcon className="h-4 w-4 mr-2" />
+                  Setup Admin
+                </Button>
+                <Button size="sm" variant="outline">
+                  <User className="h-4 w-4 mr-2" />
+                  Add Extension
+                </Button>
+              </div>
+            </CardTitle>
           </CardHeader>
           <CardContent>
-            <ScrollArea className="h-[400px]">
+            {showAdminSetup && (
+              <div className="mb-4 p-4 border rounded-lg bg-blue-50 dark:bg-blue-950">
+                <h4 className="font-semibold mb-3">Crear Admin Principal</h4>
+                <div className="space-y-3">
+                  <div>
+                    <Label>Número de Teléfono</Label>
+                    <Input
+                      value={adminPhone}
+                      onChange={(e) => setAdminPhone(e.target.value)}
+                      placeholder="8622770131"
+                    />
+                  </div>
+                  <div>
+                    <Label>Email del Admin</Label>
+                    <Input
+                      value={adminEmail}
+                      onChange={(e) => setAdminEmail(e.target.value)}
+                      placeholder="alexander.medez931@outlook.com"
+                    />
+                  </div>
+                  <div className="flex gap-2">
+                    <Button onClick={createAdminExtension} className="flex-1">
+                      Crear Admin con Privilegios Completos
+                    </Button>
+                    <Button variant="outline" onClick={() => setShowAdminSetup(false)}>
+                      Cancelar
+                    </Button>
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    Se creará la extensión 1000 como admin general con acceso completo a VoIP, WhatsApp y CRM.
+                  </p>
+                </div>
+              </div>
+            )}
+            <ScrollArea className="h-[300px]">
               <div className="space-y-2">
                 {extensions.map((ext) => (
-                  <Button
+                  <div
                     key={ext.id}
-                    variant="outline"
-                    className="w-full justify-between h-auto py-3"
-                    onClick={() => handleCall(ext.number)}
-                    disabled={!isRegistered || callStatus !== 'idle'}
+                    className="flex items-center justify-between p-3 border rounded-lg hover:bg-muted/50 transition-colors"
                   >
                     <div className="flex items-center gap-3">
                       <div className={`h-2 w-2 rounded-full ${
                         ext.status === 'available' ? 'bg-green-500' :
-                        ext.status === 'busy' ? 'bg-yellow-500' : 'bg-gray-500'
+                        ext.status === 'busy' ? 'bg-red-500' : 'bg-gray-500'
                       }`} />
-                      <div className="text-left">
-                        <p className="font-semibold">{ext.name}</p>
-                        <p className="text-xs text-muted-foreground font-mono">
-                          Ext. {ext.number}
-                        </p>
+                      <div>
+                        <p className="font-medium">{ext.number}</p>
+                        <p className="text-sm text-muted-foreground">{ext.name}</p>
                       </div>
                     </div>
-                    <Phone className="h-4 w-4" />
-                  </Button>
+                    <div className="flex items-center gap-2">
+                      {ext.role === 'admin' && (
+                        <Badge variant="destructive">Admin</Badge>
+                      )}
+                      <Badge variant={ext.status === 'available' ? 'default' : 'secondary'}>
+                        {ext.status}
+                      </Badge>
+                    </div>
+                  </div>
                 ))}
               </div>
             </ScrollArea>

@@ -26,6 +26,10 @@ import {
   type InsertSystemLog,
   type ExposedApi,
   type InsertExposedApi,
+  // Import for VoIP extensions
+  voipExtensions,
+  type VoipExtension,
+  type InsertVoipExtension,
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc } from "drizzle-orm";
@@ -88,10 +92,14 @@ export interface IStorage {
   updateExposedApi(id: string, api: Partial<ExposedApi>): Promise<ExposedApi | undefined>;
   deleteExposedApi(id: string): Promise<boolean>;
 
-  // Export methods
-  getAllTwilioCalls(): Promise<TwilioCall[]>;
-  getAllWhatsAppMessages(): Promise<WhatsappMessage[]>;
-  getAllCrmContacts(): Promise<CrmContact[]>;
+  // VoIP Extensions
+  getVoipExtension(id: string): Promise<VoipExtension | undefined>;
+  getVoipExtensionByNumber(extensionNumber: string): Promise<VoipExtension | undefined>;
+  getVoipExtensionsByUserId(userId: string): Promise<VoipExtension[]>;
+  getAllVoipExtensions(): Promise<VoipExtension[]>;
+  createVoipExtension(extension: InsertVoipExtension): Promise<VoipExtension>;
+  updateVoipExtension(id: string, extension: Partial<VoipExtension>): Promise<VoipExtension | undefined>;
+  deleteVoipExtension(id: string): Promise<boolean>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -290,19 +298,7 @@ export class DatabaseStorage implements IStorage {
   async deleteCrmContact(id: string): Promise<boolean> {
     const result = await db.delete(crmContacts).where(eq(crmContacts.id, id));
     return result.rowCount ? result.rowCount > 0 : false;
-  },
-
-  async getAllTwilioCalls(): Promise<TwilioCall[]> {
-    return await db.select().from(twilioCalls).orderBy(desc(twilioCalls.createdAt));
-  },
-
-  async getAllWhatsAppMessages(): Promise<WhatsappMessage[]> {
-    return await db.select().from(whatsappMessages).orderBy(desc(whatsappMessages.createdAt));
-  },
-
-  async getAllCrmContacts(): Promise<CrmContact[]> {
-    return await db.select().from(crmContacts).orderBy(desc(crmContacts.createdAt));
-  },
+  }
 
   // System Logs
   async getSystemLogs(limit: number = 100): Promise<SystemLog[]> {
@@ -344,6 +340,44 @@ export class DatabaseStorage implements IStorage {
 
   async deleteExposedApi(id: string): Promise<boolean> {
     const result = await db.delete(exposedApis).where(eq(exposedApis.id, id));
+    return result.rowCount ? result.rowCount > 0 : false;
+  }
+
+  // VoIP Extensions
+  async getVoipExtension(id: string): Promise<VoipExtension | undefined> {
+    const [extension] = await db.select().from(voipExtensions).where(eq(voipExtensions.id, id));
+    return extension || undefined;
+  }
+
+  async getVoipExtensionByNumber(extensionNumber: string): Promise<VoipExtension | undefined> {
+    const [extension] = await db.select().from(voipExtensions).where(eq(voipExtensions.extensionNumber, extensionNumber));
+    return extension || undefined;
+  }
+
+  async getVoipExtensionsByUserId(userId: string): Promise<VoipExtension[]> {
+    return await db.select().from(voipExtensions).where(eq(voipExtensions.userId, userId));
+  }
+
+  async getAllVoipExtensions(): Promise<VoipExtension[]> {
+    return await db.select().from(voipExtensions).orderBy(desc(voipExtensions.createdAt));
+  }
+
+  async createVoipExtension(insertExtension: InsertVoipExtension): Promise<VoipExtension> {
+    const [extension] = await db.insert(voipExtensions).values(insertExtension).returning();
+    return extension;
+  }
+
+  async updateVoipExtension(id: string, updateData: Partial<VoipExtension>): Promise<VoipExtension | undefined> {
+    const [extension] = await db
+      .update(voipExtensions)
+      .set({ ...updateData, updatedAt: new Date() })
+      .where(eq(voipExtensions.id, id))
+      .returning();
+    return extension || undefined;
+  }
+
+  async deleteVoipExtension(id: string): Promise<boolean> {
+    const result = await db.delete(voipExtensions).where(eq(voipExtensions.id, id));
     return result.rowCount ? result.rowCount > 0 : false;
   }
 }

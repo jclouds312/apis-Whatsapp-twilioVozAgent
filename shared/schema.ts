@@ -203,6 +203,31 @@ export const insertSystemLogSchema = createInsertSchema(systemLogs).omit({
 export type InsertSystemLog = z.infer<typeof insertSystemLogSchema>;
 export type SystemLog = typeof systemLogs.$inferSelect;
 
+// ============= VOIP EXTENSIONS =============
+export const voipExtensions = pgTable("voip_extensions", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull(),
+  extensionNumber: text("extension_number").notNull().unique(),
+  name: text("name").notNull(),
+  phoneNumber: text("phone_number"), // Número de teléfono vinculado
+  role: text("role").default("user"), // 'admin', 'user', 'supervisor'
+  status: text("status").default("available"), // 'available', 'busy', 'offline'
+  credentials: jsonb("credentials").default({}),
+  permissions: jsonb("permissions").default({}),
+  isActive: boolean("is_active").default(true),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const insertVoipExtensionSchema = createInsertSchema(voipExtensions).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export type InsertVoipExtension = z.infer<typeof insertVoipExtensionSchema>;
+export type VoipExtension = typeof voipExtensions.$inferSelect;
+
 // ============= EXPOSED API ENDPOINTS =============
 export const exposedApis = pgTable("exposed_apis", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
