@@ -11,6 +11,7 @@ import { AuthProvider } from "@/context/AuthContext";
 import AsteriskPage from "@/pages/Asterisk";
 import IntegrationsPage from "@/pages/Integrations";
 import PBXCorePage from "@/pages/PBXCore";
+import VoIPDomainPage from "@/pages/VoIPDomain";
 import WhatsAppPage from "@/pages/WhatsApp";
 import TwilioPage from "@/pages/Twilio";
 import RetellPage from "@/pages/Retell";
@@ -43,6 +44,7 @@ function Router() {
         <Route path="/" component={OverviewPage} />
         <Route path="/asterisk" component={AsteriskPage} />
         <Route path="/core-pbx" component={PBXCorePage} />
+        <Route path="/voip-domains" component={VoIPDomainPage} />
         <Route path="/integrations" component={IntegrationsPage} />
         <Route path="/whatsapp" component={WhatsAppPage} />
         <Route path="/twilio" component={TwilioPage} />
