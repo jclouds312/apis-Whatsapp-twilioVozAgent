@@ -25,6 +25,7 @@ export default function Admin() {
     { id: 1, number: "+1 (415) 555-0101", region: "US - California", type: "Local", capabilities: ["Voice", "SMS"], status: "Active", crmLink: "Linked" },
     { id: 2, number: "+1 (212) 555-0199", region: "US - New York", type: "Local", capabilities: ["Voice", "SMS", "MMS"], status: "Active", crmLink: "Unlinked" },
     { id: 3, number: "+1 (512) 555-0255", region: "US - Texas", type: "Local", capabilities: ["Voice"], status: "Configuring", crmLink: "Pending" },
+    { id: 4, number: "+1 (862) 277-0131", region: "US - New Jersey", type: "Main", capabilities: ["Voice", "SMS", "WhatsApp"], status: "Active", crmLink: "Linked" },
   ]);
 
   return (

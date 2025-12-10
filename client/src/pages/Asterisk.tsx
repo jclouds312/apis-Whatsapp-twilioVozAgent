@@ -48,6 +48,7 @@ const activeCalls = [
 ];
 
 const extensions = [
+  { ext: "100", name: "Admin", dept: "Management", status: "Online", ip: "192.168.1.100", followMe: true },
   { ext: "201", name: "Alice Johnson", dept: "Sales", status: "Online", ip: "192.168.1.101", followMe: true },
   { ext: "202", name: "Bob Smith", dept: "Management", status: "Busy", ip: "192.168.1.102", followMe: false },
   { ext: "203", name: "Charlie Brown", dept: "Support", status: "Offline", ip: "-", followMe: true },
