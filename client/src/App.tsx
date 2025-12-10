@@ -15,6 +15,7 @@ import VoIPDomainPage from "@/pages/VoIPDomain";
 import WhatsAppPage from "@/pages/WhatsApp";
 import WhatsAppClientPage from "@/pages/WhatsAppClient";
 import VenomGatewayPage from "@/pages/VenomGateway";
+import VonagePage from "@/pages/Vonage";
 import TwilioPage from "@/pages/Twilio";
 import RetellPage from "@/pages/Retell";
 import VerifyPage from "@/pages/Verify";
@@ -49,6 +50,7 @@ function Router() {
         <Route path="/voip-domains" component={VoIPDomainPage} />
         <Route path="/whatsapp-web" component={WhatsAppClientPage} />
         <Route path="/venom-gateway" component={VenomGatewayPage} />
+        <Route path="/vonage" component={VonagePage} />
         <Route path="/integrations" component={IntegrationsPage} />
         <Route path="/whatsapp" component={WhatsAppPage} />
         <Route path="/twilio" component={TwilioPage} />

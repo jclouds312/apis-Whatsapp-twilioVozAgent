@@ -13,7 +13,8 @@ import {
   ArrowRight,
   Settings2,
   RefreshCw,
-  Power
+  Power,
+  Activity
 } from "lucide-react";
 
 export default function IntegrationsPage() {
@@ -57,6 +58,16 @@ export default function IntegrationsPage() {
       color: "bg-purple-500",
       link: "/retell",
       features: ["Voice Agents", "LLM Integration", "Real-time Transcription"]
+    },
+    {
+      id: "vonage",
+      name: "Vonage API",
+      description: "Communications APIs for Voice, SMS, Verify and Video.",
+      icon: Activity,
+      status: "Connected",
+      color: "bg-slate-900",
+      link: "/vonage",
+      features: ["Voice API", "NCCO Builder", "SMS", "Numbers"]
     },
     {
       id: "facebook",
