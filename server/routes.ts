@@ -4,6 +4,7 @@ import { storage } from "./storage";
 import { whatsAppBot } from "./whatsapp-bot";
 import { whatsAppBusinessAPI } from "./whatsapp-business-api";
 import { whatsAppOTPService } from "./whatsapp-otp";
+import { twilioVoiceNotifications } from "./twilio-voice-notifications";
 import { logger } from "./logger";
 
 export async function registerRoutes(
@@ -75,6 +76,73 @@ export async function registerRoutes(
     } catch (error) {
       logger.error("Error handling outgoing call", "api", error);
       res.status(500).send('Error');
+    }
+  });
+
+  // Voice Notification Routes
+  app.post("/api/twilio/voice/notification/send", async (req, res) => {
+    try {
+      const { to, message, voiceId, language, repeat } = req.body;
+
+      if (!to || !message) {
+        return res.status(400).json({ error: "Missing 'to' or 'message' field" });
+      }
+
+      const result = await twilioVoiceNotifications.sendVoiceNotification({
+        to,
+        message,
+        voiceId,
+        language,
+        repeat,
+      });
+
+      res.json(result);
+    } catch (error) {
+      logger.error("Error sending voice notification", "api", error);
+      res.status(500).json({ error: "Failed to send voice notification" });
+    }
+  });
+
+  app.post("/api/twilio/voice/notification/bulk", async (req, res) => {
+    try {
+      const { recipients, message, voiceId, language, repeat } = req.body;
+
+      if (!recipients || !Array.isArray(recipients) || !message) {
+        return res.status(400).json({ error: "Missing or invalid 'recipients' or 'message' field" });
+      }
+
+      const results = await twilioVoiceNotifications.sendBulkNotifications(
+        recipients,
+        message,
+        { voiceId, language, repeat }
+      );
+
+      res.json({ results });
+    } catch (error) {
+      logger.error("Error sending bulk voice notifications", "api", error);
+      res.status(500).json({ error: "Failed to send bulk notifications" });
+    }
+  });
+
+  app.get("/api/twilio/voice/notification/status/:callSid", async (req, res) => {
+    try {
+      const { callSid } = req.params;
+      const status = await twilioVoiceNotifications.getCallStatus(callSid);
+      res.json(status);
+    } catch (error) {
+      logger.error("Error fetching call status", "api", error);
+      res.status(500).json({ error: "Failed to fetch call status" });
+    }
+  });
+
+  app.post("/api/twilio/voice/notification/cancel/:callSid", async (req, res) => {
+    try {
+      const { callSid } = req.params;
+      const result = await twilioVoiceNotifications.cancelCall(callSid);
+      res.json(result);
+    } catch (error) {
+      logger.error("Error canceling call", "api", error);
+      res.status(500).json({ error: "Failed to cancel call" });
     }
   });
 
