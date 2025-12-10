@@ -4,16 +4,17 @@ import { storage } from "./storage";
 import { whatsAppBot } from "./whatsapp-bot";
 import { whatsAppBusinessAPI } from "./whatsapp-business-api";
 import { whatsAppOTPService } from "./whatsapp-otp";
+import { log } from "./logger"; // Assuming a logger utility is available
 
 export async function registerRoutes(
   httpServer: Server,
   app: Express
 ): Promise<Server> {
-  
+
   // Health check endpoint
   app.get("/api/health", (_req, res) => {
-    res.json({ 
-      status: "healthy", 
+    res.json({
+      status: "healthy",
       timestamp: new Date().toISOString(),
       services: {
         whatsappBot: whatsAppBot.getStatus(),
@@ -115,8 +116,8 @@ export async function registerRoutes(
 
   app.get("/api/whatsapp-business/status", (_req, res) => {
     const isConfigured = whatsAppBusinessAPI.isConfigured();
-    res.json({ 
-      success: true, 
+    res.json({
+      success: true,
       configured: isConfigured,
       message: isConfigured ? 'WhatsApp Business API is configured' : 'Missing credentials'
     });
@@ -174,8 +175,8 @@ export async function registerRoutes(
 
   app.get("/api/whatsapp-otp/config-status", (_req, res) => {
     const isConfigured = whatsAppOTPService.isConfigured();
-    res.json({ 
-      success: true, 
+    res.json({
+      success: true,
       configured: isConfigured,
       message: isConfigured ? 'WhatsApp OTP service is configured' : 'Missing credentials'
     });
@@ -202,7 +203,7 @@ export async function registerRoutes(
   app.post("/api/whatsapp-business/webhook", async (req, res) => {
     try {
       const body = req.body;
-      
+
       if (body.object === 'whatsapp_business_account') {
         body.entry?.forEach((entry: any) => {
           entry.changes?.forEach((change: any) => {
@@ -216,7 +217,7 @@ export async function registerRoutes(
             }
           });
         });
-        
+
         res.status(200).send('EVENT_RECEIVED');
       } else {
         res.sendStatus(404);
@@ -224,6 +225,60 @@ export async function registerRoutes(
     } catch (error: any) {
       console.error('Webhook error:', error);
       res.status(500).json({ success: false, error: error.message });
+    }
+  });
+
+  // CRM Routes
+  app.get("/api/crm/contacts", async (req, res) => {
+    try {
+      const userId = req.user?.id || "default-user";
+      const contacts = await storage.getCrmContactsByUserId(userId);
+      res.json(contacts);
+    } catch (error) {
+      log.error("Error fetching CRM contacts:", error);
+      res.status(500).json({ error: "Failed to fetch contacts" });
+    }
+  });
+
+  app.post("/api/crm/contacts", async (req, res) => {
+    try {
+      const userId = req.user?.id || "default-user";
+      const contact = await storage.createCrmContact({
+        ...req.body,
+        userId,
+      });
+      res.json(contact);
+    } catch (error) {
+      log.error("Error creating CRM contact:", error);
+      res.status(500).json({ error: "Failed to create contact" });
+    }
+  });
+
+  app.put("/api/crm/contacts/:id", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const contact = await storage.updateCrmContact(id, req.body);
+      if (!contact) {
+        return res.status(404).json({ error: "Contact not found" });
+      }
+      res.json(contact);
+    } catch (error) {
+      log.error("Error updating CRM contact:", error);
+      res.status(500).json({ error: "Failed to update contact" });
+    }
+  });
+
+  app.delete("/api/crm/contacts/:id", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const deleted = await storage.deleteCrmContact(id);
+      if (!deleted) {
+        return res.status(404).json({ error: "Contact not found" });
+      }
+      res.json({ success: true });
+    } catch (error) {
+      log.error("Error deleting CRM contact:", error);
+      res.status(500).json({ error: "Failed to delete contact" });
     }
   });
 

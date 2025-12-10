@@ -27,8 +27,9 @@ export default function Settings() {
       </div>
 
       <Tabs defaultValue="api-keys" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-4 lg:w-[400px]">
+        <TabsList className="grid w-full grid-cols-5 lg:w-[500px]">
           <TabsTrigger value="api-keys">API Keys</TabsTrigger>
+          <TabsTrigger value="crm">CRM</TabsTrigger>
           <TabsTrigger value="general">General</TabsTrigger>
           <TabsTrigger value="billing">Billing</TabsTrigger>
           <TabsTrigger value="security">Security</TabsTrigger>
@@ -141,6 +142,62 @@ export default function Settings() {
                 <Button className="bg-primary hover:bg-primary/90">
                     <Save className="h-4 w-4 mr-2" />
                     Save Changes
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="crm" className="space-y-6">
+          <Card className="bg-card/50 backdrop-blur-sm border-primary/10">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Database className="h-5 w-5 text-primary" />
+                CRM Configuration
+              </CardTitle>
+              <CardDescription>Configure CRM sync and data management</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <div className="flex items-center justify-between">
+                <div className="space-y-0.5">
+                  <Label className="text-base">Auto-sync Contacts</Label>
+                  <p className="text-sm text-muted-foreground">Automatically sync contacts from WhatsApp and Twilio</p>
+                </div>
+                <Switch defaultChecked />
+              </div>
+              <Separator />
+              <div className="flex items-center justify-between">
+                <div className="space-y-0.5">
+                  <Label className="text-base">Duplicate Detection</Label>
+                  <p className="text-sm text-muted-foreground">Merge duplicate contacts automatically</p>
+                </div>
+                <Switch defaultChecked />
+              </div>
+              <Separator />
+              <div className="space-y-3">
+                <Label className="text-base">Default Contact Status</Label>
+                <select className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm">
+                  <option value="new">New</option>
+                  <option value="contacted">Contacted</option>
+                  <option value="qualified">Qualified</option>
+                  <option value="converted">Converted</option>
+                </select>
+              </div>
+              <Separator />
+              <div className="space-y-3">
+                <Label className="text-base">Data Retention Period</Label>
+                <select className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm">
+                  <option value="30">30 days</option>
+                  <option value="90">90 days</option>
+                  <option value="180">6 months</option>
+                  <option value="365">1 year</option>
+                  <option value="unlimited">Unlimited</option>
+                </select>
+              </div>
+              <div className="flex justify-end pt-4">
+                <Button className="bg-primary hover:bg-primary/90">
+                  <Save className="h-4 w-4 mr-2" />
+                  Save CRM Settings
                 </Button>
               </div>
             </CardContent>
