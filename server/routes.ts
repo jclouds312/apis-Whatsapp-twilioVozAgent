@@ -11,6 +11,73 @@ export async function registerRoutes(
   app: Express
 ): Promise<Server> {
 
+  // Twilio Voice routes
+  app.post("/api/twilio/voice/token", async (req, res) => {
+    try {
+      const { identity } = req.body;
+
+      if (!process.env.TWILIO_ACCOUNT_SID || !process.env.TWILIO_API_KEY || !process.env.TWILIO_API_SECRET) {
+        return res.status(500).json({ error: "Twilio Voice not configured" });
+      }
+
+      const AccessToken = require('twilio').jwt.AccessToken;
+      const VoiceGrant = AccessToken.VoiceGrant;
+
+      const voiceGrant = new VoiceGrant({
+        outgoingApplicationSid: process.env.TWILIO_TWIML_APP_SID,
+        incomingAllow: true,
+      });
+
+      const token = new AccessToken(
+        process.env.TWILIO_ACCOUNT_SID,
+        process.env.TWILIO_API_KEY,
+        process.env.TWILIO_API_SECRET,
+        { identity: identity || 'user_' + Date.now() }
+      );
+
+      token.addGrant(voiceGrant);
+
+      res.json({ token: token.toJwt() });
+    } catch (error) {
+      logger.error("Error generating Twilio Voice token", "api", error);
+      res.status(500).json({ error: "Failed to generate token" });
+    }
+  });
+
+  app.post("/api/twilio/voice/incoming", async (req, res) => {
+    try {
+      const twiml = `<?xml version="1.0" encoding="UTF-8"?>
+<Response>
+  <Dial callerId="${process.env.TWILIO_PHONE_NUMBER || ''}">
+    <Client>user_browser</Client>
+  </Dial>
+</Response>`;
+
+      res.type('text/xml');
+      res.send(twiml);
+    } catch (error) {
+      logger.error("Error handling incoming call", "api", error);
+      res.status(500).send('Error');
+    }
+  });
+
+  app.post("/api/twilio/voice/outgoing", async (req, res) => {
+    try {
+      const { To } = req.body;
+
+      const twiml = `<?xml version="1.0" encoding="UTF-8"?>
+<Response>
+  <Dial callerId="${process.env.TWILIO_PHONE_NUMBER || ''}">${To}</Dial>
+</Response>`;
+
+      res.type('text/xml');
+      res.send(twiml);
+    } catch (error) {
+      logger.error("Error handling outgoing call", "api", error);
+      res.status(500).send('Error');
+    }
+  });
+
   // Health check endpoint
   app.get("/api/health", (_req, res) => {
     res.json({
