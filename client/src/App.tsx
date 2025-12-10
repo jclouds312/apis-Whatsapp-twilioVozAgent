@@ -13,6 +13,7 @@ import IntegrationsPage from "@/pages/Integrations";
 import PBXCorePage from "@/pages/PBXCore";
 import VoIPDomainPage from "@/pages/VoIPDomain";
 import WhatsAppPage from "@/pages/WhatsApp";
+import WhatsAppClientPage from "@/pages/WhatsAppClient";
 import TwilioPage from "@/pages/Twilio";
 import RetellPage from "@/pages/Retell";
 import VerifyPage from "@/pages/Verify";
@@ -45,6 +46,7 @@ function Router() {
         <Route path="/asterisk" component={AsteriskPage} />
         <Route path="/core-pbx" component={PBXCorePage} />
         <Route path="/voip-domains" component={VoIPDomainPage} />
+        <Route path="/whatsapp-web" component={WhatsAppClientPage} />
         <Route path="/integrations" component={IntegrationsPage} />
         <Route path="/whatsapp" component={WhatsAppPage} />
         <Route path="/twilio" component={TwilioPage} />

@@ -21,7 +21,8 @@ import {
   Globe,
   Layers,
   Network,
-  Globe2
+  Globe2,
+  Smartphone
 } from "lucide-react";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
@@ -36,6 +37,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     { icon: Phone, label: "Asterisk PBX", path: "/asterisk", badge: "Core" },
     { icon: Network, label: "Core Engine", path: "/core-pbx" },
     { icon: Globe2, label: "VoIP Domains", path: "/voip-domains" },
+    { icon: Smartphone, label: "WhatsApp Web", path: "/whatsapp-web" },
     { icon: Layers, label: "Integrations", path: "/integrations" },
     { icon: MessageSquare, label: "WhatsApp Manager", path: "/whatsapp", badge: "API" },
     { icon: Phone, label: "Twilio Voice", path: "/twilio", badge: "Voice" },
