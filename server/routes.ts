@@ -5,6 +5,7 @@ import { whatsAppBot } from "./whatsapp-bot";
 import { whatsAppBusinessAPI } from "./whatsapp-business-api";
 import { whatsAppOTPService } from "./whatsapp-otp";
 import { twilioVoiceNotifications } from "./twilio-voice-notifications";
+import { twilioVoiceService } from "./twilio-voice-service";
 import { logger } from "./logger";
 
 export async function registerRoutes(
@@ -76,6 +77,111 @@ export async function registerRoutes(
     } catch (error) {
       logger.error("Error handling outgoing call", "api", error);
       res.status(500).send('Error');
+    }
+  });
+
+  // TwiML endpoint for outbound calls
+  app.post("/api/twilio/voice/twiml/outbound", async (req, res) => {
+    try {
+      const { To } = req.body;
+      const twiml = twilioVoiceService.generateTwiML('dial', { number: To });
+      res.type('text/xml');
+      res.send(twiml);
+    } catch (error) {
+      logger.error("Error generating TwiML", "api", error);
+      res.status(500).send('Error');
+    }
+  });
+
+  // Call status callback
+  app.post("/api/twilio/voice/status", async (req, res) => {
+    try {
+      const { CallSid, CallStatus, CallDuration, RecordingUrl } = req.body;
+      
+      twilioVoiceService.updateCallStatus(CallSid, CallStatus, {
+        duration: CallDuration ? parseInt(CallDuration) : undefined,
+        recordingUrl: RecordingUrl,
+      });
+
+      logger.info(`Call status update: ${CallSid} - ${CallStatus}`, "voice-service");
+      res.sendStatus(200);
+    } catch (error) {
+      logger.error("Error handling call status", "api", error);
+      res.sendStatus(500);
+    }
+  });
+
+  // Make test call from extension
+  app.post("/api/voip/test-call", async (req, res) => {
+    try {
+      const { fromExtension, toNumber, extensionId } = req.body;
+
+      if (!toNumber) {
+        return res.status(400).json({ error: "Destination number required" });
+      }
+
+      const result = await twilioVoiceService.makeCall({
+        from: process.env.TWILIO_PHONE_NUMBER || '',
+        to: toNumber,
+        extensionId: extensionId || fromExtension,
+        record: true,
+      });
+
+      if (result.success) {
+        res.json({ success: true, callSid: result.callSid });
+      } else {
+        res.status(500).json({ success: false, error: result.error });
+      }
+    } catch (error) {
+      logger.error("Error making test call", "api", error);
+      res.status(500).json({ error: "Failed to initiate call" });
+    }
+  });
+
+  // Get call status
+  app.get("/api/voip/call-status/:callSid", async (req, res) => {
+    try {
+      const { callSid } = req.params;
+      const status = await twilioVoiceService.getCallStatus(callSid);
+      res.json(status);
+    } catch (error) {
+      logger.error("Error fetching call status", "api", error);
+      res.status(500).json({ error: "Failed to fetch call status" });
+    }
+  });
+
+  // End active call
+  app.post("/api/voip/end-call/:callSid", async (req, res) => {
+    try {
+      const { callSid } = req.params;
+      const result = await twilioVoiceService.endCall(callSid);
+      res.json(result);
+    } catch (error) {
+      logger.error("Error ending call", "api", error);
+      res.status(500).json({ error: "Failed to end call" });
+    }
+  });
+
+  // Get call history
+  app.get("/api/voip/call-history", async (req, res) => {
+    try {
+      const limit = parseInt(req.query.limit as string) || 50;
+      const history = await twilioVoiceService.getCallHistory(limit);
+      res.json(history);
+    } catch (error) {
+      logger.error("Error fetching call history", "api", error);
+      res.status(500).json({ error: "Failed to fetch call history" });
+    }
+  });
+
+  // Get active calls
+  app.get("/api/voip/active-calls", async (req, res) => {
+    try {
+      const activeCalls = twilioVoiceService.getActiveCalls();
+      res.json(activeCalls);
+    } catch (error) {
+      logger.error("Error fetching active calls", "api", error);
+      res.status(500).json({ error: "Failed to fetch active calls" });
     }
   });
 

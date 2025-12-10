@@ -43,8 +43,14 @@ export default function TwilioVoIP() {
   const [adminPhone, setAdminPhone] = useState("");
   const [adminEmail, setAdminEmail] = useState("");
 
+  // Test call states
+  const [testCallNumber, setTestCallNumber] = useState("");
+  const [activeTestCall, setActiveTestCall] = useState<any>(null);
+  const [callHistory, setCallHistory] = useState<any[]>([]);
+
   useEffect(() => {
     initializeDevice();
+    fetchCallHistory();
     return () => {
       twilioVoiceService.destroy();
       if (callTimer) clearInterval(callTimer);
@@ -188,6 +194,112 @@ export default function TwilioVoIP() {
     }
   };
 
+  // Fetch call history
+  const fetchCallHistory = async () => {
+    try {
+      const response = await fetch('/api/voip/call-history?limit=10');
+      if (response.ok) {
+        const history = await response.json();
+        setCallHistory(history);
+      }
+    } catch (error) {
+      console.error("Error fetching call history:", error);
+    }
+  };
+
+  // Make test call
+  const makeTestCall = async () => {
+    if (!testCallNumber) {
+      toast({
+        title: "Error",
+        description: "Please enter a phone number",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      const response = await fetch('/api/voip/test-call', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          fromExtension: '1000',
+          toNumber: testCallNumber,
+          extensionId: 'admin-1000',
+        }),
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setActiveTestCall(data);
+        toast({
+          title: "Call Initiated",
+          description: `Calling ${testCallNumber}...`,
+        });
+        
+        // Poll for call status
+        const pollInterval = setInterval(async () => {
+          try {
+            const statusResponse = await fetch(`/api/voip/call-status/${data.callSid}`);
+            if (statusResponse.ok) {
+              const status = await statusResponse.json();
+              if (status.status === 'completed' || status.status === 'failed') {
+                clearInterval(pollInterval);
+                setActiveTestCall(null);
+                fetchCallHistory();
+                toast({
+                  title: "Call Ended",
+                  description: `Duration: ${status.duration || 0} seconds`,
+                });
+              }
+            }
+          } catch (error) {
+            clearInterval(pollInterval);
+          }
+        }, 2000);
+      } else {
+        const error = await response.json();
+        toast({
+          title: "Call Failed",
+          description: error.error || "Failed to initiate call",
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to make test call",
+        variant: "destructive",
+      });
+    }
+  };
+
+  // End test call
+  const endTestCall = async () => {
+    if (!activeTestCall?.callSid) return;
+
+    try {
+      const response = await fetch(`/api/voip/end-call/${activeTestCall.callSid}`, {
+        method: 'POST',
+      });
+
+      if (response.ok) {
+        setActiveTestCall(null);
+        fetchCallHistory();
+        toast({
+          title: "Call Ended",
+          description: "The call has been terminated",
+        });
+      }
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to end call",
+        variant: "destructive",
+      });
+    }
+  };
+
   // Function to create admin extension
   const createAdminExtension = async () => {
     if (!adminPhone || !adminEmail) {
@@ -270,6 +382,64 @@ export default function TwilioVoIP() {
         </CardContent>
       </Card>
 
+      {/* Test Call Section for Admin */}
+      <Card className="bg-gradient-to-r from-purple-500/10 to-blue-500/10 border-purple-500/20">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Phone className="h-5 w-5 text-purple-500" />
+            Admin Test Call (Extension 1000)
+          </CardTitle>
+          <CardDescription>
+            Make test calls from admin extension to US numbers
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="space-y-2">
+            <Label>Destination Number (US)</Label>
+            <Input
+              value={testCallNumber}
+              onChange={(e) => setTestCallNumber(e.target.value)}
+              placeholder="+1 (555) 123-4567"
+              disabled={!!activeTestCall}
+              className="text-lg"
+            />
+            <p className="text-xs text-muted-foreground">
+              Enter US phone number including country code (+1)
+            </p>
+          </div>
+
+          {activeTestCall ? (
+            <div className="space-y-3">
+              <div className="p-4 bg-green-500/10 border border-green-500/20 rounded-lg">
+                <div className="flex items-center gap-2">
+                  <div className="h-3 w-3 rounded-full bg-green-500 animate-pulse" />
+                  <span className="font-medium text-green-600">Call in Progress</span>
+                </div>
+                <p className="text-sm text-muted-foreground mt-2">
+                  Calling: {testCallNumber}
+                </p>
+              </div>
+              <Button 
+                onClick={endTestCall}
+                className="w-full bg-red-600 hover:bg-red-700"
+              >
+                <PhoneOff className="h-4 w-4 mr-2" />
+                End Call
+              </Button>
+            </div>
+          ) : (
+            <Button 
+              onClick={makeTestCall}
+              disabled={!testCallNumber || !isRegistered}
+              className="w-full bg-purple-600 hover:bg-purple-700"
+            >
+              <Phone className="h-4 w-4 mr-2" />
+              Make Test Call
+            </Button>
+          )}
+        </CardContent>
+      </Card>
+
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* Dialer */}
         <Card>
@@ -341,6 +511,51 @@ export default function TwilioVoIP() {
                 </>
               )}
             </div>
+          </CardContent>
+        </Card>
+
+        {/* Call History */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Clock className="h-5 w-5" />
+              Recent Test Calls
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <ScrollArea className="h-[300px]">
+              {callHistory.length > 0 ? (
+                <div className="space-y-2">
+                  {callHistory.map((call, index) => (
+                    <div
+                      key={index}
+                      className="flex items-center justify-between p-3 border rounded-lg hover:bg-muted/50"
+                    >
+                      <div>
+                        <p className="font-medium font-mono">{call.to}</p>
+                        <p className="text-xs text-muted-foreground">
+                          {new Date(call.startTime).toLocaleString()}
+                        </p>
+                      </div>
+                      <div className="text-right">
+                        <Badge variant={call.status === 'completed' ? 'default' : 'secondary'}>
+                          {call.status}
+                        </Badge>
+                        {call.duration && (
+                          <p className="text-xs text-muted-foreground mt-1">
+                            {call.duration}s
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="flex items-center justify-center h-full text-muted-foreground">
+                  <p>No call history yet</p>
+                </div>
+              )}
+            </ScrollArea>
           </CardContent>
         </Card>
 
