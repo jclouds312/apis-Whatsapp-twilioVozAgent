@@ -349,6 +349,103 @@ export async function registerRoutes(
     }
   });
 
+  // CRM Export Routes
+  app.post("/api/crm/export/voice", async (req, res) => {
+    try {
+      const { adminEmail, format } = req.body;
+      
+      const calls = await storage.getAllTwilioCalls();
+      
+      const exportData = {
+        exportedBy: adminEmail,
+        exportDate: new Date().toISOString(),
+        dataType: "twilio_voice",
+        totalRecords: calls.length,
+        data: calls.map(call => ({
+          callSid: call.id,
+          from: call.from,
+          to: call.to,
+          status: call.status,
+          duration: call.duration,
+          recordingUrl: call.recordingUrl,
+          createdAt: call.createdAt
+        }))
+      };
+
+      res.setHeader('Content-Type', 'application/json');
+      res.setHeader('Content-Disposition', `attachment; filename=voice_export_${Date.now()}.json`);
+      res.json(exportData);
+    } catch (error) {
+      logger.error("Error exporting voice data", "api", error);
+      res.status(500).json({ error: "Failed to export voice data" });
+    }
+  });
+
+  app.post("/api/crm/export/whatsapp", async (req, res) => {
+    try {
+      const { adminEmail, format } = req.body;
+      
+      const messages = await storage.getAllWhatsAppMessages();
+      
+      const exportData = {
+        exportedBy: adminEmail,
+        exportDate: new Date().toISOString(),
+        dataType: "whatsapp_messages",
+        totalRecords: messages.length,
+        data: messages.map(msg => ({
+          messageId: msg.id,
+          phoneNumber: msg.phoneNumber,
+          recipientPhone: msg.recipientPhone,
+          message: msg.message,
+          mediaUrl: msg.mediaUrl,
+          status: msg.status,
+          direction: msg.direction,
+          createdAt: msg.createdAt
+        }))
+      };
+
+      res.setHeader('Content-Type', 'application/json');
+      res.setHeader('Content-Disposition', `attachment; filename=whatsapp_export_${Date.now()}.json`);
+      res.json(exportData);
+    } catch (error) {
+      logger.error("Error exporting WhatsApp data", "api", error);
+      res.status(500).json({ error: "Failed to export WhatsApp data" });
+    }
+  });
+
+  app.post("/api/crm/export/all", async (req, res) => {
+    try {
+      const { adminEmail, format } = req.body;
+      
+      const [calls, messages, contacts] = await Promise.all([
+        storage.getAllTwilioCalls(),
+        storage.getAllWhatsAppMessages(),
+        storage.getAllCrmContacts()
+      ]);
+      
+      const exportData = {
+        exportedBy: adminEmail,
+        exportDate: new Date().toISOString(),
+        dataType: "full_crm_export",
+        summary: {
+          totalCalls: calls.length,
+          totalMessages: messages.length,
+          totalContacts: contacts.length
+        },
+        twilioVoice: calls,
+        whatsappMessages: messages,
+        crmContacts: contacts
+      };
+
+      res.setHeader('Content-Type', 'application/json');
+      res.setHeader('Content-Disposition', `attachment; filename=full_crm_export_${Date.now()}.json`);
+      res.json(exportData);
+    } catch (error) {
+      logger.error("Error exporting all CRM data", "api", error);
+      res.status(500).json({ error: "Failed to export CRM data" });
+    }
+  });
+
   // Configuration endpoint
   app.get("/api/config", (_req, res) => {
     res.json({

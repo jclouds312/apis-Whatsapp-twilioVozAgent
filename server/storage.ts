@@ -37,56 +37,61 @@ export interface IStorage {
   getUserByEmail(email: string): Promise<User | undefined>;
   createUser(user: InsertUser): Promise<User>;
   updateUser(id: string, user: Partial<User>): Promise<User | undefined>;
-  
+
   // Services
   getService(id: string): Promise<Service | undefined>;
   getServicesByUserId(userId: string): Promise<Service[]>;
   createService(service: InsertService): Promise<Service>;
   updateService(id: string, service: Partial<Service>): Promise<Service | undefined>;
   deleteService(id: string): Promise<boolean>;
-  
+
   // API Keys
   getApiKey(id: string): Promise<ApiKey | undefined>;
   getApiKeysByUserId(userId: string): Promise<ApiKey[]>;
   createApiKey(apiKey: InsertApiKey): Promise<ApiKey>;
   updateApiKey(id: string, apiKey: Partial<ApiKey>): Promise<ApiKey | undefined>;
   deleteApiKey(id: string): Promise<boolean>;
-  
+
   // WhatsApp Messages
   getWhatsappMessage(id: string): Promise<WhatsappMessage | undefined>;
   getWhatsappMessagesByUserId(userId: string): Promise<WhatsappMessage[]>;
   createWhatsappMessage(message: InsertWhatsappMessage): Promise<WhatsappMessage>;
-  
+
   // Twilio Calls
   getTwilioCall(id: string): Promise<TwilioCall | undefined>;
   getTwilioCallsByUserId(userId: string): Promise<TwilioCall[]>;
   createTwilioCall(call: InsertTwilioCall): Promise<TwilioCall>;
   updateTwilioCall(id: string, call: Partial<TwilioCall>): Promise<TwilioCall | undefined>;
-  
+
   // Workflows
   getWorkflow(id: string): Promise<Workflow | undefined>;
   getWorkflowsByUserId(userId: string): Promise<Workflow[]>;
   createWorkflow(workflow: InsertWorkflow): Promise<Workflow>;
   updateWorkflow(id: string, workflow: Partial<Workflow>): Promise<Workflow | undefined>;
   deleteWorkflow(id: string): Promise<boolean>;
-  
+
   // CRM Contacts
   getCrmContact(id: string): Promise<CrmContact | undefined>;
   getCrmContactsByUserId(userId: string): Promise<CrmContact[]>;
   createCrmContact(contact: InsertCrmContact): Promise<CrmContact>;
   updateCrmContact(id: string, contact: Partial<CrmContact>): Promise<CrmContact | undefined>;
   deleteCrmContact(id: string): Promise<boolean>;
-  
+
   // System Logs
   getSystemLogs(limit?: number): Promise<SystemLog[]>;
   createSystemLog(log: InsertSystemLog): Promise<SystemLog>;
-  
+
   // Exposed APIs
   getExposedApi(id: string): Promise<ExposedApi | undefined>;
   getExposedApisByUserId(userId: string): Promise<ExposedApi[]>;
   createExposedApi(api: InsertExposedApi): Promise<ExposedApi>;
   updateExposedApi(id: string, api: Partial<ExposedApi>): Promise<ExposedApi | undefined>;
   deleteExposedApi(id: string): Promise<boolean>;
+
+  // Export methods
+  getAllTwilioCalls(): Promise<TwilioCall[]>;
+  getAllWhatsAppMessages(): Promise<WhatsappMessage[]>;
+  getAllCrmContacts(): Promise<CrmContact[]>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -285,7 +290,19 @@ export class DatabaseStorage implements IStorage {
   async deleteCrmContact(id: string): Promise<boolean> {
     const result = await db.delete(crmContacts).where(eq(crmContacts.id, id));
     return result.rowCount ? result.rowCount > 0 : false;
-  }
+  },
+
+  async getAllTwilioCalls(): Promise<TwilioCall[]> {
+    return await db.select().from(twilioCalls).orderBy(desc(twilioCalls.createdAt));
+  },
+
+  async getAllWhatsAppMessages(): Promise<WhatsappMessage[]> {
+    return await db.select().from(whatsappMessages).orderBy(desc(whatsappMessages.createdAt));
+  },
+
+  async getAllCrmContacts(): Promise<CrmContact[]> {
+    return await db.select().from(crmContacts).orderBy(desc(crmContacts.createdAt));
+  },
 
   // System Logs
   async getSystemLogs(limit: number = 100): Promise<SystemLog[]> {
