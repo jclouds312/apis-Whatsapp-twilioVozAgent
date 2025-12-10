@@ -4,7 +4,7 @@ import { storage } from "./storage";
 import { whatsAppBot } from "./whatsapp-bot";
 import { whatsAppBusinessAPI } from "./whatsapp-business-api";
 import { whatsAppOTPService } from "./whatsapp-otp";
-import { log } from "./logger"; // Assuming a logger utility is available
+import { logger } from "./logger";
 
 export async function registerRoutes(
   httpServer: Server,
@@ -235,7 +235,7 @@ export async function registerRoutes(
       const contacts = await storage.getCrmContactsByUserId(userId);
       res.json(contacts);
     } catch (error) {
-      log.error("Error fetching CRM contacts:", error);
+      logger.error("Error fetching CRM contacts", "api", error);
       res.status(500).json({ error: "Failed to fetch contacts" });
     }
   });
@@ -249,7 +249,7 @@ export async function registerRoutes(
       });
       res.json(contact);
     } catch (error) {
-      log.error("Error creating CRM contact:", error);
+      logger.error("Error creating CRM contact", "api", error);
       res.status(500).json({ error: "Failed to create contact" });
     }
   });
@@ -263,7 +263,7 @@ export async function registerRoutes(
       }
       res.json(contact);
     } catch (error) {
-      log.error("Error updating CRM contact:", error);
+      logger.error("Error updating CRM contact", "api", error);
       res.status(500).json({ error: "Failed to update contact" });
     }
   });
@@ -277,7 +277,7 @@ export async function registerRoutes(
       }
       res.json({ success: true });
     } catch (error) {
-      log.error("Error deleting CRM contact:", error);
+      logger.error("Error deleting CRM contact", "api", error);
       res.status(500).json({ error: "Failed to delete contact" });
     }
   });
