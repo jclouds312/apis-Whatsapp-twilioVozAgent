@@ -41,3 +41,9 @@ waitForPort = 5000
 
 [agent]
 mockupState = "FULLSTACK"
+
+[userenv]
+
+[userenv.shared]
+NOCODEAPI_TWILIO_ENDPOINT = "https://v1.nocodeapi.com/john474n/twilio/jbngLoZWwbtslepf"
+TWILIO_PHONE_NUMBER = "+18622770131"
