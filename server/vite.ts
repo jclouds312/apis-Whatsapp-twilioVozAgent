@@ -31,7 +31,7 @@ export async function setupVite(server: Server, app: Express) {
 
   app.use(vite.middlewares);
 
-  const handleRequest = async (req, res, next) => {
+  app.use(async (req, res, next) => {
     const url = req.originalUrl;
 
     try {
@@ -54,8 +54,5 @@ export async function setupVite(server: Server, app: Express) {
       vite.ssrFixStacktrace(e as Error);
       next(e);
     }
-  };
-
-  app.use("/", handleRequest);
-  app.use("/*", handleRequest);
+  });
 }
