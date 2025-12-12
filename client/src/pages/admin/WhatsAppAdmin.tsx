@@ -4,11 +4,11 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { MessageSquare, Plus, QrCode, Smartphone, RefreshCw, Power, Shield } from "lucide-react";
+import { MessageSquare, Plus, QrCode, Smartphone, RefreshCw, Power, Shield, CheckCheck } from "lucide-react";
 
 export default function WhatsAppAdmin() {
   const [instances, setInstances] = useState([
-    { id: "WA-MAIN", name: "Main Company Line", number: "+1 862-277-0131", status: "connected", messages: 5420, type: "Business API" },
+    { id: "WA-MAIN", name: "Main Company Line", number: "+1 862-277-0131", status: "connected", messages: 5420, type: "Business API", verified: true },
     { id: "WA-001", name: "Ventas Principal", number: "+34 600 000 001", status: "connected", messages: 1250, type: "Standard" },
     { id: "WA-002", name: "Soporte Técnico", number: "+34 600 000 002", status: "connected", messages: 3400 },
     { id: "WA-003", name: "Marketing Promo", number: "+34 600 000 003", status: "disconnected", messages: 0 },
@@ -34,8 +34,13 @@ export default function WhatsAppAdmin() {
             <CardHeader className="pb-4">
               <div className="flex justify-between items-start">
                 <div className="flex items-center gap-3">
-                  <div className="h-10 w-10 rounded-lg bg-green-500/10 flex items-center justify-center">
+                  <div className="h-10 w-10 rounded-lg bg-green-500/10 flex items-center justify-center relative">
                     <Smartphone className="h-6 w-6 text-green-500" />
+                    {instance.verified && (
+                      <div className="absolute -top-1 -right-1 bg-blue-500 rounded-full p-0.5 border-2 border-slate-900">
+                        <CheckCheck className="h-3 w-3 text-white" />
+                      </div>
+                    )}
                   </div>
                   <div>
                     <CardTitle className="text-base">{instance.name}</CardTitle>

@@ -1,207 +1,173 @@
 import { useState } from "react";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import {
-  MessageSquare, Send, Phone, User, Calendar, MoreVertical,
-  Image as ImageIcon, Smile, Paperclip, Search, Check, CheckCheck
-} from "lucide-react";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Phone, PhoneOff, Mic, MicOff, Video, MoreVertical, Delete, User, History, Voicemail } from "lucide-react";
 
-const conversations = [
-  { id: 1, number: "+1 (555) 123-4567", lastMessage: "Yes, I'm available at 2pm.", time: "10:30 AM", unread: 0, status: "received" },
-  { id: 2, number: "+1 (555) 987-6543", lastMessage: "Please send the invoice.", time: "Yesterday", unread: 2, status: "received" },
-  { id: 3, number: "+1 (555) 000-1111", lastMessage: "Thanks for your help!", time: "Yesterday", unread: 0, status: "sent" },
-];
+export default function MockSoftphone() {
+  const [activeCall, setActiveCall] = useState<any>(null);
+  const [dialNumber, setDialNumber] = useState("");
+  const [callStatus, setCallStatus] = useState("idle"); // idle, calling, connected
 
-const messages = [
-  { id: 1, type: "received", text: "Hi, do you have any appointments available today?", time: "10:15 AM" },
-  { id: 2, type: "sent", text: "Hello! Yes, we have an opening at 2pm. Does that work for you?", time: "10:20 AM" },
-  { id: 3, type: "received", text: "Yes, I'm available at 2pm.", time: "10:30 AM" },
-];
+  const handleCall = () => {
+    if (!dialNumber) return;
+    setCallStatus("calling");
+    setTimeout(() => {
+      setCallStatus("connected");
+      setActiveCall({
+        number: dialNumber,
+        name: "Unknown Caller",
+        duration: "00:00"
+      });
+    }, 1500);
+  };
 
-export default function TwilioSMS() {
-  const [selectedId, setSelectedId] = useState(1);
-  const [inputText, setInputText] = useState("");
+  const handleHangup = () => {
+    setCallStatus("idle");
+    setActiveCall(null);
+    setDialNumber("");
+  };
+
+  const dialPad = ["1", "2", "3", "4", "5", "6", "7", "8", "9", "*", "0", "#"];
 
   return (
-    <div className="flex h-[calc(100vh-8rem)] gap-6">
-      {/* Conversations List */}
-      <Card className="w-80 flex flex-col bg-card/50 backdrop-blur-sm border-primary/10">
-        <div className="p-4 border-b border-primary/10 space-y-4">
-          <div className="flex items-center justify-between">
-            <h2 className="font-semibold flex items-center gap-2">
-              <MessageSquare className="h-5 w-5 text-primary" />
-              SMS Inbox
-            </h2>
-            <Button size="icon" className="h-8 w-8">
-              <Send className="h-4 w-4 ml-0.5" />
-            </Button>
-          </div>
-          <div className="relative">
-            <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
-            <Input placeholder="Search messages..." className="pl-8 bg-background/50" />
-          </div>
-        </div>
-        <ScrollArea className="flex-1">
-          <div className="p-2 space-y-1">
-            {conversations.map((conv) => (
-              <div
-                key={conv.id}
-                onClick={() => setSelectedId(conv.id)}
-                className={`p-3 rounded-lg cursor-pointer flex gap-3 transition-colors ${
-                  selectedId === conv.id ? "bg-primary/10 border border-primary/20" : "hover:bg-muted/50"
-                }`}
-              >
-                <Avatar className="h-10 w-10 bg-slate-800">
-                  <AvatarFallback className="text-xs text-primary font-mono">
-                    {conv.number.slice(-4)}
+    <div className="flex h-[calc(100vh-8rem)] justify-center items-center p-6">
+      <div className="w-full max-w-sm grid gap-6">
+        
+        {/* Connection Status Card */}
+        <Card className="bg-slate-900/80 backdrop-blur border-slate-800 shadow-xl">
+          <CardContent className="p-4 flex items-center justify-between">
+             <div className="flex items-center gap-3">
+               <div className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
+               <div className="space-y-0.5">
+                 <p className="text-sm font-medium text-slate-200">Main Company Line</p>
+                 <p className="text-xs text-muted-foreground font-mono">+1 862-277-0131</p>
+               </div>
+             </div>
+             <Badge variant="outline" className="bg-emerald-500/10 text-emerald-400 border-emerald-500/20">
+               Online
+             </Badge>
+          </CardContent>
+        </Card>
+
+        {/* Dialer Card */}
+        <Card className="bg-slate-950 border-slate-800 shadow-2xl overflow-hidden relative">
+          
+          {/* Active Call Overlay */}
+          {callStatus !== "idle" && (
+            <div className="absolute inset-0 z-20 bg-slate-950/95 backdrop-blur-md flex flex-col items-center justify-center p-6 space-y-8 animate-in fade-in zoom-in-95 duration-300">
+              <div className="text-center space-y-2">
+                <Avatar className="h-24 w-24 mx-auto border-4 border-slate-800 shadow-xl">
+                  <AvatarFallback className="bg-slate-800 text-slate-400 text-2xl">
+                    <User />
                   </AvatarFallback>
                 </Avatar>
-                <div className="flex-1 overflow-hidden">
-                  <div className="flex justify-between items-start">
-                    <span className="font-medium text-sm truncate">{conv.number}</span>
-                    <span className="text-[10px] text-muted-foreground">{conv.time}</span>
-                  </div>
-                  <p className="text-xs text-muted-foreground truncate mt-1">
-                    {conv.status === "sent" && <span className="mr-1">You:</span>}
-                    {conv.lastMessage}
-                  </p>
-                </div>
-                {conv.unread > 0 && (
-                  <div className="flex flex-col justify-center">
-                    <Badge className="h-5 w-5 p-0 flex items-center justify-center rounded-full">
-                      {conv.unread}
-                    </Badge>
-                  </div>
-                )}
+                <h2 className="text-2xl font-bold text-white">{dialNumber}</h2>
+                <p className="text-emerald-400 font-medium animate-pulse">
+                  {callStatus === "calling" ? "Calling..." : "00:42"}
+                </p>
               </div>
-            ))}
-          </div>
-        </ScrollArea>
-      </Card>
 
-      {/* Message Thread */}
-      <Card className="flex-1 flex flex-col bg-card/50 backdrop-blur-sm border-primary/10 overflow-hidden">
-        <div className="p-4 border-b border-primary/10 flex justify-between items-center bg-background/30">
-          <div className="flex items-center gap-3">
-            <Avatar className="h-10 w-10 bg-slate-800">
-              <AvatarFallback className="text-primary font-mono">
-                67
-              </AvatarFallback>
-            </Avatar>
-            <div>
-              <h3 className="font-semibold text-sm">+1 (555) 123-4567</h3>
-              <p className="text-xs text-muted-foreground flex items-center gap-1">
-                United States • Twilio SMS
-              </p>
-            </div>
-          </div>
-          <div className="flex gap-2">
-            <Button size="icon" variant="ghost">
-              <Phone className="h-4 w-4" />
-            </Button>
-            <Button size="icon" variant="ghost">
-              <Calendar className="h-4 w-4" />
-            </Button>
-            <Button size="icon" variant="ghost">
-              <MoreVertical className="h-4 w-4" />
-            </Button>
-          </div>
-        </div>
+              <div className="grid grid-cols-3 gap-6 w-full max-w-[200px]">
+                <Button variant="outline" size="icon" className="h-14 w-14 rounded-full border-slate-700 hover:bg-slate-800">
+                  <Mic className="h-6 w-6 text-slate-300" />
+                </Button>
+                <Button variant="outline" size="icon" className="h-14 w-14 rounded-full border-slate-700 hover:bg-slate-800">
+                  <Video className="h-6 w-6 text-slate-300" />
+                </Button>
+                <Button variant="outline" size="icon" className="h-14 w-14 rounded-full border-slate-700 hover:bg-slate-800">
+                  <MoreVertical className="h-6 w-6 text-slate-300" />
+                </Button>
+              </div>
 
-        <ScrollArea className="flex-1 p-4">
-          <div className="space-y-4">
-             <div className="flex justify-center my-4">
-              <Badge variant="outline" className="bg-background/50 text-xs font-normal text-muted-foreground">
-                Today, 10:15 AM
-              </Badge>
-            </div>
-            {messages.map((msg) => (
-              <div
-                key={msg.id}
-                className={`flex ${msg.type === "sent" ? "justify-end" : "justify-start"}`}
+              <Button 
+                size="lg" 
+                className="h-16 w-full rounded-full bg-red-600 hover:bg-red-700 shadow-lg shadow-red-900/20 text-lg font-medium"
+                onClick={handleHangup}
               >
-                <div
-                  className={`max-w-[70%] rounded-2xl px-4 py-2 shadow-sm ${
-                    msg.type === "sent"
-                      ? "bg-primary text-primary-foreground rounded-tr-none"
-                      : "bg-muted/50 border border-border rounded-tl-none"
-                  }`}
-                >
-                  <p className="text-sm">{msg.text}</p>
-                  <div className={`text-[10px] mt-1 flex items-center justify-end gap-1 ${
-                    msg.type === "sent" ? "text-white/70" : "text-muted-foreground"
-                  }`}>
-                    {msg.time}
-                    {msg.type === "sent" && <CheckCheck className="h-3 w-3" />}
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </ScrollArea>
-
-        <div className="p-4 bg-background/50 backdrop-blur border-t border-primary/10">
-          <div className="flex items-end gap-2">
-            <div className="flex gap-1 pb-2">
-              <Button size="icon" variant="ghost" className="h-8 w-8 text-muted-foreground hover:text-primary">
-                <Image className="h-5 w-5" />
-              </Button>
-              <Button size="icon" variant="ghost" className="h-8 w-8 text-muted-foreground hover:text-primary">
-                <Smile className="h-5 w-5" />
+                <PhoneOff className="mr-2 h-6 w-6" /> End Call
               </Button>
             </div>
-            <div className="flex-1 bg-muted/30 rounded-2xl border border-input focus-within:ring-1 focus-within:ring-primary/50 transition-all flex items-center px-3 py-2">
-               <textarea
-                value={inputText}
-                onChange={(e) => setInputText(e.target.value)}
-                placeholder="Type an SMS..."
-                className="flex-1 bg-transparent border-none focus:outline-none resize-none max-h-24 text-sm"
-                rows={1}
-                style={{ minHeight: "24px" }}
+          )}
+
+          <CardContent className="p-6 space-y-6">
+            {/* Display */}
+            <div className="text-center py-4">
+              <Input 
+                value={dialNumber}
+                onChange={(e) => setDialNumber(e.target.value)}
+                className="text-center text-3xl font-mono bg-transparent border-none focus-visible:ring-0 placeholder:text-slate-800"
+                placeholder="Enter Number"
               />
             </div>
-            <Button
-              size="icon"
-              className="h-10 w-10 rounded-full bg-primary shadow-lg shadow-primary/20 mb-1"
-            >
-              <Send className="h-4 w-4 ml-0.5" />
+
+            {/* Keypad */}
+            <div className="grid grid-cols-3 gap-4">
+              {dialPad.map((key) => (
+                <Button
+                  key={key}
+                  variant="ghost"
+                  className="h-16 w-16 rounded-full text-2xl font-medium hover:bg-slate-800/50 hover:text-white transition-all mx-auto"
+                  onClick={() => setDialNumber(prev => prev + key)}
+                >
+                  {key}
+                </Button>
+              ))}
+            </div>
+
+            {/* Call Action */}
+            <div className="flex justify-center pt-2">
+              <Button 
+                size="icon" 
+                className="h-16 w-16 rounded-full bg-green-600 hover:bg-green-500 shadow-lg shadow-green-900/20 transition-all hover:scale-105"
+                onClick={handleCall}
+                disabled={!dialNumber}
+              >
+                <Phone className="h-8 w-8 text-white" />
+              </Button>
+            </div>
+          </CardContent>
+
+          {/* Bottom Tabs */}
+          <div className="grid grid-cols-3 border-t border-slate-800 bg-slate-900/50">
+            <Button variant="ghost" className="h-14 rounded-none border-t-2 border-primary bg-slate-800/50 text-primary">
+              <Phone className="h-5 w-5" />
+            </Button>
+            <Button variant="ghost" className="h-14 rounded-none hover:bg-slate-800 text-slate-400 hover:text-slate-200">
+              <History className="h-5 w-5" />
+            </Button>
+            <Button variant="ghost" className="h-14 rounded-none hover:bg-slate-800 text-slate-400 hover:text-slate-200">
+              <Voicemail className="h-5 w-5" />
             </Button>
           </div>
-          <div className="flex justify-between mt-2 px-1">
-            <span className="text-[10px] text-muted-foreground">
-              SMS segment: 1 (0/160)
-            </span>
-            <span className="text-[10px] text-muted-foreground">
-              Rate: $0.0075/msg
-            </span>
+        </Card>
+      </div>
+      
+      {/* Right Side Info (Optional - Recent Logs) */}
+      <div className="hidden lg:block w-80 ml-6 space-y-4">
+        <h3 className="text-lg font-semibold text-slate-200 px-1">Recent Calls</h3>
+        <ScrollArea className="h-[500px] w-full rounded-xl border border-slate-800 bg-slate-900/30 p-4">
+          <div className="space-y-4">
+            {[1,2,3,4,5].map((_, i) => (
+              <div key={i} className="flex items-center justify-between p-3 rounded-lg hover:bg-slate-800/50 transition-colors cursor-pointer group">
+                <div className="flex items-center gap-3">
+                  <div className={`h-8 w-8 rounded-full flex items-center justify-center ${i % 2 === 0 ? 'bg-blue-500/10 text-blue-400' : 'bg-red-500/10 text-red-400'}`}>
+                    {i % 2 === 0 ? <Phone className="h-4 w-4" /> : <PhoneOff className="h-4 w-4" />}
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium text-slate-300">+1 (555) 000-000{i}</p>
+                    <p className="text-xs text-muted-foreground">Today, 10:{30 + i} AM</p>
+                  </div>
+                </div>
+                <span className="text-xs text-slate-500 font-mono">02:1{i}</span>
+              </div>
+            ))}
           </div>
-        </div>
-      </Card>
+        </ScrollArea>
+      </div>
     </div>
   );
 }
-
-function Image(props: any) {
-    return (
-      <svg
-        {...props}
-        xmlns="http://www.w3.org/2000/svg"
-        width="24"
-        height="24"
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="2"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      >
-        <rect width="18" height="18" x="3" y="3" rx="2" ry="2" />
-        <circle cx="9" cy="9" r="2" />
-        <path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21" />
-      </svg>
-    )
-  }
