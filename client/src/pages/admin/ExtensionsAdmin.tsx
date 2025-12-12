@@ -8,7 +8,8 @@ import { Plus, Search, Phone, User, Settings, Trash2, Edit } from "lucide-react"
 
 export default function ExtensionsAdmin() {
   const [extensions, setExtensions] = useState([
-    { id: 101, user: "Juan Pérez", department: "Ventas", status: "online", type: "SIP" },
+    { id: 100, user: "Main Company Line", department: "Administración", status: "online", type: "Main", number: "862-277-0131" },
+    { id: 101, user: "Juan Pérez", department: "Ventas", status: "online", type: "SIP", number: "101" },
     { id: 102, user: "Maria García", department: "Soporte", status: "busy", type: "WebRTC" },
     { id: 103, user: "Carlos López", department: "Ventas", status: "offline", type: "SIP" },
     { id: 104, user: "Ana Martínez", department: "Administración", status: "online", type: "WebRTC" },
@@ -75,6 +76,7 @@ export default function ExtensionsAdmin() {
             <TableHeader>
               <TableRow className="border-slate-800 hover:bg-slate-900/50">
                 <TableHead>Extensión</TableHead>
+                <TableHead>Número Directo</TableHead>
                 <TableHead>Usuario</TableHead>
                 <TableHead>Departamento</TableHead>
                 <TableHead>Tipo</TableHead>
@@ -90,6 +92,9 @@ export default function ExtensionsAdmin() {
                       <Phone className="h-4 w-4" />
                       {ext.id}
                     </div>
+                  </TableCell>
+                  <TableCell className="font-mono text-slate-300">
+                    {ext.number}
                   </TableCell>
                   <TableCell>
                     <div className="flex items-center gap-2">

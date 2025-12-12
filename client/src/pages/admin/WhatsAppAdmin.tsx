@@ -4,11 +4,12 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { MessageSquare, Plus, QrCode, Smartphone, RefreshCw, Power } from "lucide-react";
+import { MessageSquare, Plus, QrCode, Smartphone, RefreshCw, Power, Shield } from "lucide-react";
 
 export default function WhatsAppAdmin() {
   const [instances, setInstances] = useState([
-    { id: "WA-001", name: "Ventas Principal", number: "+34 600 000 001", status: "connected", messages: 1250 },
+    { id: "WA-MAIN", name: "Main Company Line", number: "+1 862-277-0131", status: "connected", messages: 5420, type: "Business API" },
+    { id: "WA-001", name: "Ventas Principal", number: "+34 600 000 001", status: "connected", messages: 1250, type: "Standard" },
     { id: "WA-002", name: "Soporte Técnico", number: "+34 600 000 002", status: "connected", messages: 3400 },
     { id: "WA-003", name: "Marketing Promo", number: "+34 600 000 003", status: "disconnected", messages: 0 },
   ]);
@@ -57,6 +58,12 @@ export default function WhatsAppAdmin() {
                   <span className="text-xs font-mono text-slate-400 mt-1">{instance.id}</span>
                 </div>
               </div>
+              
+              {instance.id === "WA-MAIN" && (
+                 <div className="mb-4 p-2 bg-blue-500/10 border border-blue-500/20 rounded text-xs text-blue-300 flex items-center gap-2">
+                   <Shield className="h-3 w-3" /> Linked to Main PBX Extension 100
+                 </div>
+              )}
               
               <div className="flex gap-2">
                 {instance.status === 'disconnected' ? (
