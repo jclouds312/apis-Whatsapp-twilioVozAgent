@@ -37,6 +37,9 @@ import ApiKeyDashboardPage from "@/pages/ApiKeyDashboard";
 import FunctionConnectPage from "@/pages/FunctionConnect";
 import WorkflowSuggesterPage from "@/pages/WorkflowSuggester";
 import AdminPage from "@/pages/Admin";
+import ExtensionsAdmin from "@/pages/admin/ExtensionsAdmin";
+import WhatsAppAdmin from "@/pages/admin/WhatsAppAdmin";
+import Accounts from "@/pages/admin/Accounts";
 import DeploymentPage from "@/pages/Deployment";
 import ApiKeyGeneratorPage from "@/pages/ApiKeyGenerator";
 
@@ -72,6 +75,9 @@ function Router() {
         <Route path="/api-key-dashboard" component={ApiKeyDashboardPage} />
         <Route path="/logs" component={SystemLogsPage} />
         <Route path="/admin" component={AdminPage} />
+        <Route path="/admin/extensions" component={ExtensionsAdmin} />
+        <Route path="/admin/whatsapp" component={WhatsAppAdmin} />
+        <Route path="/admin/accounts" component={Accounts} />
         <Route path="/crm-admin" component={CRMAdminPage} />
         <Route path="/deployment" component={DeploymentPage} />
         <Route path="/settings" component={SettingsPage} />
