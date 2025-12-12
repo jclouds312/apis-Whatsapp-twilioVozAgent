@@ -49,7 +49,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     { icon: Globe, label: "Facebook SDK", path: "/facebook-integration", badge: "v21" },
     { icon: Key, label: "API Key Manager", path: "/api-key-manager", badge: "Premium" },
     { icon: Terminal, label: "API Console", path: "/api-console" },
-    { icon: Zap, label: "Twilio SMS", path: "/twilio-voice" },
+    { icon: Zap, label: "Softphone", path: "/twilio-voice", badge: "Live" },
     { icon: Terminal, label: "Widgets", path: "/embed-widgets" },
     { icon: Users, label: "CRM Pro", path: "/crm-integration" },
     { icon: ShieldCheck, label: "Admin: Phones", path: "/admin", badge: "Admin" },
